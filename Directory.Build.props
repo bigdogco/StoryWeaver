@@ -1,0 +1,26 @@
+<Project>
+
+  <!--
+    Shared build settings for every project in the solution.
+    Keeps the individual .csproj files minimal - change it here, not in four places.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+
+    <!--
+      Warnings as errors. Aggressive for a hobby project, but nullable-reference
+      warnings in particular are worth enforcing while the domain model is still
+      being shaped - a null slipping into the entity graph is exactly the kind of
+      bug that surfaces 200 turns later. Relax per-project if it gets tedious.
+    -->
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  </PropertyGroup>
+
+</Project>

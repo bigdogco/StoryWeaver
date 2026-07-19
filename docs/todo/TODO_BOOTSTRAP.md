@@ -81,31 +81,46 @@ a UI framework.
 
 ### 1. Repository scaffolding
 
-- [ ] Create solution `StoryWeaver.sln`
-- [ ] Create projects:
-  - [ ] `StoryWeaver.Core` — domain model, turn loop. **No UI, no HTTP, no storage deps.**
-  - [ ] `StoryWeaver.Llm` — provider abstraction, role config, prompt assembly
-  - [ ] `StoryWeaver.Storage` — JSON implementation of Core's repository interface
-  - [ ] `StoryWeaver.Console` — throwaway harness
-- [ ] Wire project references (Core depends on nothing; others depend inward)
-- [ ] `.gitignore` — .NET template plus `settings.local.json`, `saves/`, `.env`
-- [ ] `.editorconfig` — basic formatting consistency
-- [ ] Verify: `dotnet build` succeeds on empty scaffold
+- [x] Create solution `StoryWeaver.sln` (`src/` layout, matching AI-Lord)
+- [x] Create projects:
+  - [x] `StoryWeaver.Core` — domain model, turn loop. **No UI, no HTTP, no storage deps.**
+  - [x] `StoryWeaver.Llm` — provider abstraction, role config, prompt assembly
+  - [x] `StoryWeaver.Storage` — JSON implementation of Core's repository interface
+  - [x] `StoryWeaver.Cli` — throwaway harness. **Renamed from `StoryWeaver.Console`:** a
+        `StoryWeaver.Console` namespace shadows `System.Console`, breaking every
+        unqualified `Console.WriteLine` inside the project.
+- [x] Wire project references (Core depends on nothing; others depend inward)
+- [x] `.gitignore` — .NET template plus `*.local.json`, `saves/`, `.env`
+- [x] `.editorconfig` — formatting, file-scoped namespaces, `_camelCase` private fields
+- [x] `Directory.Build.props` — shared `net8.0`, nullable, warnings-as-errors
+- [x] Verify: `dotnet build` succeeds on empty scaffold (0 warnings, 0 errors)
+
+**Target framework: `net8.0`.** Installed SDKs are 8.0 (LTS) and 9.0 (STS); no 10. .NET 8's
+LTS window ends around Nov 2026 — bumping later is a one-line change in
+`Directory.Build.props`.
 
 ### 2. Docs structure
 
 Per CLAUDE.md:
 
-- [ ] `docs/devlog/` directory
-- [ ] `docs/CHALLENGES.md` — seeded with known risks (see below)
-- [ ] `docs/todo/TODO_FUTURE_WORK.md` — seeded with deferred items from this doc
+- [x] `docs/devlog/` directory
+- [x] `docs/CHALLENGES.md` — seeded with known risks (see below)
+- [x] `docs/todo/TODO_FUTURE_WORK.md` — seeded with deferred items from this doc
 
 ### 3. Configuration and secrets
 
-- [ ] `settings.json` — committed, no secrets, holds role→model mapping
-- [ ] `settings.local.json` — gitignored, optional overrides
-- [ ] API key read from environment variable only; clear error message if absent
-- [ ] Config model binding + validation on startup (fail loudly, not at first API call)
+- [x] `settings.example.json` — committed template, no secrets
+- [x] `settings.local.json` — gitignored, holds the real key (verified not tracked)
+- [x] API key from settings file, overridable by `STORYWEAVER_API_KEY` /
+      `OPENROUTER_API_KEY`; clear error message if absent
+- [x] Config model binding + validation on startup (fail loudly, not at first API call).
+      Aggregates *all* problems into one message rather than failing on the first.
+- [x] Validation enforces the `json_schema` ⇒ `requireParameters` coupling — the guard
+      against the OpenRouter routing issue, checked at startup rather than discovered
+      as intermittent bad output later.
+- [x] Settings file located by walking up from the executable, so the real file stays at
+      the repo root and edits do not require a rebuild.
+- [x] Harness accepts an optional settings path argument (for trying alternate configs)
 
 ### 4. LLM layer
 
