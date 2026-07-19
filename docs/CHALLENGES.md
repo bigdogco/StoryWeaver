@@ -29,7 +29,14 @@ warning, and no way to tell from the response which provider served it.
 **Caveat on mitigation 1:** if the chosen model does not support `json_schema` at all,
 `require_parameters: true` may produce a hard failure or an empty provider set rather
 than degrading gracefully. `requireParameters` and `responseFormat` must be changed
-together.
+together. Startup validation now enforces this coupling, so the mistake is caught before
+the first API call rather than showing up as intermittent bad output.
+
+**Status 2026-07-19:** verified working for the chosen models — `deepseek-v4-flash`
+returned schema-conformant JSON on the first attempt with `require_parameters: true`.
+Kept open rather than resolved: this was one call on one day. The hazard is *routing*,
+which varies by model, provider mix, and time, so it will need re-checking whenever a
+role's model changes.
 
 ---
 
@@ -45,6 +52,19 @@ exactly those models.
 This is the question the bootstrap phase exists to answer. If extraction is not reliable
 enough, the architecture needs rethinking — better to learn that in a console harness
 than after an Avalonia UI is built on top.
+
+**Status 2026-07-19:** the *format* half is looking good — one narration passed to
+`deepseek-v4-flash` came back schema-conformant first try. The *semantic* half is
+untouched. That test asked for three flat fields from two sentences of prose; real
+extraction means diffing deltas against existing canon over hundreds of turns, deciding
+what changed versus what was merely restated, and resisting the pull to invent detail the
+prose only implied. Nothing here has been tested against that yet. §9's ~50-turn manual
+session is the real answer.
+
+One thing already visible: the extraction reply was correct but *lossy* in a telling way
+— it recorded `"characters": ["patrons"]`, flattening a crowd into a single unnamed
+entity. Harmless in a smoke test; exactly the kind of thing that silently degrades an
+entity graph if unnoticed over a long session.
 
 ---
 
@@ -97,6 +117,13 @@ system block.
 Two-plus model calls per turn. Estimated shape: narration dominates, extraction ~5–10% of
 turn cost on a cheap model. This is an estimate from the design, not a measurement. Needs
 real numbers early, since it constrains model choice for the whole project.
+
+**First data point 2026-07-19 (smoke test):** narration 1522 tokens, extraction 821. Note
+the ratio — extraction was ~35% of the turn's *tokens*, not the 5–10% assumed. Both models
+are reasoners, so much of that is thinking tokens rather than output. Cost-wise the gap is
+wider than the token counts suggest since the two models are priced differently, but the
+assumption that extraction is a rounding error does not survive contact. Worth measuring
+properly, in currency rather than tokens, once turns are real.
 
 ---
 

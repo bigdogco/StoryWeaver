@@ -66,12 +66,12 @@ a UI framework.
       `type: "json_schema"`, carrying `name`, `strict: true`, and a schema using
       `additionalProperties: false` + explicit `required`. **Critical caveat and its
       mitigation are in §4 and CHALLENGES.**
-- [ ] **Model choices per role** — Pavel selects these; he uses OpenRouter regularly.
-      Leaning toward DeepSeek or similar for cost reasons (Anthropic pricing is not
-      viable for a game loop with 2+ calls per turn). **Open sub-question:** confirm the
-      chosen extraction model actually supports `json_schema` through OpenRouter — if it
-      does not, the validator+repair path (§4) becomes the primary mechanism rather than
-      the fallback.
+- [x] ~~**Model choices per role**~~ — RESOLVED: narration `qwen/qwen3.7-plus`,
+      extraction `deepseek/deepseek-v4-flash`, summarize + worldgen
+      `deepseek/deepseek-v3.2`. **Sub-question answered by the smoke test:**
+      `deepseek-v4-flash` *does* honour `json_schema` through OpenRouter with
+      `require_parameters: true` — schema-conformant JSON on the first attempt, no repair
+      round-trip. The validator+repair path stays as the fallback it was designed to be.
 - [x] ~~**Streaming for narration**~~ — RESOLVED: not implemented in bootstrap, but the
       interface is shaped to allow it later without a rewrite. See §4.
 
@@ -133,14 +133,14 @@ corrective instruction when the response fails a supplied validator. Start from 
 
 Changes needed when porting:
 
-- [ ] Decouple from `MCMSettings` (Bannerlord mod settings) → our own config model
-- [ ] Extend `ResponseFormat` from `json_object`-only to support
+- [x] Decouple from `MCMSettings` (Bannerlord mod settings) → our own config model
+- [x] Extend `ResponseFormat` from `json_object`-only to support
       `type: "json_schema"` with `name` / `strict` / `schema`
-- [ ] **Add `provider: { require_parameters: true }` on the extraction role** — see
+- [x] **Add `provider: { require_parameters: true }` on the extraction role** — see
       the caveat below. Per-role, not global.
-- [ ] Swap `Newtonsoft.Json` → `System.Text.Json` (no legacy constraint here)
-- [ ] Add per-role resolution: code asks for `LlmRole.Extraction`, config maps to model
-- [ ] Set an explicit `HttpClient` timeout (narration calls can run long)
+- [x] Swap `Newtonsoft.Json` → `System.Text.Json` (no legacy constraint here)
+- [x] Add per-role resolution: code asks for `LlmRole.Extraction`, config maps to model
+- [x] Set an explicit `HttpClient` timeout (narration calls can run long)
 
 > ⚠️ **The load-balancing caveat.** OpenRouter routes a single model ID across multiple
 > upstream providers, price-weighted by default. **A provider that does not support a
@@ -154,16 +154,26 @@ Changes needed when porting:
 > constrained, a cheap extraction model may emit malformed JSON, and re-asking with a
 > corrective instruction recovers it without failing the turn.
 
-- [ ] `ILlmClient` — minimal: take a request, return text or structured result
-- [ ] Role-based resolution: code asks for `LlmRole.Narration`, config maps to a model
-- [ ] **Shape the interface for future streaming.** Streaming is *not* implemented in
+- [x] `ILlmClient` — minimal: take a request, return text or structured result
+- [x] Role-based resolution: code asks for `LlmRole.Narration`, config maps to a model
+- [x] **Shape the interface for future streaming.** Streaming is *not* implemented in
       bootstrap, but make the incremental form the primitive and the "give me the whole
       string" call a thin wrapper that accumulates it. Callers in Core use the simple
       form only. Adding real streaming later then becomes a console/UI rendering change
       rather than a change to `ILlmClient` and the turn loop — i.e. the two things
       everything else depends on. Cheap now, expensive to retrofit.
-- [ ] Request/response logging to disk — **essential for debugging the extraction pass**
-- [ ] Basic error handling: rate limits, timeouts, malformed responses
+      **As implemented:** `CompleteAsync` takes an optional `Action<string>? onChunk`
+      that today fires once with the full text. Chosen over `IAsyncEnumerable<string>`
+      because the result also carries usage, serving model, and error state, and
+      splitting those from the text stream complicates every caller.
+- [x] Request/response logging to disk — **essential for debugging the extraction pass**
+      (`ILlmLog` / `FileLlmLog`, one file per session)
+- [x] Basic error handling: rate limits, timeouts, malformed responses. Also covers
+      OpenRouter's habit of returning HTTP 200 carrying an error object, and
+      distinguishes caller cancellation from `HttpClient` timeout (both surface as
+      `TaskCanceledException`; only the latter is a failure result).
+- [x] Smoke test behind a `--smoke` flag — two live calls, narration then
+      schema-constrained extraction. Behind a flag because it spends real credits.
 
 ### 5. Domain model — minimal
 
