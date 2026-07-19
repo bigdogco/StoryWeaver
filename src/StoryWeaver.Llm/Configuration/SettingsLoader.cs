@@ -193,7 +193,49 @@ public static class SettingsLoader
                 "Either set requireParameters to true, or change responseFormat to 'JsonObject' " +
                 "if the chosen model does not support schema-constrained output.");
         }
+
+        if (settings.Reasoning is null)
+        {
+            return;
+        }
+
+        // Same hazard, different parameter. A silently-dropped `reasoning` block is worse
+        // than a dropped response_format in one respect: the output still looks correct, so
+        // nothing prompts you to check. You just quietly pay for reasoning you switched off.
+        if (!settings.RequireParameters)
+        {
+            errors.Add(
+                $"roles.{key} configures reasoning but requireParameters is false. " +
+                "OpenRouter may route to a provider that ignores the reasoning parameter, " +
+                "leaving the model at full effort and full cost with no visible symptom. " +
+                "Set requireParameters to true.");
+        }
+
+        if (settings.Reasoning.Effort is { } effort && !ValidEfforts.Contains(effort))
+        {
+            errors.Add(
+                $"roles.{key}.reasoning.effort is '{effort}'. Valid values: " +
+                $"{string.Join(", ", ValidEfforts)}.");
+        }
+
+        if (settings.Reasoning.MaxTokens is <= 0)
+        {
+            errors.Add(
+                $"roles.{key}.reasoning.maxTokens must be greater than 0 " +
+                $"(was {settings.Reasoning.MaxTokens}).");
+        }
+
+        if (settings.Reasoning.MaxTokens >= settings.MaxTokens)
+        {
+            errors.Add(
+                $"roles.{key}.reasoning.maxTokens ({settings.Reasoning.MaxTokens}) leaves no " +
+                $"room under maxTokens ({settings.MaxTokens}). Reasoning is drawn from the same " +
+                "budget as the answer, so the model would exhaust it before writing output.");
+        }
     }
+
+    private static readonly string[] ValidEfforts =
+        ["max", "xhigh", "high", "medium", "low", "minimal", "none"];
 
     /// <summary>Config keys are camelCase; enum names are PascalCase.</summary>
     private static string ToKey(LlmRole role)

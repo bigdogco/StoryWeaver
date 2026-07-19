@@ -91,3 +91,27 @@ Small things the incumbents mostly don't do, cheap to add once the foundations e
       Likely end state is a hybrid — JSON for entity canon (small, diffable,
       hand-editable), SQLite for the turn log (grows unbounded, needs FTS, wants
       transactions). Keep `IWorldRepository` honest and this stays a weekend.
+
+---
+
+## Cost and quality tuning
+
+- [ ] **A/B the extraction role's reasoning effort.** Per-role `reasoning` config is
+      wired (`effort` / `maxTokens` / `exclude`), currently unset so models sit at their
+      defaults. The obvious saving is turning extraction's effort down — but the probe's
+      reasoning trace showed it doing genuinely useful work, including correctly deciding
+      that Hald needed no `fact_learned` because he already knew the fact he was
+      disclosing. Cutting effort may buy cost at the price of exactly the semantic
+      accuracy that is already the weak link.
+
+      **Measure, do not guess:** run the same fixed narration set at several effort levels
+      and score deltas against a hand-written expected set. Needs §7 first, since a single
+      probe call is not a sample.
+
+- [ ] **Reconsider `maxTokens` per role once real turns exist.** Extraction was raised
+      800 → 4000 to stop reasoning exhausting the budget. That number is a guess with
+      headroom, not a measurement.
+
+- [ ] **Measure cost per turn in currency, not tokens.** The smoke test showed extraction
+      at ~35% of turn *tokens* against a design assumption of 5–10%, but the roles are
+      priced differently, so the token ratio is not the cost ratio.

@@ -147,6 +147,29 @@ public sealed class OpenRouterClient : ILlmClient, IDisposable
             // Only sent when the role asks for it. Omitted otherwise so we do not needlessly
             // constrain routing for calls that do not depend on optional parameters.
             Provider = role.RequireParameters ? new WireProvider { RequireParameters = true } : null,
+            Reasoning = BuildReasoning(role.Reasoning),
+        };
+    }
+
+    private static WireReasoning? BuildReasoning(ReasoningSettings? reasoning)
+    {
+        if (reasoning is null)
+        {
+            return null;
+        }
+
+        // An object with every field null would still serialize as `"reasoning": {}`, which
+        // is a different request from omitting it.
+        if (reasoning.Effort is null && reasoning.MaxTokens is null && reasoning.Exclude is null)
+        {
+            return null;
+        }
+
+        return new WireReasoning
+        {
+            Effort = reasoning.Effort,
+            MaxTokens = reasoning.MaxTokens,
+            Exclude = reasoning.Exclude,
         };
     }
 
@@ -293,13 +316,13 @@ public sealed class OpenRouterClient : ILlmClient, IDisposable
             };
         }
 
-        if (parsed.Content is null)
+        if (string.IsNullOrEmpty(parsed.Content))
         {
             return new HttpOutcome
             {
                 StatusCode = (int)response.StatusCode,
                 Body = body,
-                Error = "Response contained no message content.",
+                Error = DescribeEmptyContent(parsed),
             };
         }
 
@@ -313,6 +336,35 @@ public sealed class OpenRouterClient : ILlmClient, IDisposable
                 ? null
                 : new LlmUsage(parsed.Usage.PromptTokens, parsed.Usage.CompletionTokens, parsed.Usage.TotalTokens),
         };
+    }
+
+    /// <summary>
+    /// An empty response has several very different causes that all look identical from the
+    /// call site. The expensive one to misdiagnose is a reasoning model exhausting
+    /// <c>max_tokens</c> on thinking before it writes a single output token: there is no
+    /// error, the finish reason is a bland "length", and the natural conclusion is that the
+    /// prompt or schema was rejected. Name it explicitly.
+    /// </summary>
+    private static string DescribeEmptyContent(OpenRouterResponse parsed)
+    {
+        int reasoning = parsed.Usage?.CompletionDetails?.ReasoningTokens ?? 0;
+        int completion = parsed.Usage?.CompletionTokens ?? 0;
+
+        if (parsed.FinishReason == "length" && reasoning > 0 && reasoning >= completion)
+        {
+            return
+                $"Model produced no output: all {completion} completion tokens went to " +
+                "reasoning before max_tokens was reached. Raise the role's maxTokens — on a " +
+                "reasoning model the budget must cover thinking as well as the answer. " +
+                "This is not a schema or prompt rejection.";
+        }
+
+        if (parsed.FinishReason == "length")
+        {
+            return $"Model hit max_tokens after {completion} tokens without producing content.";
+        }
+
+        return $"Response contained no message content (finish_reason: {parsed.FinishReason ?? "none"}).";
     }
 
     private static string Summarize(string body)

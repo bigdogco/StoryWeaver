@@ -32,6 +32,27 @@ internal sealed class OpenRouterRequest
     [JsonPropertyName("provider")]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public WireProvider? Provider { get; init; }
+
+    /// <summary>Reasoning control. Omitted entirely when the role does not configure it,
+    /// which leaves the model at its own default.</summary>
+    [JsonPropertyName("reasoning")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public WireReasoning? Reasoning { get; init; }
+}
+
+internal sealed class WireReasoning
+{
+    [JsonPropertyName("effort")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? Effort { get; init; }
+
+    [JsonPropertyName("max_tokens")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public int? MaxTokens { get; init; }
+
+    [JsonPropertyName("exclude")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public bool? Exclude { get; init; }
 }
 
 internal sealed class WireMessage
@@ -92,6 +113,11 @@ internal sealed class OpenRouterResponse
     /// <summary>First choice's text, or null when the response carried no content.</summary>
     public string? Content =>
         Choices is { Count: > 0 } ? Choices[0].Message?.Content : null;
+
+    /// <summary>Why generation stopped. <c>"length"</c> alongside empty content is the
+    /// signature of a reasoning model that spent its whole budget thinking.</summary>
+    public string? FinishReason =>
+        Choices is { Count: > 0 } ? Choices[0].FinishReason : null;
 }
 
 internal sealed class WireChoice
@@ -118,6 +144,17 @@ internal sealed class WireUsage
 
     [JsonPropertyName("total_tokens")]
     public int TotalTokens { get; init; }
+
+    [JsonPropertyName("completion_tokens_details")]
+    public WireCompletionDetails? CompletionDetails { get; init; }
+}
+
+internal sealed class WireCompletionDetails
+{
+    /// <summary>Tokens spent thinking. Billed against the same budget as the answer, so a
+    /// reasoning model can exhaust <c>max_tokens</c> before emitting anything at all.</summary>
+    [JsonPropertyName("reasoning_tokens")]
+    public int ReasoningTokens { get; init; }
 }
 
 internal sealed class WireError

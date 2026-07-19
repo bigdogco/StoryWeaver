@@ -66,6 +66,72 @@ One thing already visible: the extraction reply was correct but *lossy* in a tel
 entity. Harmless in a smoke test; exactly the kind of thing that silently degrades an
 entity graph if unnoticed over a long session.
 
+**Update 2026-07-19, delta schema probe.** One realistic paragraph, nine delta kinds
+available, `strict: true`. The *format* was flawless — five well-formed deltas, correctly
+discriminated, clean round-trip into Core types. The *semantics* were not:
+
+| Problem | What happened |
+|---|---|
+| **Dangling reference** | Emitted `fact_learned` for `cellar-poisoning` with **no `fact_established` for it**. Someone learned a fact that does not exist. |
+| **Re-introduced known entity** | Emitted `location_introduced` for `marrow-cellar`, which the prompt explicitly listed as already known. |
+| **Garbage field content** | That location's `description` was set to the poisoning fact — a *description* field filled with an event. |
+| **Missed obvious change** | No `mood_changed` for Hald, despite "his easy grin curdling into something guarded" being the clearest state change in the passage. |
+| **Invented an id** | Used `"player"` as a `characterId`, a thing the domain model does not have. |
+
+This is the reliability question landing squarely, and the answer is nuanced: **schema
+compliance is solved, semantic correctness is not.** Every failure above is one a
+validation pass can catch (dangling id, duplicate introduction, unknown character id) —
+which is the argument for making §7's validation strict and loud rather than trusting the
+extractor. The missed mood change is the hardest, because nothing detects an omission.
+
+Notable that the schema is doing real work in a direction it was not designed for: because
+`fact_learned` cannot carry fact *text*, the model had to invent an id, and the dangling
+reference is **visible**. A generic property patch would have absorbed it silently.
+
+---
+
+### Reasoning tokens are billed against `max_tokens`, and running out is silent
+
+**Severity:** High — no error, and the symptom points at the wrong cause.
+
+A reasoning model spends its thinking budget from the same `max_tokens` allowance as its
+answer. Set the budget to fit the expected *output* and the model can think until the
+budget is gone and return **empty content with no error** — HTTP 200, a bland
+`finish_reason: "length"`, and `completion_tokens == reasoning_tokens`.
+
+Hit for real on 2026-07-19: extraction was capped at 800 tokens, `deepseek-v4-flash` spent
+all 800 reasoning, and the probe reported "no message content". The natural reading was
+that the schema had been rejected — the investigation went that way and was wrong. The
+reasoning trace (recoverable from the session log) showed the model working through the
+schema correctly; it simply never reached the point of writing output.
+
+**Mitigations:**
+1. Extraction budget raised 800 → 4000. Any role on a reasoning model needs headroom for
+   thinking on top of the answer.
+2. `OpenRouterClient.DescribeEmptyContent` now names this case explicitly rather than
+   reporting a generic empty response, so the next occurrence diagnoses itself.
+
+The general lesson is worth more than the fix: **an empty response has several very
+different causes that are indistinguishable at the call site.** Any of them will look like
+whatever you were most recently worried about.
+
+**Related — reasoning is controllable, and that control is itself droppable.** OpenRouter
+exposes a `reasoning` parameter: `effort` (max/xhigh/high/medium/low/minimal/none),
+`max_tokens` for an explicit budget, and `exclude` to strip reasoning from the response.
+Now configurable per role via `RoleSettings.Reasoning`.
+
+Two traps in it:
+
+- **`exclude: true` saves nothing.** It removes reasoning from the *response*, not from the
+  bill or the token budget. `effort` is the cost control; `exclude` is cosmetic.
+- **`reasoning` is a parameter, so it can be silently dropped like any other.** Sent
+  without `require_parameters: true`, a provider that does not support it ignores it and
+  you get full-effort reasoning at full cost while believing effort was "low". This is
+  *worse* than a dropped `response_format`, because the output still looks correct — there
+  is no symptom to prompt an investigation. Startup validation now rejects a role that
+  configures reasoning without `requireParameters`, and rejects a `reasoning.maxTokens`
+  that leaves no room under the role's `maxTokens`.
+
 ---
 
 ### Compounding canon errors
@@ -129,4 +195,21 @@ properly, in currency rather than tokens, once turns are real.
 
 ## Resolved
 
-*(nothing yet)*
+### `anyOf` in strict JSON schema — works
+
+**Resolved 2026-07-19** by `--probe-schema`.
+
+The `StateDelta` set is nine variants discriminated by `kind`, which in JSON schema is an
+`anyOf`. `strict: true` support for `anyOf` is less universally implemented than for a flat
+object, and the earlier smoke test was weak evidence — it exercised a three-field flat
+object, the easy case.
+
+`deepseek-v4-flash` handled the nine-branch union correctly: well-formed deltas, right
+branch per change, every `required` field present, clean deserialization into the Core
+types via `[JsonPolymorphic]`. The flat-object fallback is not needed.
+
+Strict mode requires each branch to set `additionalProperties: false` and list *every*
+property in `required` — optionality is expressed as a nullable type, not by omission.
+
+Re-run `--probe-schema` if the extraction model changes; this is a per-model property, and
+the routing hazard above means it is not even stable per model ID.

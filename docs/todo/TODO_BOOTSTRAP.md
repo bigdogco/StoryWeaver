@@ -179,16 +179,42 @@ Changes needed when porting:
 
 Deliberately small. Expand only when a turn actually needs it.
 
-- [ ] `Entity` base — id, name, type
-- [ ] `Character` — static description, state (location, status, mood),
-      `knows` (list of fact ids), `relationship` to player, `last_seen`
-- [ ] `Location` — description, connections
-- [ ] `Fact` — a discrete piece of world truth that characters can know
-- [ ] `WorldState` — the entity graph plus turn counter
-- [ ] `StateDelta` — a proposed change, the output type of extraction
+- [x] `Entity` base — id, name. Ids are human-readable slugs, not GUIDs: they appear in
+      prompts, saved JSON, and logs, all of which get read by a human while debugging.
+- [x] `Character` — static description, state (location, status, mood),
+      `knows` (set of fact ids), `relationship` to player, `last_seen`
+- [x] `Location` — description, connections (plain id set; no direction/door model until
+      a turn needs one, since movement is described in prose, not navigated)
+- [x] `Fact` — a discrete piece of world truth that characters can know.
+      **Deliberately not an `Entity`:** entities have a name distinct from their
+      description, a fact is only its text, and a `Name` field would invite the extraction
+      model to invent titles for statements.
+- [x] `WorldState` — the entity graph plus turn counter, with scene queries
+      (`CharactersIn`, `CharactersWithPlayer`, `KnownFacts`). Mutable by design; applying
+      deltas lives in the turn loop, not here.
+- [x] `StateDelta` — a proposed change, the output type of extraction. **Closed set of
+      nine kinds**, polymorphic on a `kind` discriminator.
 
 **Design note:** per-character knowledge (`knows`) is the field that makes NPCs feel
-simulated rather than narrated. Do not collapse it into global state.
+simulated rather than narrated. Do not collapse it into global state. It holds fact *ids*,
+not text, so two characters cannot end up knowing different versions of the same fact.
+
+**Decision — the delta set is strictly closed.** Enumerated kinds only; extraction is
+constrained to them by JSON schema. A generic `{ entity, property, value }` patch was
+rejected: a cheap model will confidently write `character.mood.current` when canon says
+`mood`, no schema can catch it, and it lands as a silent no-op. With a closed set, a change
+the model wants to make but cannot express becomes a *visible* failure — which at this
+stage is the point, since it tells us what the world model is missing.
+
+Kinds: `character_moved`, `player_moved`, `status_changed`, `mood_changed`,
+`relationship_changed`, `fact_established`, `fact_learned`, `character_introduced`,
+`location_introduced`.
+
+`CharacterIntroduced` is separate from `CharacterMoved` so "the narration invented
+someone" stays distinguishable from "someone walked in" — the first is worth watching, the
+second is routine. Every delta carries optional `Evidence` (the model's justification,
+ideally quoting the prose); it mutates nothing and exists so a wrong canon entry can be
+traced back to what the model thought it saw.
 
 ### 6. Storage
 
@@ -209,6 +235,39 @@ The heart of the phase.
 - [ ] Validate deltas against current canon; log conflicts
 - [ ] Commit deltas transactionally
 - [ ] Append turn to history
+
+- [x] ~~**Author the extraction JSON schema for the closed delta set**~~ — done and
+      verified by `--probe-schema`. Nine-branch `anyOf` under `strict: true` works on
+      `deepseek-v4-flash`; the flat-object fallback is not needed. Schema currently lives
+      in `DeltaSchemaProbe`; **moves to prompt assembly when §7 is built.**
+
+**Validation is now the critical piece, not an afterthought.** The probe proved schema
+compliance is solved and semantic correctness is not — in one call the extractor produced
+a dangling fact reference, re-introduced a known location, filled a `description` field
+with an event, and missed the most obvious mood change in the passage. Details in
+CHALLENGES. Validation must therefore reject rather than trust:
+
+- [ ] Reject `fact_learned` referencing a `factId` not in canon and not established
+      earlier in the same delta set (ordering matters within a batch)
+- [ ] Reject `*_introduced` for an id that already exists — the model re-introduces known
+      entities when they are merely mentioned
+- [ ] Reject any delta referencing an unknown `characterId` / `locationId`
+- [x] ~~Decide how the **player** is addressed~~ — RESOLVED: the player is an ordinary
+      `Character` under the reserved id `Character.PlayerId` (`"player"`). No
+      player-specific delta kinds; every existing kind addresses them for free, which is
+      what the extractor was already trying to do unprompted.
+
+      **Consequence worth noting:** `WorldState.PlayerLocationId` was standalone mutable
+      state and is now *derived* from the player character's `LocationId`. Keeping both
+      would have been the same fact stored twice, and therefore the same fact able to
+      disagree with itself after any delta that touched only one copy.
+
+      Costs accepted: `RelationshipToPlayer` is meaningless on the player's own record
+      (stays neutral, ignored), and every query meaning "the people around you" must now
+      exclude the player explicitly — hence `NpcsWithPlayer()` rather than the old
+      `CharactersWithPlayer()`.
+- [ ] Surface rejected deltas prominently in the harness. A silently dropped delta is the
+      same failure mode as a silently dropped lorebook entry.
 
 Conflict handling for v1: **log and surface, do not auto-resolve.** We need to see how
 often and how badly it goes wrong before deciding what to do about it.

@@ -63,6 +63,35 @@ public sealed class ProviderSettings
     public int TimeoutSeconds { get; init; } = 120;
 }
 
+/// <summary>
+/// Maps to OpenRouter's <c>reasoning</c> parameter.
+///
+/// <b>This is a parameter, so the routing hazard applies to it.</b> Sent without
+/// <c>require_parameters: true</c>, a provider that does not support it ignores it — you
+/// would get full-effort reasoning at full cost while believing effort was set to "low".
+/// Identical failure shape to <c>response_format</c>, identical mitigation.
+///
+/// Note that <see cref="Exclude"/> saves nothing: it strips reasoning from the response,
+/// not from the bill or the token budget. <see cref="Effort"/> is the cost control.
+/// </summary>
+public sealed class ReasoningSettings
+{
+    /// <summary>One of max, xhigh, high, medium, low, minimal, none. "none" disables
+    /// reasoning where supported; models with mandatory reasoning reject it.</summary>
+    [JsonPropertyName("effort")]
+    public string? Effort { get; init; }
+
+    /// <summary>Explicit reasoning budget. Supported by Gemini thinking models, Anthropic,
+    /// and some Qwen models; on effort-only models it is converted to an effort level.</summary>
+    [JsonPropertyName("maxTokens")]
+    public int? MaxTokens { get; init; }
+
+    /// <summary>Keep reasoning active but omit it from the response. Does not reduce cost
+    /// or free up budget.</summary>
+    [JsonPropertyName("exclude")]
+    public bool? Exclude { get; init; }
+}
+
 public sealed class RoleSettings
 {
     [JsonPropertyName("model")]
@@ -71,8 +100,19 @@ public sealed class RoleSettings
     [JsonPropertyName("temperature")]
     public float Temperature { get; init; } = 0.7f;
 
+    /// <summary>
+    /// Total output budget. <b>On a reasoning model this must cover the thinking as well as
+    /// the answer</b> — reasoning tokens are billed as output tokens and drawn from this
+    /// same allowance. A budget sized for the answer alone yields an empty response with no
+    /// error and a bland <c>finish_reason: "length"</c>. See docs/CHALLENGES.md.
+    /// </summary>
     [JsonPropertyName("maxTokens")]
     public int MaxTokens { get; init; } = 1000;
+
+    /// <summary>Optional reasoning control. Omitted from the request entirely when null,
+    /// leaving the model at its own default.</summary>
+    [JsonPropertyName("reasoning")]
+    public ReasoningSettings? Reasoning { get; init; }
 
     /// <summary>
     /// Maps to OpenRouter's <c>provider.require_parameters</c>. When true, routing is

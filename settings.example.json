@@ -19,9 +19,10 @@
     },
 
     "extraction": {
+      "_comment": "maxTokens must cover REASONING as well as output if the model is a reasoner. A budget that only fits the answer produces empty content with no error.",
       "model": "<openrouter/model-id>",
       "temperature": 0.0,
-      "maxTokens": 800,
+      "maxTokens": 4000,
       "requireParameters": true,
       "responseFormat": "json_schema"
     },

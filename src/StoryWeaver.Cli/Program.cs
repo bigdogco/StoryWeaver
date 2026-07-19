@@ -18,6 +18,7 @@ internal static class Program
         Console.WriteLine();
 
         bool smoke = args.Contains("--smoke", StringComparer.OrdinalIgnoreCase);
+        bool probe = args.Contains("--probe-schema", StringComparer.OrdinalIgnoreCase);
         string? settingsPath = args.FirstOrDefault(a => !a.StartsWith("--", StringComparison.Ordinal));
 
         StoryWeaverSettings settings;
@@ -34,13 +35,19 @@ internal static class Program
 
         PrintSettings(settings);
 
-        if (!smoke)
+        if (probe)
         {
-            Console.WriteLine("Pass --smoke to run a live API test (makes two real calls).");
-            return 0;
+            return await DeltaSchemaProbe.RunAsync(settings).ConfigureAwait(false);
         }
 
-        return await RunSmokeTestAsync(settings).ConfigureAwait(false);
+        if (smoke)
+        {
+            return await RunSmokeTestAsync(settings).ConfigureAwait(false);
+        }
+
+        Console.WriteLine("  --smoke         live API test, two real calls");
+        Console.WriteLine("  --probe-schema  live test of the nine-branch delta schema, one real call");
+        return 0;
     }
 
     private static void PrintSettings(StoryWeaverSettings settings)
