@@ -35,6 +35,11 @@ internal static class Program
 
         PrintSettings(settings);
 
+        if (args.Contains("--play", StringComparer.OrdinalIgnoreCase))
+        {
+            return await PlaySession.RunAsync(settings).ConfigureAwait(false);
+        }
+
         if (probe)
         {
             return await DeltaSchemaProbe.RunAsync(settings).ConfigureAwait(false);
@@ -45,6 +50,7 @@ internal static class Program
             return await RunSmokeTestAsync(settings).ConfigureAwait(false);
         }
 
+        Console.WriteLine("  --play          play a session (in-memory, two calls per turn)");
         Console.WriteLine("  --smoke         live API test, two real calls");
         Console.WriteLine("  --probe-schema  live test of the nine-branch delta schema, one real call");
         return 0;

@@ -229,12 +229,31 @@ traced back to what the model thought it saw.
 
 The heart of the phase.
 
-- [ ] Assemble context from world state (naive for now: dump relevant entities)
-- [ ] **Narrate** — call narration role, get prose
-- [ ] **Extract** — call extraction role with the prose, get `StateDelta[]`
-- [ ] Validate deltas against current canon; log conflicts
-- [ ] Commit deltas transactionally
-- [ ] Append turn to history
+- [x] Assemble context from world state (naive for now: dump relevant entities).
+      `ContextAssembler` prints **ids alongside names** — the probe showed that a model not
+      told an entity's internal id invents a plausible slug and produces a dangling
+      reference.
+- [x] **Narrate** — call narration role, get prose (`LlmNarrator`)
+- [x] **Extract** — call extraction role with the prose, get `StateDelta[]`
+      (`LlmStateExtractor`)
+- [x] Validate deltas against current canon; log conflicts (`DeltaValidator`)
+- [x] Commit deltas transactionally (`DeltaApplier`, then save)
+- [x] Append turn to history (`TurnRecord`, storing rejections and raw output too)
+
+**Structure:** the turn loop lives in `Core` and reaches the models through `INarrator` /
+`IStateExtractor`, which `Core` defines and `Llm` implements. `Core` still references
+nothing.
+
+**Ordering decision:** narration is shown to the player *regardless* of what extraction
+does. Extraction failing is a canon problem, not a storytelling one — discarding good
+prose because a second model could not parse it turns a silent bookkeeping error into a
+visibly broken game. `TurnOutcome.ExtractionFailed` keeps "extraction died" distinct from
+"extraction ran and its output was rejected"; those are different problems.
+
+**Section 6 was deliberately deferred until after this**, so the save format is not
+frozen around a domain model the turn loop is still reshaping. `InMemoryWorldRepository`
+was written *before* the JSON one so that "the interface leaks no storage detail" is
+tested by a second implementation rather than self-certified.
 
 - [x] ~~**Author the extraction JSON schema for the closed delta set**~~ — done and
       verified by `--probe-schema`. Nine-branch `anyOf` under `strict: true` works on
@@ -247,11 +266,18 @@ a dangling fact reference, re-introduced a known location, filled a `description
 with an event, and missed the most obvious mood change in the passage. Details in
 CHALLENGES. Validation must therefore reject rather than trust:
 
-- [ ] Reject `fact_learned` referencing a `factId` not in canon and not established
+- [x] Reject `fact_learned` referencing a `factId` not in canon and not established
       earlier in the same delta set (ordering matters within a batch)
-- [ ] Reject `*_introduced` for an id that already exists — the model re-introduces known
+- [x] Reject `*_introduced` for an id that already exists — the model re-introduces known
       entities when they are merely mentioned
-- [ ] Reject any delta referencing an unknown `characterId` / `locationId`
+- [x] Reject any delta referencing an unknown `characterId` / `locationId`
+- [x] Reject `relationship_changed` targeting the player — a consequence of the player
+      being an ordinary `Character`, enforced where the meaningless field would be written
+- [x] **Rejections cascade.** Validation walks the batch in order against canon plus
+      everything accepted *so far*, so a batch may legitimately introduce a character then
+      move them — but if the introduction is rejected, the move is rejected too. Without
+      that, rejecting a `fact_established` would leave the dangling `fact_learned` behind:
+      exactly the failure being prevented.
 - [x] ~~Decide how the **player** is addressed~~ — RESOLVED: the player is an ordinary
       `Character` under the reserved id `Character.PlayerId` (`"player"`). No
       player-specific delta kinds; every existing kind addresses them for free, which is
@@ -274,12 +300,20 @@ often and how badly it goes wrong before deciding what to do about it.
 
 ### 8. Console harness
 
-- [ ] Load or create a world
-- [ ] Hardcoded starting scenario (one location, two characters, a couple of facts)
-- [ ] Read player input → run turn → print prose
-- [ ] Command to dump current world state for inspection
-- [ ] Command to show the last extraction result and any conflicts
-- [ ] Save on exit / autosave per turn
+- [x] Hardcoded starting scenario — two locations, two NPCs, and one fact that **exactly
+      one NPC knows**, so per-character knowledge is observable. A scene with no secrets
+      could not show whether knowledge stays where it belongs.
+- [x] Read player input → run turn → print prose
+- [x] `/state` — dump world state as the models see it
+- [x] `/raw` — last raw extraction response
+- [x] Applied, **no-op**, and rejected deltas printed after every turn. Shown by default
+      rather than behind a command: a silently dropped delta is the failure that would
+      otherwise take fifty turns to notice.
+- [x] `/prose` — world state as the *narrator* sees it. Its own command because that view
+      must contain no ids, and eyeballing it is the only check that the narrator cannot
+      leak one into the story.
+- [ ] Load or create a world — needs §6
+- [ ] Save on exit / autosave per turn — needs §6
 
 ### 9. Validation
 

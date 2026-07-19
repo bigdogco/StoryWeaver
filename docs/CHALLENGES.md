@@ -88,6 +88,40 @@ Notable that the schema is doing real work in a direction it was not designed fo
 `fact_learned` cannot carry fact *text*, the model had to invent an id, and the dangling
 reference is **visible**. A generic property patch would have absorbed it silently.
 
+**Update 2026-07-19, first four-turn play session.** The central premise survived its first
+real test: asked about a fact only Hald knew, Mabb did not know it, and the narration turned
+that into a character beat rather than a lookup failure. Per-character knowledge works.
+
+Four problems, all now fixed, recorded because two were self-inflicted and the pattern is
+worth remembering:
+
+1. **The narrator wrote an internal id into the prose** — "the heavy oak door of the
+   marrow-tavern flies outward". `ContextAssembler` listed connections as bare ids, which
+   the narrator read as names. Ids had been added to context to help the *extractor*; that
+   the narrator would echo them was never considered. Fixed by splitting into
+   `ForNarration` (names only) and `ForExtraction` (ids), since the two roles want opposite
+   things from the same state.
+2. **A character did not know the fact he had just disclosed.** The extractor prompt said
+   "the speaker usually already knew it, so they need no fact_learned" — true about the
+   fiction, wrong about the bookkeeping, because canon contains only what gets written
+   down. Hald stated his own secret and was recorded as not knowing it. Fixed by requiring
+   `fact_learned` for the speaker too.
+3. **Padding.** One batch contained the *same* `location_introduced` three times with
+   different evidence quotes, plus re-establishment of two known facts. Now deduplicated on
+   semantic identity (ignoring evidence) before validation.
+4. **No-ops counted as successes.** "player learned well-boarded" was reported as applied
+   on a turn where the player already knew it. Validation now returns three categories
+   rather than two, so restatements of existing canon cannot inflate a quality measure over
+   a long session.
+
+**Still unsolved: omissions.** No `mood_changed` for Mabb through an obvious slide into
+maudlin self-pity, and no `relationship_changed` for Hald across two turns of escalating
+hostility — he ended the exchange by shutting the subject down, still at standing −10.
+Nothing detects a delta that was never emitted, and no validator can. Candidate approaches
+if this proves systematic: a periodic reconciliation pass asking a model to compare canon
+against recent narration, or making a small number of high-value fields (mood, standing)
+*required* per turn so the model must state them even when unchanged.
+
 ---
 
 ### Reasoning tokens are billed against `max_tokens`, and running out is silent

@@ -4,6 +4,7 @@ using StoryWeaver.Llm;
 using StoryWeaver.Llm.Configuration;
 using StoryWeaver.Llm.Logging;
 using StoryWeaver.Llm.OpenRouter;
+using StoryWeaver.Llm.Story;
 
 namespace StoryWeaver.Cli;
 
@@ -49,7 +50,7 @@ internal static class DeltaSchemaProbe
         LlmResult result = await client.CompleteAsync(new LlmCall
         {
             Role = LlmRole.Extraction,
-            Schema = new JsonSchemaSpec("state_deltas", DeltaSchema),
+            Schema = new JsonSchemaSpec(DeltaSchema.Name, DeltaSchema.Json),
             Messages =
             [
                 LlmMessage.System(
@@ -130,140 +131,4 @@ internal static class DeltaSchemaProbe
         public List<StateDelta>? Deltas { get; init; }
     }
 
-    /// <summary>
-    /// Strict mode requires every object to set <c>additionalProperties: false</c> and to
-    /// list <i>every</i> property in <c>required</c> — optionality is expressed by allowing
-    /// null, not by omission. Each branch pins <c>kind</c> to a single-value enum, which is
-    /// what makes the union discriminable.
-    ///
-    /// The root is an object rather than an array because that is what the API requires.
-    /// </summary>
-    private const string DeltaSchema = """
-    {
-      "type": "object",
-      "properties": {
-        "deltas": {
-          "type": "array",
-          "description": "Every state change the narration supports.",
-          "items": {
-            "anyOf": [
-              {
-                "type": "object",
-                "description": "An existing character changed location.",
-                "properties": {
-                  "kind": { "type": "string", "enum": ["character_moved"] },
-                  "characterId": { "type": "string" },
-                  "toLocationId": { "type": "string" },
-                  "evidence": { "type": "string" }
-                },
-                "required": ["kind", "characterId", "toLocationId", "evidence"],
-                "additionalProperties": false
-              },
-              {
-                "type": "object",
-                "description": "The player changed location.",
-                "properties": {
-                  "kind": { "type": "string", "enum": ["player_moved"] },
-                  "toLocationId": { "type": "string" },
-                  "evidence": { "type": "string" }
-                },
-                "required": ["kind", "toLocationId", "evidence"],
-                "additionalProperties": false
-              },
-              {
-                "type": "object",
-                "description": "Physical or situational condition changed.",
-                "properties": {
-                  "kind": { "type": "string", "enum": ["status_changed"] },
-                  "characterId": { "type": "string" },
-                  "status": { "type": "string" },
-                  "evidence": { "type": "string" }
-                },
-                "required": ["kind", "characterId", "status", "evidence"],
-                "additionalProperties": false
-              },
-              {
-                "type": "object",
-                "description": "Emotional register changed.",
-                "properties": {
-                  "kind": { "type": "string", "enum": ["mood_changed"] },
-                  "characterId": { "type": "string" },
-                  "mood": { "type": "string" },
-                  "evidence": { "type": "string" }
-                },
-                "required": ["kind", "characterId", "mood", "evidence"],
-                "additionalProperties": false
-              },
-              {
-                "type": "object",
-                "description": "A character's stance toward the player changed.",
-                "properties": {
-                  "kind": { "type": "string", "enum": ["relationship_changed"] },
-                  "characterId": { "type": "string" },
-                  "standing": { "type": "integer", "description": "-100 to 100." },
-                  "summary": { "type": "string" },
-                  "evidence": { "type": "string" }
-                },
-                "required": ["kind", "characterId", "standing", "summary", "evidence"],
-                "additionalProperties": false
-              },
-              {
-                "type": "object",
-                "description": "A new piece of world truth entered canon, regardless of who knows it.",
-                "properties": {
-                  "kind": { "type": "string", "enum": ["fact_established"] },
-                  "factId": { "type": "string" },
-                  "text": { "type": "string" },
-                  "evidence": { "type": "string" }
-                },
-                "required": ["kind", "factId", "text", "evidence"],
-                "additionalProperties": false
-              },
-              {
-                "type": "object",
-                "description": "A character came to know an established fact.",
-                "properties": {
-                  "kind": { "type": "string", "enum": ["fact_learned"] },
-                  "characterId": { "type": "string" },
-                  "factId": { "type": "string" },
-                  "evidence": { "type": "string" }
-                },
-                "required": ["kind", "characterId", "factId", "evidence"],
-                "additionalProperties": false
-              },
-              {
-                "type": "object",
-                "description": "A character not previously in canon appeared.",
-                "properties": {
-                  "kind": { "type": "string", "enum": ["character_introduced"] },
-                  "characterId": { "type": "string" },
-                  "name": { "type": "string" },
-                  "description": { "type": "string" },
-                  "locationId": { "type": ["string", "null"] },
-                  "evidence": { "type": "string" }
-                },
-                "required": ["kind", "characterId", "name", "description", "locationId", "evidence"],
-                "additionalProperties": false
-              },
-              {
-                "type": "object",
-                "description": "A location not previously in canon appeared.",
-                "properties": {
-                  "kind": { "type": "string", "enum": ["location_introduced"] },
-                  "locationId": { "type": "string" },
-                  "name": { "type": "string" },
-                  "description": { "type": "string" },
-                  "evidence": { "type": "string" }
-                },
-                "required": ["kind", "locationId", "name", "description", "evidence"],
-                "additionalProperties": false
-              }
-            ]
-          }
-        }
-      },
-      "required": ["deltas"],
-      "additionalProperties": false
-    }
-    """;
 }
