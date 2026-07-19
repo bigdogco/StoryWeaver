@@ -1,0 +1,51 @@
+{
+  "_comment": "Template. Copy to settings.local.json and fill in apiKey + model IDs. settings.local.json is gitignored; never put a real key in this file.",
+
+  "provider": {
+    "apiKey": "sk-or-v1-...",
+    "baseUrl": "https://openrouter.ai/api/v1/chat/completions",
+    "httpReferer": "",
+    "xTitle": "StoryWeaver",
+    "timeoutSeconds": 120
+  },
+
+  "roles": {
+    "narration": {
+      "model": "<openrouter/model-id>",
+      "temperature": 0.9,
+      "maxTokens": 1200,
+      "requireParameters": false,
+      "responseFormat": "text"
+    },
+
+    "extraction": {
+      "model": "<openrouter/model-id>",
+      "temperature": 0.0,
+      "maxTokens": 800,
+      "requireParameters": true,
+      "responseFormat": "json_schema"
+    },
+
+    "summarize": {
+      "model": "<openrouter/model-id>",
+      "temperature": 0.3,
+      "maxTokens": 600,
+      "requireParameters": false,
+      "responseFormat": "text"
+    },
+
+    "worldgen": {
+      "model": "<openrouter/model-id>",
+      "temperature": 1.0,
+      "maxTokens": 1500,
+      "requireParameters": true,
+      "responseFormat": "json_schema"
+    }
+  },
+
+  "logging": {
+    "logPrompts": true,
+    "logResponses": true,
+    "logDirectory": "logs"
+  }
+}
