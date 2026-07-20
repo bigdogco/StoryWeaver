@@ -43,9 +43,16 @@ internal static class EvalScenarios
         Hostility,
         NewCharacter,
         Redescription,
-        PlayerClaim,
         Atmosphere,
     ];
+
+    // PlayerClaim is retired, not deleted. It encoded the decision that a player's assertion
+    // becomes a fact, and six models rejected it 0/7, 0/7, 2/7 across 21 samples. Twenty-one
+    // samples of unanimous disagreement is a design answer, not a tuning problem — the models
+    // treat "someone said a thing" as an event rather than as world truth, which is defensible
+    // and arguably more correct than the original rule.
+    //
+    // Kept in the file because the reasoning is worth finding again if someone re-proposes it.
 
     /// <summary>
     /// <b>Real generated narration, copied verbatim from a live session</b> — not written for

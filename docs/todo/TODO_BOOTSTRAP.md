@@ -14,6 +14,12 @@ The one question this phase answers:
 
 > Can a cheap model reliably read narrative prose and emit correct structured state deltas?
 
+**Answered 2026-07-20: yes.** `deepseek/deepseek-v3.2` scored 100% required, 0 forbidden,
+0 rejects across three independent n=7 eval sweeps, at ~90 completion tokens and ~$0.0001 a
+call. Reached via `--eval` (see [ExtractionEval](../../src/StoryWeaver.Cli/ExtractionEval.cs))
+after a long detour through single-sample comparisons that turned out to be noise. The
+canon-vs-narration architecture stands. Details in the 2026-07-20 devlogs.
+
 Everything else in StoryWeaver is built on top of that extraction pass. If it is not
 reliable, the architecture needs rethinking — and we want to learn that now, cheaply,
 before there is a UI or a schema to migrate.

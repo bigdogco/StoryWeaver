@@ -22,7 +22,10 @@ namespace StoryWeaver.Cli;
 /// </summary>
 internal static class ExtractionEval
 {
-    public static async Task<int> RunAsync(StoryWeaverSettings settings, string[] models, int runs)
+    public static async Task<int> RunAsync(
+        StoryWeaverSettings settings,
+        string[] models,
+        int runs)
     {
         FileLlmLog log = new(settings.Logging);
 
@@ -52,7 +55,7 @@ internal static class ExtractionEval
 
         StoryWeaverSettings scoped = WithExtractionModel(settings, model);
         using OpenRouterClient client = new(scoped, log);
-        LlmStateExtractor extractor = new(client);
+        IStateExtractor extractor = new LlmStateExtractor(client);
 
         ModelReport report = new(model);
 

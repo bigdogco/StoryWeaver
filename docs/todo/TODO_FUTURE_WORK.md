@@ -146,6 +146,28 @@ Small things the incumbents mostly don't do, cheap to add once the foundations e
 
 ---
 
+## The extraction eval
+
+`--eval` (scenarios in [EvalScenarios](../../src/StoryWeaver.Cli/EvalScenarios.cs)) is now
+the way any extraction change is judged. It earned its keep repeatedly — it killed a
+two-call redesign built on a movement failure that turned out to be noise, and it caught
+three response-shape bugs that all presented as "the model is bad".
+
+Keep it honest:
+
+- [ ] **Grow the scenario set as new failures appear in play.** 100% today means the *known*
+      failure modes are covered on one small world, not that extraction is solved. Every real
+      session that produces a wrong delta is a scenario worth adding — the `atmosphere` case
+      (verbatim generated narration) already found things the hand-written ones missed.
+- [ ] **Re-run before trusting any extraction change**, and before changing the extraction
+      model. Provider routing drifts under the same model id, so the eval measures the model
+      as actually served, and that can move.
+- [ ] **n=7 was not enough to be safe.** A movement failure looked solid at n=7 and did not
+      reproduce. For anything close, prefer three independent sweeps over one larger one — the
+      cross-run spread is the signal, not a single average.
+
+---
+
 ## Cost and quality tuning
 
 - [ ] **A/B the extraction role's reasoning effort.** Per-role `reasoning` config is
