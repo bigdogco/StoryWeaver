@@ -91,16 +91,10 @@ internal static class DeltaSchemaProbe
 
     private static int ReportRoundTrip(string content)
     {
-        JsonSerializerOptions options = new()
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            PropertyNameCaseInsensitive = true,
-        };
-
         DeltaEnvelope? envelope;
         try
         {
-            envelope = JsonSerializer.Deserialize<DeltaEnvelope>(content, options);
+            envelope = JsonSerializer.Deserialize<DeltaEnvelope>(content, StoryJson.Options);
         }
         catch (JsonException ex)
         {

@@ -40,6 +40,39 @@ role's model changes.
 
 ---
 
+### Response shape beyond the schema is not guaranteed
+
+**Severity:** High as a class, though the known instance is fixed.
+
+JSON schema pins which fields exist and what type they are. It says **nothing** about
+property order, key casing, or whitespace — and because OpenRouter routes the same model id
+across upstream providers, those can differ between two otherwise identical calls.
+
+Hit on 2026-07-19. Extraction failed on every turn that produced a delta:
+
+```
+Deserialization of types without a parameterless constructor ...
+Type 'StoryWeaver.Core.StateDelta'.
+```
+
+The model had emitted properties alphabetically, putting `kind` last. System.Text.Json's
+built-in polymorphism requires the type discriminator to be the **first** property. The
+schema was honoured perfectly; both orderings are valid JSON. The dependency on ordering was
+ours. The earlier probe passed only because a different provider happened to emit
+`kind` first — the failing response came from DigitalOcean.
+
+Fixed by `StateDeltaConverter`, which finds `kind` wherever it appears and dispatches on it.
+Unknown or missing kinds throw rather than returning null, because a null is
+indistinguishable from the model reporting no changes.
+
+**The general rule matters more than the fix: never depend on the shape of a response beyond
+what the schema guarantees.** Anything that does is a latent version of this bug, and it will
+present as an intermittent model failure rather than as our own.
+
+Covered by `--selftest`, which is offline and free to run.
+
+---
+
 ### Extraction reliability is unproven
 
 **Severity:** High — the architecture rests on it.

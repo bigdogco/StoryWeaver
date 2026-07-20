@@ -71,12 +71,6 @@ public sealed class LlmStateExtractor : IStateExtractor
         - If nothing changed, return an empty deltas list. That is a valid answer.
         """;
 
-    private static readonly JsonSerializerOptions ParseOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        PropertyNameCaseInsensitive = true,
-    };
-
     private readonly ILlmClient _client;
 
     public LlmStateExtractor(ILlmClient client) => _client = client;
@@ -112,7 +106,7 @@ public sealed class LlmStateExtractor : IStateExtractor
         DeltaEnvelope? envelope;
         try
         {
-            envelope = JsonSerializer.Deserialize<DeltaEnvelope>(result.Content, ParseOptions);
+            envelope = JsonSerializer.Deserialize<DeltaEnvelope>(result.Content, StoryJson.Options);
         }
         catch (JsonException ex)
         {

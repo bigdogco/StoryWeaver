@@ -17,6 +17,14 @@ internal static class Program
         Console.WriteLine("StoryWeaver - console harness");
         Console.WriteLine();
 
+        // Ahead of settings loading: it makes no API calls and must stay runnable when
+        // nothing is configured, so a fresh clone can check serialization before signing up
+        // for an API key.
+        if (args.Contains("--selftest", StringComparer.OrdinalIgnoreCase))
+        {
+            return JsonSelfTest.Run();
+        }
+
         bool smoke = args.Contains("--smoke", StringComparer.OrdinalIgnoreCase);
         bool probe = args.Contains("--probe-schema", StringComparer.OrdinalIgnoreCase);
         string? settingsPath = args.FirstOrDefault(a => !a.StartsWith("--", StringComparison.Ordinal));

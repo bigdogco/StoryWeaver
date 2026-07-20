@@ -21,16 +21,12 @@ namespace StoryWeaver.Core;
 /// sometimes rejected — and value semantics make all of that easier. The entities they
 /// apply to are mutable classes.
 /// </summary>
-[JsonPolymorphic(TypeDiscriminatorPropertyName = "kind")]
-[JsonDerivedType(typeof(CharacterMoved), "character_moved")]
-[JsonDerivedType(typeof(PlayerMoved), "player_moved")]
-[JsonDerivedType(typeof(StatusChanged), "status_changed")]
-[JsonDerivedType(typeof(MoodChanged), "mood_changed")]
-[JsonDerivedType(typeof(RelationshipChanged), "relationship_changed")]
-[JsonDerivedType(typeof(FactEstablished), "fact_established")]
-[JsonDerivedType(typeof(FactLearned), "fact_learned")]
-[JsonDerivedType(typeof(CharacterIntroduced), "character_introduced")]
-[JsonDerivedType(typeof(LocationIntroduced), "location_introduced")]
+// Serialization goes through StateDeltaConverter (registered in StoryJson), NOT through
+// [JsonPolymorphic]. The built-in support requires the "kind" discriminator to be the first
+// property in the object, and models do not reliably put it there — one provider emitted
+// properties alphabetically, which put "kind" last and broke every delta. The kind/type map
+// lives in that converter; adding a delta kind means editing it, DeltaApplier, and
+// DeltaSchema together.
 public abstract record StateDelta
 {
     /// <summary>
