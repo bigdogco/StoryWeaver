@@ -117,7 +117,15 @@ public sealed class LlmStateExtractor : IStateExtractor
                 $"Extraction returned JSON that does not match StateDelta: {ex.Message}");
         }
 
-        return new ExtractionResult(envelope?.Deltas ?? [], result.Content);
+        return new ExtractionResult(
+            envelope?.Deltas ?? [],
+            result.Content,
+            result.Usage is null
+                ? null
+                : new ExtractionUsage(
+                    result.Usage.PromptTokens,
+                    result.Usage.CompletionTokens,
+                    result.Usage.ReasoningTokens));
     }
 
     private static bool IsJsonObject(string content)

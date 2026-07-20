@@ -38,7 +38,21 @@ public interface IStateExtractor
 /// the raw text is what settles whether a bad turn was the model's fault or ours, and it is
 /// unrecoverable once discarded.
 /// </summary>
-public sealed record ExtractionResult(IReadOnlyList<StateDelta> Deltas, string? Raw)
+public sealed record ExtractionResult(
+    IReadOnlyList<StateDelta> Deltas,
+    string? Raw,
+    ExtractionUsage? Usage = null)
 {
     public static ExtractionResult Empty(string? raw = null) => new([], raw);
 }
+
+/// <summary>
+/// What the extraction call cost. Core's own type so the domain does not depend on a
+/// provider SDK's shape.
+///
+/// <paramref name="ReasoningTokens"/> is a subset of <paramref name="CompletionTokens"/> and
+/// is usually the bulk of it on a reasoning model — the actual delta JSON has been about 90
+/// tokens against 644 spent thinking. Anyone comparing extraction models needs that split,
+/// because it decides whether a pricier model is affordable.
+/// </summary>
+public sealed record ExtractionUsage(int PromptTokens, int CompletionTokens, int ReasoningTokens);

@@ -99,6 +99,13 @@ public sealed class OpenRouterClient : ILlmClient, IDisposable
 
             _log.Response(call.Role, outcome.Body);
 
+            if (outcome.ContentFromReasoning)
+            {
+                _log.Info(
+                    $"Provider returned the payload in 'reasoning' with 'content' empty " +
+                    $"(model {outcome.Model ?? "?"}). Used the reasoning field.");
+            }
+
             if (outcome.Error is not null)
             {
                 if (IsTransient(outcome.StatusCode) && !isLastAttempt)
@@ -331,10 +338,15 @@ public sealed class OpenRouterClient : ILlmClient, IDisposable
             StatusCode = (int)response.StatusCode,
             Body = body,
             Content = parsed.Content,
+            ContentFromReasoning = parsed.ContentCameFromReasoning,
             Model = parsed.Model,
             Usage = parsed.Usage is null
                 ? null
-                : new LlmUsage(parsed.Usage.PromptTokens, parsed.Usage.CompletionTokens, parsed.Usage.TotalTokens),
+                : new LlmUsage(
+                    parsed.Usage.PromptTokens,
+                    parsed.Usage.CompletionTokens,
+                    parsed.Usage.TotalTokens,
+                    parsed.Usage.CompletionDetails?.ReasoningTokens ?? 0),
         };
     }
 
@@ -408,6 +420,9 @@ public sealed class OpenRouterClient : ILlmClient, IDisposable
         public string? Model { get; init; }
 
         public LlmUsage? Usage { get; init; }
+
+        /// <summary>The payload arrived in the reasoning field rather than content.</summary>
+        public bool ContentFromReasoning { get; init; }
 
         public string? Error { get; init; }
     }

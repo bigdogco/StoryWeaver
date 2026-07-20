@@ -27,7 +27,13 @@ internal static class Program
 
         bool smoke = args.Contains("--smoke", StringComparer.OrdinalIgnoreCase);
         bool probe = args.Contains("--probe-schema", StringComparer.OrdinalIgnoreCase);
-        string? settingsPath = args.FirstOrDefault(a => !a.StartsWith("--", StringComparison.Ordinal));
+        // Skip anything that is the value of a --flag, or "--models deepseek/x" would be read
+        // as a settings file path and the real settings silently ignored.
+        string[] valueFlags = ["--models", "--runs"];
+        string? settingsPath = args
+            .Where((a, i) => !a.StartsWith("--", StringComparison.Ordinal)
+                             && (i == 0 || !valueFlags.Contains(args[i - 1], StringComparer.OrdinalIgnoreCase)))
+            .FirstOrDefault();
 
         StoryWeaverSettings settings;
         try
@@ -42,6 +48,15 @@ internal static class Program
         }
 
         PrintSettings(settings);
+
+        if (args.Contains("--eval", StringComparer.OrdinalIgnoreCase))
+        {
+            string[] models = Value(args, "--models")?.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                              ?? [settings.GetRole(LlmRole.Extraction).Model];
+            int runs = int.TryParse(Value(args, "--runs"), out int parsed) ? parsed : 3;
+
+            return await ExtractionEval.RunAsync(settings, models, runs).ConfigureAwait(false);
+        }
 
         if (args.Contains("--play", StringComparer.OrdinalIgnoreCase))
         {
@@ -62,6 +77,13 @@ internal static class Program
         Console.WriteLine("  --smoke         live API test, two real calls");
         Console.WriteLine("  --probe-schema  live test of the nine-branch delta schema, one real call");
         return 0;
+    }
+
+    /// <summary>Reads <c>--flag value</c>, returning null when absent or valueless.</summary>
+    private static string? Value(string[] args, string flag)
+    {
+        int index = Array.FindIndex(args, a => string.Equals(a, flag, StringComparison.OrdinalIgnoreCase));
+        return index >= 0 && index + 1 < args.Length ? args[index + 1] : null;
     }
 
     private static void PrintSettings(StoryWeaverSettings settings)

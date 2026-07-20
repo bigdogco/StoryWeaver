@@ -71,6 +71,18 @@ present as an intermittent model failure rather than as our own.
 
 Covered by `--selftest`, which is offline and free to run.
 
+**Second instance, 2026-07-20: the payload arrived in the wrong field.** MiniMax M3 served by
+Parasail returned `content: null` with well-formed delta JSON in `reasoning`, on 20 of 21
+calls. The client read only `message.content`, so twenty correct answers were recorded as
+empty responses and the model scored near zero on an eval it was actually passing.
+
+Fixed by falling back to `reasoning` when `content` is empty, and logging when that happens.
+The fallback cannot smuggle thinking into a normal response because it only applies when
+there is no content at all.
+
+Three instances now — silently dropped parameters, property order, response field. This is
+the defining hazard of the integration, not a run of bad luck.
+
 ---
 
 ### Extraction reliability is unproven
@@ -187,7 +199,18 @@ if this proves systematic: a periodic reconciliation pass asking a model to comp
 against recent narration, or making a small number of high-value fields (mood, standing)
 *required* per turn so the model must state them even when unchanged.
 
-**Now looking systematic rather than occasional.** Across nine turns over two sessions:
+**Resolved as model-dependent, 2026-07-20.** `qwen/qwen3.7-plus` scored 14/14 on the
+hostility scenario at n=7, including `relationship_changed` every single time, using the
+*existing* schema and prompt. deepseek-v3.2 and minimax-m3 missed standing on 5–6 runs of 7.
+
+So the earlier conclusion below was wrong: this was never a schema or prompt failure. Six
+models failing the same way looked like a design problem and was a capability problem.
+
+Recorded rather than deleted, because the reasoning that produced the wrong conclusion was
+sound given the evidence available — the mistake was drawing it from models that shared a
+weakness, without a single counter-example.
+
+**The original observation, kept for context.** Across nine turns over two sessions:
 **zero** `relationship_changed`, through an innkeeper who was consistently cold, turned his
 back, and twice closed a subject down. He remains at his seeded −10. Mood is reported but
 patchily — a character going from oblivious to "pale eyes fixing on you" produced nothing.

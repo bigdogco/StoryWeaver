@@ -1,0 +1,291 @@
+using StoryWeaver.Core;
+using StoryWeaver.Llm.Configuration;
+using StoryWeaver.Llm.Logging;
+using StoryWeaver.Llm.OpenRouter;
+using StoryWeaver.Llm.Story;
+
+namespace StoryWeaver.Cli;
+
+/// <summary>
+/// Scores extraction models against fixed scenarios.
+///
+/// Exists because a whole session was spent comparing single runs of different prompts and
+/// attributing the differences to wording, when the same configuration re-run produced
+/// results just as different. Without repeated runs and a score, every change to extraction
+/// is unfalsifiable.
+///
+/// <b>Each scenario runs N times per model and the spread is reported</b>, because
+/// consistency is a selection criterion in its own right. OpenRouter routes one model id
+/// across several upstream providers, so "how much does this model vary when it lands on a
+/// different backend" is a property of the model we have to live with — pinning a provider
+/// would hide exactly the thing worth knowing, and would not survive moving to another proxy.
+/// </summary>
+internal static class ExtractionEval
+{
+    public static async Task<int> RunAsync(StoryWeaverSettings settings, string[] models, int runs)
+    {
+        FileLlmLog log = new(settings.Logging);
+
+        Console.WriteLine($"Scenarios: {EvalScenarios.All.Count}, models: {models.Length}, runs each: {runs}");
+        Console.WriteLine($"Calls: {EvalScenarios.All.Count * models.Length * runs}");
+        Console.WriteLine($"Logging to {log.FilePath}");
+        Console.WriteLine();
+
+        List<ModelReport> reports = [];
+
+        foreach (string model in models)
+        {
+            reports.Add(await ScoreModelAsync(settings, log, model, runs).ConfigureAwait(false));
+        }
+
+        PrintSummary(reports);
+        return 0;
+    }
+
+    private static async Task<ModelReport> ScoreModelAsync(
+        StoryWeaverSettings settings,
+        ILlmLog log,
+        string model,
+        int runs)
+    {
+        Console.WriteLine($"=== {model} ===");
+
+        StoryWeaverSettings scoped = WithExtractionModel(settings, model);
+        using OpenRouterClient client = new(scoped, log);
+        LlmStateExtractor extractor = new(client);
+
+        ModelReport report = new(model);
+
+        foreach (EvalScenario scenario in EvalScenarios.All)
+        {
+            ScenarioReport scenarioReport = new(scenario.Name);
+
+            for (int run = 0; run < runs; run++)
+            {
+                scenarioReport.Runs.Add(
+                    await ScoreRunAsync(extractor, scenario).ConfigureAwait(false));
+            }
+
+            report.Scenarios.Add(scenarioReport);
+            Console.WriteLine($"  {scenarioReport.Describe()}");
+        }
+
+        Console.WriteLine();
+        return report;
+    }
+
+    private static async Task<RunScore> ScoreRunAsync(IStateExtractor extractor, EvalScenario scenario)
+    {
+        WorldState world = scenario.World();
+        string context = ContextAssembler.ForExtraction(world);
+
+        ExtractionResult result;
+        try
+        {
+            result = await extractor
+                .ExtractAsync(context, scenario.PlayerInput, scenario.Narration)
+                .ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            return new RunScore { Failed = true, Note = ex.Message };
+        }
+
+        ValidationOutcome validation = DeltaValidator.Validate(world, result.Deltas);
+
+        // Required and forbidden are measured at deliberately different points.
+        //
+        // Required is scored AFTER validation: a delta the validator rejects never reaches
+        // canon, so crediting it would score a model for output the world never sees.
+        //
+        // Forbidden is scored on the RAW output, before validation. Scoring it after was a
+        // real mistake in the first version — models emitted location_introduced for a place
+        // already in canon, the validator rejected it, and the scoreboard proudly reported
+        // "forbidden 0". That reads as "the model behaved" when it means "the validator
+        // saved us", and it is precisely why the eval looked clean while live play was full
+        // of re-introductions. The validator is a safety net, not evidence of good output.
+        List<StateDelta> effective = [.. validation.Accepted, .. validation.NoOps];
+
+        return new RunScore
+        {
+            RequiredHit = scenario.Required.Count(rule => effective.Any(rule.Matches)),
+            RequiredTotal = scenario.Required.Count,
+            ForbiddenHit = scenario.Forbidden.Count(rule => result.Deltas.Any(rule.Matches)),
+            Rejected = validation.Rejected.Count,
+            PromptTokens = result.Usage?.PromptTokens ?? 0,
+            CompletionTokens = result.Usage?.CompletionTokens ?? 0,
+            ReasoningTokens = result.Usage?.ReasoningTokens ?? 0,
+            MissingRules = [.. scenario.Required.Where(r => !effective.Any(r.Matches)).Select(r => r.Description)],
+            ViolatedRules = [.. scenario.Forbidden.Where(r => result.Deltas.Any(r.Matches)).Select(r => r.Description)],
+        };
+    }
+
+    /// <summary>
+    /// A copy of the settings with only the extraction role's model swapped. Copied rather
+    /// than mutated so a failure partway through a sweep cannot leave the caller's settings
+    /// pointing at whichever model happened to be under test.
+    /// </summary>
+    private static StoryWeaverSettings WithExtractionModel(StoryWeaverSettings settings, string model)
+    {
+        RoleSettings existing = settings.GetRole(LlmRole.Extraction);
+
+        StoryWeaverSettings copy = new()
+        {
+            Provider = settings.Provider,
+            Logging = settings.Logging,
+            Roles = new Dictionary<string, RoleSettings>(settings.Roles, StringComparer.OrdinalIgnoreCase),
+        };
+
+        copy.Roles["extraction"] = new RoleSettings
+        {
+            Model = model,
+            Temperature = existing.Temperature,
+            MaxTokens = existing.MaxTokens,
+            RequireParameters = existing.RequireParameters,
+            ResponseFormat = existing.ResponseFormat,
+            Reasoning = existing.Reasoning,
+        };
+
+        return copy;
+    }
+
+    private static void PrintSummary(List<ModelReport> reports)
+    {
+        Console.WriteLine(new string('=', 78));
+        Console.WriteLine("SUMMARY");
+        Console.WriteLine(new string('=', 78));
+        Console.WriteLine();
+        Console.WriteLine($"{"model",-34} {"required",9} {"forbidden",10} {"rejects",8} {"tokens",8}");
+        Console.WriteLine(new string('-', 78));
+
+        foreach (ModelReport report in reports.OrderByDescending(r => r.RequiredRate))
+        {
+            Console.WriteLine(
+                $"{Shorten(report.Model),-34} " +
+                $"{report.RequiredRate,8:P0} " +
+                $"{report.ForbiddenPerRun,10:F2} " +
+                $"{report.RejectsPerRun,8:F2} " +
+                $"{report.AverageCompletionTokens,8:F0}");
+        }
+
+        Console.WriteLine();
+        Console.WriteLine("required  = share of must-have deltas produced (higher is better)");
+        Console.WriteLine("forbidden = must-not-happen deltas per run    (lower is better)");
+        Console.WriteLine("rejects   = deltas the validator threw out    (lower is better)");
+        Console.WriteLine("tokens    = mean completion tokens per call   (cost proxy)");
+        Console.WriteLine();
+
+        foreach (ModelReport report in reports)
+        {
+            Console.WriteLine($"--- {report.Model} ---");
+
+            foreach (ScenarioReport scenario in report.Scenarios)
+            {
+                Console.WriteLine($"  {scenario.Describe()}");
+
+                foreach (string problem in scenario.Problems())
+                {
+                    Console.WriteLine($"      {problem}");
+                }
+            }
+
+            Console.WriteLine();
+        }
+    }
+
+    private static string Shorten(string model) =>
+        model.Length <= 34 ? model : "…" + model[^33..];
+
+    private sealed class ModelReport(string model)
+    {
+        public string Model { get; } = model;
+
+        public List<ScenarioReport> Scenarios { get; } = [];
+
+        private IEnumerable<RunScore> AllRuns => Scenarios.SelectMany(s => s.Runs);
+
+        public double RequiredRate
+        {
+            get
+            {
+                int total = AllRuns.Sum(r => r.RequiredTotal);
+                return total == 0 ? 1 : (double)AllRuns.Sum(r => r.RequiredHit) / total;
+            }
+        }
+
+        public double ForbiddenPerRun => Average(r => r.ForbiddenHit);
+
+        public double RejectsPerRun => Average(r => r.Rejected);
+
+        public double AverageCompletionTokens => Average(r => r.CompletionTokens);
+
+        private double Average(Func<RunScore, int> select)
+        {
+            List<RunScore> runs = [.. AllRuns];
+            return runs.Count == 0 ? 0 : runs.Average(r => (double)select(r));
+        }
+    }
+
+    private sealed class ScenarioReport(string name)
+    {
+        public string Name { get; } = name;
+
+        public List<RunScore> Runs { get; } = [];
+
+        public string Describe()
+        {
+            int required = Runs.Sum(r => r.RequiredHit);
+            int requiredTotal = Runs.Sum(r => r.RequiredTotal);
+            int forbidden = Runs.Sum(r => r.ForbiddenHit);
+            int failed = Runs.Count(r => r.Failed);
+
+            string requiredPart = requiredTotal == 0 ? "n/a" : $"{required}/{requiredTotal}";
+            string failedPart = failed > 0 ? $", {failed} call(s) failed" : string.Empty;
+
+            return $"{Name,-16} required {requiredPart,-7} forbidden {forbidden}{failedPart}";
+        }
+
+        /// <summary>Distinct problems seen, with how many runs hit each — the detail that
+        /// says whether a failure is systematic or occasional.</summary>
+        public IEnumerable<string> Problems()
+        {
+            foreach (IGrouping<string, string> group in Runs
+                .SelectMany(r => r.MissingRules.Select(m => $"MISSED: {m}"))
+                .Concat(Runs.SelectMany(r => r.ViolatedRules.Select(v => $"DID:    {v}")))
+                .GroupBy(x => x))
+            {
+                yield return $"{group.Key} ({group.Count()}/{Runs.Count})";
+            }
+
+            foreach (RunScore run in Runs.Where(r => r.Failed))
+            {
+                yield return $"ERROR:  {run.Note}";
+            }
+        }
+    }
+
+    private sealed class RunScore
+    {
+        public bool Failed { get; init; }
+
+        public string? Note { get; init; }
+
+        public int RequiredHit { get; init; }
+
+        public int RequiredTotal { get; init; }
+
+        public int ForbiddenHit { get; init; }
+
+        public int Rejected { get; init; }
+
+        public int PromptTokens { get; init; }
+
+        public int CompletionTokens { get; init; }
+
+        public int ReasoningTokens { get; init; }
+
+        public IReadOnlyList<string> MissingRules { get; init; } = [];
+
+        public IReadOnlyList<string> ViolatedRules { get; init; } = [];
+    }
+}

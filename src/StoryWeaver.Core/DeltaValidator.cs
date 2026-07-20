@@ -148,6 +148,8 @@ public static class DeltaValidator
                 : characters.Contains(d.CharacterId)
                     ? $"character '{d.CharacterId}' already exists. Introducing a known " +
                       "character overwrites them; use a state change instead."
+                : Taken(d.CharacterId, locations, facts)
+                    ? $"id '{d.CharacterId}' is already in use by a location or fact."
                 : d.LocationId is { } loc && !Blank(loc) && !locations.Contains(loc)
                     ? $"location '{loc}' does not exist."
                 : null,
@@ -158,6 +160,8 @@ public static class DeltaValidator
                 : locations.Contains(d.LocationId)
                     ? $"location '{d.LocationId}' already exists. Mentioning a known place " +
                       "is not introducing it."
+                : Taken(d.LocationId, characters, facts)
+                    ? $"id '{d.LocationId}' is already in use by a character or fact."
                 : null,
 
             CharacterMoved d =>
@@ -196,6 +200,8 @@ public static class DeltaValidator
                 Blank(d.FactId) ? "factId is empty."
                 : Blank(d.Text) ? "text is empty."
                 : facts.Contains(d.FactId) ? $"fact '{d.FactId}' already exists."
+                : Taken(d.FactId, characters, locations)
+                    ? $"id '{d.FactId}' is already in use by a character or location."
                 : null,
 
             FactLearned d =>
@@ -210,6 +216,18 @@ public static class DeltaValidator
     }
 
     private static bool Blank(string? value) => string.IsNullOrWhiteSpace(value);
+
+    /// <summary>
+    /// Ids must be unique across characters, locations, and facts — not merely within each.
+    ///
+    /// Found the hard way: extraction emitted <c>location_introduced</c> with the id
+    /// <c>innkeeper-hald</c>, which exists as a character but not as a location. The per-type
+    /// check passed, so a character's id was silently reused as a place. Nothing downstream
+    /// would have flagged it, and the two entities would then share an identity forever.
+    ///
+    /// </summary>
+    private static bool Taken(string id, HashSet<string> first, HashSet<string> second) =>
+        first.Contains(id) || second.Contains(id);
 }
 
 /// <summary>

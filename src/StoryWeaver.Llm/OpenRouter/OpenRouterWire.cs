@@ -62,6 +62,18 @@ internal sealed class WireMessage
 
     [JsonPropertyName("content")]
     public string Content { get; init; } = string.Empty;
+
+    /// <summary>
+    /// The model's thinking, when the provider separates it out.
+    ///
+    /// Read because some providers put the <i>answer</i> here and leave
+    /// <see cref="Content"/> null — observed with MiniMax M3 served by Parasail on vLLM,
+    /// which returned perfectly formed delta JSON in this field on every call while
+    /// <c>content</c> stayed null. Without the fallback those look identical to empty
+    /// responses, and the model scored zero on an eval it was actually passing.
+    /// </summary>
+    [JsonPropertyName("reasoning")]
+    public string? Reasoning { get; init; }
 }
 
 internal sealed class WireProvider
@@ -110,9 +122,33 @@ internal sealed class OpenRouterResponse
     [JsonPropertyName("error")]
     public WireError? Error { get; init; }
 
-    /// <summary>First choice's text, or null when the response carried no content.</summary>
-    public string? Content =>
-        Choices is { Count: > 0 } ? Choices[0].Message?.Content : null;
+    /// <summary>
+    /// First choice's text, falling back to the reasoning field when content is empty.
+    ///
+    /// The fallback only applies when there is nothing else — a provider that fills both is
+    /// unaffected, so this cannot smuggle thinking into a normal response.
+    /// </summary>
+    public string? Content
+    {
+        get
+        {
+            if (Choices is not { Count: > 0 } || Choices[0].Message is not { } message)
+            {
+                return null;
+            }
+
+            return string.IsNullOrWhiteSpace(message.Content) ? message.Reasoning : message.Content;
+        }
+    }
+
+    /// <summary>True when the payload arrived in the reasoning field. Worth logging: it means
+    /// this provider is misreporting, and the next model to "return nothing" may be doing the
+    /// same thing.</summary>
+    public bool ContentCameFromReasoning =>
+        Choices is { Count: > 0 }
+        && Choices[0].Message is { } message
+        && string.IsNullOrWhiteSpace(message.Content)
+        && !string.IsNullOrWhiteSpace(message.Reasoning);
 
     /// <summary>Why generation stopped. <c>"length"</c> alongside empty content is the
     /// signature of a reasoning model that spent its whole budget thinking.</summary>

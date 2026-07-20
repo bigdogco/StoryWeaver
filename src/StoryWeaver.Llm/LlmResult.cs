@@ -31,4 +31,14 @@ public sealed class LlmResult
         new() { IsSuccess = false, Error = error, Attempts = attempts };
 }
 
-public sealed record LlmUsage(int PromptTokens, int CompletionTokens, int TotalTokens);
+/// <summary>
+/// Token counts for one call. <paramref name="ReasoningTokens"/> is part of
+/// <paramref name="CompletionTokens"/>, not additional to it — and on a reasoning model it
+/// is usually most of it. Measured at 644 of 736 completion tokens on one extraction sample,
+/// which makes it the dominant cost of a turn and worth reporting separately.
+/// </summary>
+public sealed record LlmUsage(
+    int PromptTokens,
+    int CompletionTokens,
+    int TotalTokens,
+    int ReasoningTokens = 0);

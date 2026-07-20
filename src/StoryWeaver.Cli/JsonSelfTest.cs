@@ -47,6 +47,7 @@ internal static class JsonSelfTest
             typeof(CharacterIntroduced));
 
         failures += CheckRoundTrip();
+        failures += CheckCrossNamespaceIds();
         failures += CheckRejects("unknown kind", """{"kind":"teleported","characterId":"h"}""");
         failures += CheckRejects("missing kind", """{"characterId":"h","mood":"wary"}""");
 
@@ -104,6 +105,34 @@ internal static class JsonSelfTest
         }
 
         Console.WriteLine("  ok    round trip preserves value equality");
+        return 0;
+    }
+
+    /// <summary>
+    /// A character's id must not be reusable as a location or fact id.
+    ///
+    /// Observed live: extraction emitted location_introduced with the id "innkeeper-hald",
+    /// which existed as a character but not as a location. The per-type check passed and the
+    /// bogus location was applied to canon. Nothing downstream would ever have flagged it.
+    /// </summary>
+    private static int CheckCrossNamespaceIds()
+    {
+        WorldState world = new();
+        world.Characters["innkeeper-hald"] = new Character { Id = "innkeeper-hald", Name = "Hald" };
+
+        ValidationOutcome outcome = DeltaValidator.Validate(world, [
+            new LocationIntroduced("innkeeper-hald", "The Drowned Crow", "A taproom."),
+        ]);
+
+        if (outcome.Accepted.Count != 0 || outcome.Rejected.Count != 1)
+        {
+            Console.WriteLine(
+                $"  FAIL  cross-namespace id: accepted {outcome.Accepted.Count}, " +
+                $"rejected {outcome.Rejected.Count}; expected 0 and 1.");
+            return 1;
+        }
+
+        Console.WriteLine("  ok    character id cannot be reused as a location");
         return 0;
     }
 

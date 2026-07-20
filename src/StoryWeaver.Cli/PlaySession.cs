@@ -26,7 +26,7 @@ internal static class PlaySession
         InMemoryWorldRepository repository = new();
         TurnEngine engine = new(new LlmNarrator(client), new LlmStateExtractor(client), repository);
 
-        WorldState world = SeedWorld();
+        WorldState world = WorldSeeds.Marrow();
         await repository.SaveAsync(WorldId, world).ConfigureAwait(false);
 
         PrintBanner(log.FilePath);
@@ -198,74 +198,4 @@ internal static class PlaySession
         Console.WriteLine(new string('-', 70));
     }
 
-    /// <summary>
-    /// Hardcoded opening. One location the player can leave toward, two characters, and one
-    /// fact that exactly one of them knows — enough to see whether knowledge stays where it
-    /// belongs, which a scene with no secrets could not show.
-    /// </summary>
-    private static WorldState SeedWorld()
-    {
-        WorldState world = new();
-
-        world.Locations["marrow-tavern"] = new Location
-        {
-            Id = "marrow-tavern",
-            Name = "The Drowned Crow",
-            Description =
-                "A low-ceilinged taproom in the town of Marrow. Peat smoke, spilled ale, and " +
-                "the sour cold that comes off the marsh outside. A handful of locals keep to " +
-                "their own tables and their own business.",
-            Connections = { "marrow-square" },
-        };
-
-        world.Locations["marrow-square"] = new Location
-        {
-            Id = "marrow-square",
-            Name = "Marrow Square",
-            Description = "A rutted market square, mostly empty. The well at its centre is boarded over.",
-            Connections = { "marrow-tavern" },
-        };
-
-        world.Characters[Character.PlayerId] = new Character
-        {
-            Id = Character.PlayerId,
-            Name = "You",
-            Description = "A traveller, recently arrived in Marrow.",
-            LocationId = "marrow-tavern",
-        };
-
-        world.Characters["innkeeper-hald"] = new Character
-        {
-            Id = "innkeeper-hald",
-            Name = "Hald",
-            Description =
-                "The innkeeper of the Drowned Crow. Heavyset, watchful, wipes the same patch " +
-                "of counter when he is thinking.",
-            LocationId = "marrow-tavern",
-            Status = "normal",
-            Mood = "guarded",
-            RelationshipToPlayer = new Relationship(-10, "suspicious of strangers"),
-            Knows = { "well-boarded" },
-        };
-
-        world.Characters["drinker-mabb"] = new Character
-        {
-            Id = "drinker-mabb",
-            Name = "Mabb",
-            Description = "An old marsh-hand nursing a mug in the corner. Talks when drunk, which is often.",
-            LocationId = "marrow-tavern",
-            Status = "drunk",
-            Mood = "maudlin",
-            RelationshipToPlayer = new Relationship(0, "no strong feelings"),
-        };
-
-        world.Facts["well-boarded"] = new Fact
-        {
-            Id = "well-boarded",
-            Text = "The well in Marrow Square was boarded over after something was found in it.",
-            EstablishedTurn = 0,
-        };
-
-        return world;
-    }
 }
