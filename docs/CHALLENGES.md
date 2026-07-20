@@ -114,6 +114,38 @@ worth remembering:
    rather than two, so restatements of existing canon cannot inflate a quality measure over
    a long session.
 
+**Update 2026-07-19, second session (five turns, roleplay input convention).** The previous
+fixes held: no id reached the prose, the narrator never echoed the player's dialogue back,
+no-op detection fired correctly, and movement tracked cleanly. Typos and malformed asterisk
+markup (`8I say`) were handled without trouble, which matters — real play is full of them.
+
+**One new failure, caused by the previous fix.** Extraction was told "anything the player
+told a character is a fact that character now knows", to close the hole where player-stated
+actions never reached canon. The model applied it to *questions*:
+
+```
+fact player-asked-about-well-rumor: The player asked Hald and Mabb
+     if they have heard a rumor about the well.
+innkeeper-hald learned player-asked-about-well-rumor
+drinker-mabb learned player-asked-about-well-rumor
+```
+
+A conversational event promoted to permanent world truth, with two characters now "knowing"
+it. Over a long session this mints junk facts at conversation rate, each replayed into
+context forever, crowding out real ones — and `Knows` is precisely the field that is
+supposed to make NPCs feel simulated.
+
+Fixed in the prompt by defining what a fact *is*, with a usable test: **would it still be
+true if nobody had ever mentioned it?** Plus an explicit never-list (questions, refusals,
+greetings, purchases, moods, "a conversation happened") and permission to establish nothing,
+since most turns legitimately establish no facts.
+
+Deliberately not fixed with a validator rule. Pattern-matching text like "The player asked"
+is brittle and would miss the general case; this is a definition problem, not a syntax one.
+
+**Lesson worth keeping:** the fix for a silent omission created a silent over-production.
+Both directions need watching whenever an extraction rule is loosened.
+
 **Still unsolved: omissions.** No `mood_changed` for Mabb through an obvious slide into
 maudlin self-pity, and no `relationship_changed` for Hald across two turns of escalating
 hostility — he ended the exchange by shutting the subject down, still at standing −10.
@@ -121,6 +153,17 @@ Nothing detects a delta that was never emitted, and no validator can. Candidate 
 if this proves systematic: a periodic reconciliation pass asking a model to compare canon
 against recent narration, or making a small number of high-value fields (mood, standing)
 *required* per turn so the model must state them even when unchanged.
+
+**Now looking systematic rather than occasional.** Across nine turns over two sessions:
+**zero** `relationship_changed`, through an innkeeper who was consistently cold, turned his
+back, and twice closed a subject down. He remains at his seeded −10. Mood is reported but
+patchily — a character going from oblivious to "pale eyes fixing on you" produced nothing.
+
+Relationships appear to be the worst case, plausibly because they are the least concrete:
+a move or a revealed secret is a discrete event, while standing shifts by accumulation
+across a scene, and a per-turn extractor sees one turn. If so, relationship drift may
+belong in a periodic reconciliation pass looking at several turns at once, rather than in
+the per-turn extraction at all.
 
 ---
 

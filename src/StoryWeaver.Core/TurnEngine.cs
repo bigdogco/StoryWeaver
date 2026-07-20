@@ -44,7 +44,7 @@ public sealed class TurnEngine
         try
         {
             extraction = await _extractor
-                .ExtractAsync(extractionContext, narration, cancellationToken)
+                .ExtractAsync(extractionContext, playerInput, narration, cancellationToken)
                 .ConfigureAwait(false);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)

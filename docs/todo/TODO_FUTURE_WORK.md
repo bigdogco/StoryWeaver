@@ -94,6 +94,58 @@ Small things the incumbents mostly don't do, cheap to add once the foundations e
 
 ---
 
+## Domain model gaps found in play
+
+- [ ] **Items and inventory do not exist.** A session had the player pay coppers for a
+      beer; extraction correctly reported nothing, because there is nothing to report
+      against. Not an extraction failure — a missing concept. Wants `Item`, ownership, and
+      probably `ItemTransferred` / `ItemAcquired` deltas.
+
+      Deliberately deferred: adding it before the extraction quality question is settled
+      would mean tuning two things at once and knowing which caused what.
+
+- [ ] **Buildings mentioned in prose are not locations.** A stranger kicked open the door
+      of "one of the buildings" on the square; that building has no id and cannot be
+      entered. Related to lazy world expansion — the general form is "when does a mentioned
+      thing become a real entity", and answering it for buildings answers it for most
+      scenery.
+
+---
+
+## Presentation
+
+- [ ] **Output formatting is a UI-time decision, not a now decision.** The input convention
+      (`*action*` plus speech) is adopted; narrator *output* stays plain prose. Because
+      narration is a rendering of canon rather than the state itself, the convention can
+      change at any point without breaking anything — unlike chat-log-as-state tools, where
+      changing it leaves the history permanently mixed and the model reads that history
+      back.
+
+      Revisit once Avalonia can actually style it: italic action spans, coloured or
+      attributed dialogue, NPC name emphasis. In a console, markup renders as literal
+      asterisks, which is strictly worse than none.
+
+- [ ] **Narration style belongs to the world author, not to the code.** Length is the
+      obvious case — "one or two short paragraphs" is currently hardcoded in
+      `LlmNarrator.SystemPrompt`, and it is a taste call, not a fact. A tense interrogation
+      and a journey across a marsh want different pacing, and a comedic romp wants a
+      different narrator entirely from a bleak horror.
+
+      The general shape: **the narrator prompt should be data, not a `const string`.** Tone,
+      register, point of view, verbosity, and content limits are all world-authoring
+      parameters. Probably a narration-style block on the world definition, with a sensible
+      default so a new world needs none of it. Possibly per-scene later — combat and
+      travel genuinely want different lengths.
+
+      Left hardcoded for bootstrap deliberately: there is no world-authoring format yet to
+      hang it off, and inventing one to hold a single setting would be the wrong order.
+
+- [ ] **Consider echoing the player's own line back into the transcript** so a session
+      reads as a conversation rather than a sequence of replies. Presentation only; the
+      input is already stored verbatim in `TurnRecord.PlayerInput`.
+
+---
+
 ## Cost and quality tuning
 
 - [ ] **A/B the extraction role's reasoning effort.** Per-role `reasoning` config is

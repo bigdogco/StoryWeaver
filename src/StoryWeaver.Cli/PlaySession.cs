@@ -147,6 +147,9 @@ internal static class PlaySession
                 break;
 
             case "/help":
+                Console.WriteLine("  Write *actions between asterisks* and speech outside them.");
+                Console.WriteLine("  Both are authoritative — the narrator will not rewrite them.");
+                Console.WriteLine();
                 Console.WriteLine("  /state  world state as the extractor sees it (with ids)");
                 Console.WriteLine("  /prose  world state as the narrator sees it (no ids)");
                 Console.WriteLine("  /raw    last raw extraction response");
@@ -178,7 +181,12 @@ internal static class PlaySession
         Console.WriteLine();
         Console.WriteLine("StoryWeaver — play session (in-memory, nothing is saved)");
         Console.WriteLine($"Logging to {logPath}");
-        Console.WriteLine("Commands: /state  /raw  /help  /quit");
+        Console.WriteLine();
+        Console.WriteLine("Write *actions between asterisks* and speech outside them:");
+        Console.WriteLine();
+        Console.WriteLine("  *I lean on the counter.* What do you know about the well?");
+        Console.WriteLine();
+        Console.WriteLine("Plain instructions work too. Commands: /state /prose /raw /help /quit");
         Console.WriteLine();
     }
 

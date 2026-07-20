@@ -14,11 +14,21 @@ public interface INarrator
         CancellationToken cancellationToken = default);
 }
 
-/// <summary>Reads prose back into proposed changes.</summary>
+/// <summary>
+/// Reads a turn back into proposed changes.
+///
+/// Takes the player's input as well as the narration, and not for symmetry. When the player
+/// writes their own actions — "*I slip the ring into Hald's palm*" — that action is
+/// authoritative and has happened, but the narration may well dwell on the reaction rather
+/// than restate the handover. Extracting from prose alone silently loses everything the
+/// player asserted and the narrator chose not to repeat, including anything they revealed to
+/// an NPC, which is a fact that NPC now knows.
+/// </summary>
 public interface IStateExtractor
 {
     Task<ExtractionResult> ExtractAsync(
         string context,
+        string playerInput,
         string narration,
         CancellationToken cancellationToken = default);
 }

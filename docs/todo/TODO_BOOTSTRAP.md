@@ -309,6 +309,23 @@ often and how badly it goes wrong before deciding what to do about it.
 - [x] Applied, **no-op**, and rejected deltas printed after every turn. Shown by default
       rather than behind a command: a silently dropped delta is the failure that would
       otherwise take fifty turns to notice.
+- [x] **Roleplay input convention.** `*actions between asterisks*`, speech outside them.
+      Both authoritative; the narrator may not rewrite, paraphrase, or echo the player's
+      dialogue, nor invent words or feelings for them. Plain instructions still work.
+
+      Adopted *before* §9 deliberately — playing the 50-turn validation session in a style
+      we were about to change would have made that session poor evidence.
+
+      **This closed a real hole:** extraction previously saw only the narration. When the
+      player writes an action the narrator does not restate — handing over an object,
+      revealing something to an NPC — it happened, but canon never heard about it.
+      `IStateExtractor` now takes the player input as well.
+
+      Narration length stays at two to four paragraphs — briefly cut to one or two, and
+      reverted as too thin. The agency rules that came in alongside it are kept, since they
+      are what actually protects the player's turn: stop where the player would naturally
+      act, leave the scene open, never resolve the encounter for them. Length is a taste
+      call and belongs to the world author (see TODO_FUTURE_WORK), not to the code.
 - [x] `/prose` — world state as the *narrator* sees it. Its own command because that view
       must contain no ids, and eyeballing it is the only check that the narrator cannot
       leak one into the story.

@@ -20,8 +20,34 @@ public sealed class LlmStateExtractor : IStateExtractor
         You read narration from a text RPG and report what changed in the world, as
         structured deltas.
 
-        You are a bookkeeper, not a storyteller. Report only what the prose actually
-        supports. Do not infer, embellish, or continue the scene.
+        You are a bookkeeper, not a storyteller. Report only what actually happened. Do not
+        infer, embellish, or continue the scene.
+
+        You are given both what the player did and the narration that followed. The player's
+        input is authoritative: text between asterisks is an action they took, text outside
+        is speech. If the player did something the narration does not restate — handing over
+        an object, moving somewhere, revealing information — it still happened and must be
+        reported.
+
+        ## What counts as a fact
+
+        A fact is a durable truth about the world. The test: **would it still be true if
+        nobody had ever mentioned it?**
+
+        "The well was sealed after a body was found in it" is a fact. "The player asked
+        about the well" is not — it is a conversation, and conversations are not world
+        truths.
+
+        NEVER establish a fact for:
+        - a question being asked, or a request being made
+        - someone refusing, deflecting, or declining to answer
+        - a greeting, a purchase, a gesture, or anyone's mood
+        - the fact that a conversation happened at all
+
+        Only establish a fact when genuinely new information about the world is revealed. If
+        a character deflects a question, no information was revealed — emit nothing.
+
+        Most turns should establish no facts. That is normal and correct.
 
         Critical rules:
         - Use the exact ids from "Known ids" for anything that already exists. Only invent a
@@ -30,12 +56,14 @@ public sealed class LlmStateExtractor : IStateExtractor
           prose merely mentions a known place, that is not an introduction.
         - A description field describes what something IS, permanently. Never put an event
           in a description.
-        - Establishing a fact and someone knowing it are separate. If a character reveals
-          new information, emit fact_established, then fact_learned for everyone who now
-          knows it — INCLUDING THE SPEAKER, unless the known ids already record them as
-          knowing it. Canon only contains what you write down: a character who states a
-          secret but gets no fact_learned is recorded as not knowing their own secret, and
-          will contradict themselves later.
+        - Establishing a fact and someone knowing it are separate. When new information is
+          revealed, emit fact_established, then fact_learned for everyone who now knows it —
+          INCLUDING THE SPEAKER, unless the known ids already record them as knowing it.
+          Canon only contains what you write down: a character who states a secret but gets
+          no fact_learned is recorded as not knowing their own secret, and will contradict
+          themselves later.
+        - fact_learned is only for real information. A character who was merely asked a
+          question has learned nothing.
         - Do not restate what is already true. If the state says a mood is "wary", do not
           emit mood_changed to "wary" again. Report changes, not the current situation.
         - Emit mood_changed whenever the prose shows a shift in how a character feels, even
@@ -55,6 +83,7 @@ public sealed class LlmStateExtractor : IStateExtractor
 
     public async Task<ExtractionResult> ExtractAsync(
         string context,
+        string playerInput,
         string narration,
         CancellationToken cancellationToken = default)
     {
@@ -67,7 +96,10 @@ public sealed class LlmStateExtractor : IStateExtractor
                 Messages =
                 [
                     LlmMessage.System(SystemPrompt),
-                    LlmMessage.User($"World state:\n\n{context}\n\nNarration:\n\n{narration}"),
+                    LlmMessage.User(
+                        $"World state:\n\n{context}\n\n" +
+                        $"What the player did:\n\n{playerInput}\n\n" +
+                        $"Narration:\n\n{narration}"),
                 ],
             },
             cancellationToken: cancellationToken).ConfigureAwait(false);
