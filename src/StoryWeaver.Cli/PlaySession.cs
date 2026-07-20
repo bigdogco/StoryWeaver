@@ -3,12 +3,13 @@ using StoryWeaver.Llm.Configuration;
 using StoryWeaver.Llm.Logging;
 using StoryWeaver.Llm.OpenRouter;
 using StoryWeaver.Llm.Story;
+using StoryWeaver.Storage;
 
 namespace StoryWeaver.Cli;
 
 /// <summary>
-/// Playable console harness. Throwaway, and storage is in-memory — a session dies with the
-/// process until section 6 lands.
+/// Playable console harness. Throwaway, but now persistent — the world is saved to disk after
+/// every turn, so a session can be quit and resumed.
 ///
 /// The point of this is not the game. It is watching what extraction does over many turns:
 /// the rejection list is printed after every turn precisely because a silently dropped
@@ -17,19 +18,28 @@ namespace StoryWeaver.Cli;
 internal static class PlaySession
 {
     private const string WorldId = "marrow";
+    private const string SaveRoot = "saves";
 
     public static async Task<int> RunAsync(StoryWeaverSettings settings)
     {
         FileLlmLog log = new(settings.Logging);
         using OpenRouterClient client = new(settings, log);
 
-        InMemoryWorldRepository repository = new();
+        JsonWorldRepository repository = new(SaveRoot);
         TurnEngine engine = new(new LlmNarrator(client), new LlmStateExtractor(client), repository);
 
-        WorldState world = WorldSeeds.Marrow();
-        await repository.SaveAsync(WorldId, world).ConfigureAwait(false);
+        // Resume the world if it exists, otherwise seed it and write the first save so the
+        // world is on disk before any turn runs.
+        WorldState? loaded = await repository.LoadAsync(WorldId).ConfigureAwait(false);
+        bool resumed = loaded is not null;
+        WorldState world = loaded ?? WorldSeeds.Marrow();
 
-        PrintBanner(log.FilePath);
+        if (!resumed)
+        {
+            await repository.SaveAsync(WorldId, world).ConfigureAwait(false);
+        }
+
+        PrintBanner(log.FilePath, repository.RootDirectory, resumed, world.TurnNumber);
         PrintOpeningScene(world);
 
         while (true)
@@ -39,7 +49,7 @@ internal static class PlaySession
 
             if (input is null || input.Trim() is "/quit" or "/q")
             {
-                Console.WriteLine("\nEnding session. Nothing was saved — storage is in-memory.");
+                Console.WriteLine($"\nEnding session. World saved under {repository.RootDirectory}.");
                 return 0;
             }
 
@@ -126,7 +136,7 @@ internal static class PlaySession
         _ => delta.GetType().Name,
     };
 
-    private static void HandleCommand(string input, WorldState world, InMemoryWorldRepository repo)
+    private static void HandleCommand(string input, WorldState world, IWorldRepository repo)
     {
         switch (input)
         {
@@ -162,7 +172,7 @@ internal static class PlaySession
         }
     }
 
-    private static void PrintLastRaw(InMemoryWorldRepository repo)
+    private static void PrintLastRaw(IWorldRepository repo)
     {
         IReadOnlyList<TurnRecord> history = repo.LoadHistoryAsync(WorldId).GetAwaiter().GetResult();
 
@@ -176,10 +186,13 @@ internal static class PlaySession
         Console.WriteLine(history[^1].RawExtraction ?? "(no raw extraction recorded)");
     }
 
-    private static void PrintBanner(string logPath)
+    private static void PrintBanner(string logPath, string saveRoot, bool resumed, int turnNumber)
     {
         Console.WriteLine();
-        Console.WriteLine("StoryWeaver — play session (in-memory, nothing is saved)");
+        Console.WriteLine(resumed
+            ? $"StoryWeaver — play session (resumed at turn {turnNumber})"
+            : "StoryWeaver — play session (new world)");
+        Console.WriteLine($"Saving to  {saveRoot}");
         Console.WriteLine($"Logging to {logPath}");
         Console.WriteLine();
         Console.WriteLine("Write *actions between asterisks* and speech outside them:");
@@ -192,9 +205,18 @@ internal static class PlaySession
 
     private static void PrintOpeningScene(WorldState world)
     {
-        Location tavern = world.Locations["marrow-tavern"];
+        // Wherever the player currently stands — the tavern in a fresh world, but possibly
+        // elsewhere in a resumed one.
+        Location? here = world.PlayerLocationId is { } id ? world.FindLocation(id) : null;
+        here ??= world.Locations.GetValueOrDefault("marrow-tavern");
+
+        if (here is null)
+        {
+            return;
+        }
+
         Console.WriteLine(new string('-', 70));
-        Console.WriteLine(tavern.Description);
+        Console.WriteLine(here.Description);
         Console.WriteLine(new string('-', 70));
     }
 

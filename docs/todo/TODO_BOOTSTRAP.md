@@ -224,12 +224,18 @@ traced back to what the model thought it saw.
 
 ### 6. Storage
 
-- [ ] `IWorldRepository` in Core — load, save, transactional commit of a delta set
-- [ ] JSON implementation in Storage
-- [ ] Save format: one file per world, human-readable, stable key ordering so
-      `git diff` is meaningful
-- [ ] Atomic write (temp file + move) so a crash cannot corrupt a save
-- [ ] Verify: interface exposes no JSON-specific types (the SQLite swap must stay cheap)
+- [x] `IWorldRepository` in Core — load, save, transactional commit of a delta set
+- [x] JSON implementation in Storage (`JsonWorldRepository`)
+- [x] Save format: one directory per world, human-readable, sorted keys so `git diff` is
+      meaningful. Canon `canon.json` (whole), history `history.jsonl` (append-only)
+- [x] Atomic write (temp file + move) so a crash cannot corrupt a save
+- [x] Verify: interface exposes no JSON-specific types (the SQLite swap must stay cheap)
+
+Two save-format bugs were caught and fixed before freezing it: System.Text.Json drops the
+`OrdinalIgnoreCase` comparer when deserializing `init` collections (a loaded world would
+match ids case-sensitively), and `HashSet` order is unstable across resizes (noisy diffs).
+Both fixed with save-only converters that sort on write and read case-insensitive. See the
+2026-07-21 devlog. Verified by an 18-assertion offline round-trip check.
 
 ### 7. Turn loop
 
@@ -335,8 +341,9 @@ often and how badly it goes wrong before deciding what to do about it.
 - [x] `/prose` — world state as the *narrator* sees it. Its own command because that view
       must contain no ids, and eyeballing it is the only check that the narrator cannot
       leak one into the story.
-- [ ] Load or create a world — needs §6
-- [ ] Save on exit / autosave per turn — needs §6
+- [x] Load or create a world — resumes if `saves/marrow/` exists, else seeds and saves
+- [x] Save on exit / autosave per turn — the turn loop persists every turn; quitting just
+      reports where the world is saved
 
 ### 9. Validation
 

@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace StoryWeaver.Core;
 
 /// <summary>
@@ -26,11 +28,17 @@ public sealed class WorldState
     /// looks: an earlier draft kept a standalone <c>PlayerLocationId</c> alongside the
     /// character graph, which is the same fact stored twice and therefore the same fact
     /// able to disagree with itself after any delta that touched only one of them.
+    ///
+    /// Derived, so it is <see cref="JsonIgnoreAttribute">not persisted</see> — the player is
+    /// already stored once inside <see cref="Characters"/>, and writing them again here would
+    /// be the same fact on disk twice.
     /// </summary>
+    [JsonIgnore]
     public Character? Player => FindCharacter(Character.PlayerId);
 
     /// <summary>Where the player currently is. Derived — the player's own
-    /// <see cref="Character.LocationId"/> is the only copy.</summary>
+    /// <see cref="Character.LocationId"/> is the only copy, and therefore not persisted.</summary>
+    [JsonIgnore]
     public string? PlayerLocationId => Player?.LocationId;
 
     public Dictionary<string, Character> Characters { get; init; } =

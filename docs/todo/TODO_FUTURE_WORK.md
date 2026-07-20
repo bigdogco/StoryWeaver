@@ -112,6 +112,33 @@ Small things the incumbents mostly don't do, cheap to add once the foundations e
 
 ---
 
+## Prompts as editable files
+
+- [ ] **No prompt string lives in code.** Every prompt — narrator system prompt, extractor
+      system prompt, the fact definition and NEVER-list, any corrective/repair instruction —
+      must be an editable file the user can change without a rebuild. Code ships defaults
+      (either embedded resources or files written on first run); the load path reads from
+      disk and overrides them. This is the general form of the narration-style item below and
+      of "the narrator prompt should be data, not a `const string`" — but it covers *all*
+      roles, not just narration.
+
+      **Hot-reload, at least optionally.** Once prompts are files, watch them and re-read on
+      change (or re-read per turn behind a flag), so tuning a prompt does not mean restarting
+      a session. Cheap once the load path exists; a `FileSystemWatcher` over the prompt
+      directory is enough.
+
+      Current violators to migrate: `LlmNarrator.SystemPrompt` and the extractor's system
+      prompt, both `const string` today. Left as code for bootstrap deliberately — they were
+      being tuned *as* code and `--eval` measures the version in the binary — but that reason
+      expires once extraction is settled, which it now is.
+
+      **Interaction with prompt caching:** prompts becoming per-world/per-session data is
+      fine for caching as long as they are stable *within* a session; hot-reload
+      deliberately breaks the prefix cache on change, which is the correct trade while
+      tuning and should be off by default in normal play.
+
+---
+
 ## Presentation
 
 - [ ] **Output formatting is a UI-time decision, not a now decision.** The input convention

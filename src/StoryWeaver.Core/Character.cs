@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace StoryWeaver.Core;
 
 /// <summary>
@@ -21,7 +23,9 @@ public sealed class Character : Entity
     /// </summary>
     public const string PlayerId = "player";
 
-    /// <summary>True for the player's own character.</summary>
+    /// <summary>True for the player's own character. Derived from <see cref="Entity.Id"/>,
+    /// so it is not persisted — it would be a redundant column recomputable on load.</summary>
+    [JsonIgnore]
     public bool IsPlayer => string.Equals(Id, PlayerId, StringComparison.OrdinalIgnoreCase);
 
     /// <summary>Who they are, independent of the current scene. Stable across the story.</summary>
