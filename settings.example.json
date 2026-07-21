@@ -20,11 +20,13 @@
 
     "extraction": {
       "_comment": "maxTokens must cover REASONING as well as output if the model is a reasoner. A budget that only fits the answer produces empty content with no error.",
+      "_providerIgnore": "Optional. Upstream providers to exclude. requireParameters only filters providers that do not SUPPORT a parameter; a provider can support the schema, return schema-valid JSON, and still pick the wrong delta branch. That is measurable only by running --eval --providers <name> and comparing. Excluding keeps every other provider, so this is much weaker than pinning.",
       "model": "<openrouter/model-id>",
       "temperature": 0.0,
       "maxTokens": 4000,
       "requireParameters": true,
-      "responseFormat": "json_schema"
+      "responseFormat": "json_schema",
+      "providerIgnore": []
     },
 
     "summarize": {

@@ -54,10 +54,15 @@ it is not forgotten.
 - [x] Record the serving provider on every eval run, with a per-provider breakdown.
 - [x] `--providers a,b` to sample each upstream deliberately (test instrument only).
 - [x] `providerIgnore` / `providerOrder` on a role.
-- [ ] Set `providerIgnore: ["AtlasCloud"]` on extraction.
-- [ ] **Re-establish the baseline** routed-normally with that exclusion. The recorded "100%
+- [x] Set `providerIgnore: ["AtlasCloud"]` on extraction.
+- [x] **Re-establish the baseline** routed-normally with that exclusion. The recorded "100%
       across three n=7 sweeps" is void — it measured a routing mix we did not choose and
       cannot reproduce.
+
+      **New baseline, 8 scenarios, n=7, 56 calls: 86% required, forbidden 0.00, rejects 0.00,
+      107 tokens.** `movement` 7/7, `hostility` 14/14, `new-character` 7/7, `revelation` 19/21,
+      `player-arrival` 7/14. Providers: StreamLake 39/48 clean, Baidu 8/8. All remaining
+      failures are systematic — no provider variance left in the data.
 - [ ] Fix the missing move. Iterate **pinned to Baidu** so a prompt change is measurable
       without routing noise, then confirm on normal routing.
 - [ ] Revisit the `fact_learned`-for-the-speaker miss (3/7 on Baidu) separately.
