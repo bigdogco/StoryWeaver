@@ -197,6 +197,14 @@ Keep it honest:
 - [ ] **Re-run before trusting any extraction change**, and before changing the extraction
       model. Provider routing drifts under the same model id, so the eval measures the model
       as actually served, and that can move.
+- [ ] **Always read the per-provider breakdown, not just the headline.** A verified sweep
+      showed `forbidden 0.02` — traceable to exactly one run served by Google, against
+      StreamLake 53/53. Without that line it is an unexplained rounding error and the prompt
+      becomes the suspect. Google is **flagged, not excluded**: n=1 is the evidence threshold
+      that produced three wrong conclusions in a single day.
+- [ ] **Sample size is per provider, not per sweep.** A 56-call sweep that lands 53 times on
+      one upstream has n=1 or 2 everywhere else, so the headline is really a measurement of
+      whichever provider happened to win the routing.
 - [ ] **n=7 was not enough to be safe.** A movement failure looked solid at n=7 and did not
       reproduce. For anything close, prefer three independent sweeps over one larger one — the
       cross-run spread is the signal, not a single average.

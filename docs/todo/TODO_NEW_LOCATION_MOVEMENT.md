@@ -85,8 +85,53 @@ it is not forgotten.
 
       **Final: 97% required, forbidden 0.00, rejects 0.00, 54/56 clean runs.**
 
-- [ ] Revisit the `fact_learned`-for-the-speaker miss — still 2/7 on the current baseline.
-      Tracked as the only remaining scored gap.
+- [x] Revisit the `fact_learned`-for-the-speaker miss.
+
+      **Characterised before changing anything.** Over 21 pinned runs the miss was not random
+      — it tracked how many facts the model emitted:
+
+      | facts | runs | speaker recorded | miss |
+      |---|---|---|---|
+      | 1 | 14 | 13 | 7% |
+      | 2 | 6 | 1 | 83% |
+      | 3 | 1 | 0 | 100% |
+
+      The player was recorded 21/21. The rule was never missing; it was applied once per
+      *turn* instead of once per *fact*, and only the less obvious half — the speaker — was
+      dropped as the list grew.
+
+      Extended the existing bullet rather than adding a rule. After: **1/21**. Notably the
+      model now splits *more* (21/21 runs multi-fact, up from 7/21) while getting the speaker
+      right — better on both axes, since one speech does reveal several independently knowable
+      truths, and recording them as a blob would make a character learn the body and the
+      cover-up as one atomic unit.
+
+      Regression checked deliberately: a rule encouraging more `fact_established` is how the
+      junk-fact era began. `deflection` and `atmosphere` both stayed at `forbidden 0`.
+      Completion tokens 116 → 140.
+
+---
+
+## Verified baseline (2026-07-21)
+
+Three independent sweeps, 8 scenarios, n=7, normal routing, AtlasCloud excluded:
+
+```
+sweep 1:  100%   forbidden 0.00   rejects 0.00   56/56 clean
+sweep 2:  100%   forbidden 0.02   rejects 0.02   55/56 clean
+sweep 3:  100%   forbidden 0.00   rejects 0.00   56/56 clean
+```
+
+Identical scenario by scenario: `revelation` 21/21, `movement` 7/7, `hostility` 14/14,
+`new-character` 7/7, `player-arrival` 14/14, and nothing forbidden in `deflection`,
+`redescription` or `atmosphere`.
+
+**Unlike the previous "100%", this one is attributable.** Sweep 2's single blemish localises to
+one run served by **Google**, which emitted a forbidden `character_introduced`; StreamLake was
+53/53, Venice 1/1, SiliconFlow 1/1, Google 0/1. Flagged, **not excluded** — n=1 is exactly the
+evidence threshold that produced three wrong conclusions earlier the same day. It is a
+candidate for the pinned A/B that convicted AtlasCloud, and a textbook case for automated
+provider calibration.
 
 ## Method rule earned the hard way
 
