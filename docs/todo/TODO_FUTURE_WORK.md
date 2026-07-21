@@ -193,6 +193,37 @@ Keep it honest:
       reproduce. For anything close, prefer three independent sweeps over one larger one — the
       cross-run spread is the signal, not a single average.
 
+### Ship the model comparison as a user-facing feature
+
+- [ ] **Let users benchmark extraction models from inside the app.** The `--eval` harness is
+      already the reusable asset from the bootstrap model hunt; exposing it turns "which cheap
+      model reads my prose correctly?" into something a user answers for their own world and
+      taste, not a decision baked into the binary. Ties directly to the existing per-role
+      model config in settings — the natural flow is "pick a set of extraction models → run →
+      see required/forbidden/rejects per model → set the winner."
+
+      Design considerations, so this is not restarted from zero later:
+
+      - **Scenarios are the hard part, not the runner.** Today's scenarios
+        ([EvalScenarios](../../src/StoryWeaver.Cli/EvalScenarios.cs)) are hand-written against
+        the one Marrow seed. A user's world is different, so a shipped version needs one of:
+        curated genre-agnostic scenarios that travel; a way to *capture* scenarios from real
+        play (a turn the user marks "extraction got this wrong/right" becomes a case — pairs
+        well with the inspectable-extraction and canon-arbitration items above); or
+        LLM-generated candidate scenarios the user vets. Capture-from-play is the most honest
+        and reuses data already in `TurnRecord`.
+      - **It spends real credits** — N runs × M models × scenarios. Surface estimated cost
+        before running and actual after, per the "cost in currency, not tokens" item below.
+        Not a background feature; an explicit, opt-in "test models" action.
+      - **Results are point-in-time.** Provider routing drifts under a model id, so a saved
+        result needs a timestamp and ideally the served-provider, and stale results should say
+        so rather than be trusted as current.
+      - **Prefer three sweeps over one big run** in the UI too — show the cross-run spread, not
+        just an average, or it will mislead exactly the way n=7 did during bootstrap.
+      - **Scoring must stay split the way it is now:** required scored *after* validation,
+        forbidden scored on *raw* output — otherwise the validator hides re-introductions and
+        the score lies. Whatever surfaces this must not "simplify" that away.
+
 ---
 
 ## Cost and quality tuning
