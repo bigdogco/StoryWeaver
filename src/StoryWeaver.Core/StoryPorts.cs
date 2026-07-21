@@ -59,7 +59,8 @@ public interface IStateExtractor
 public sealed record ExtractionResult(
     IReadOnlyList<StateDelta> Deltas,
     string? Raw,
-    ExtractionUsage? Usage = null)
+    ExtractionUsage? Usage = null,
+    string? Provider = null)
 {
     public static ExtractionResult Empty(string? raw = null) => new([], raw);
 }

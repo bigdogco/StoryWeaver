@@ -201,6 +201,58 @@ Keep it honest:
       reproduce. For anything close, prefer three independent sweeps over one larger one — the
       cross-run spread is the signal, not a single average.
 
+### Automated provider calibration
+
+- [ ] **Measure the providers behind a model and auto-fill a `providerIgnore` list.** The
+      user's framing, and it is the right one: nobody can be expected to know which of a
+      model's fourteen upstreams are good — it is hard enough to pick the model. If the answer
+      has to be measured, the measuring should be automatic.
+
+      **Why `requireParameters` is not enough.** It filters providers that do not *support* a
+      parameter. Measured on 2026-07-21: `deepseek-v3.2` has 14 providers, 4 lacking
+      `structured_outputs` and correctly excluded. But AtlasCloud *supports* the schema,
+      returns *schema-valid* JSON, and picks the wrong delta branch — a building emitted as a
+      `character_introduced`. No request parameter can prevent that. **Schema compliance and
+      semantic quality are different properties, and only the first is enforceable.**
+
+      Shape of the feature:
+
+      1. Enumerate providers: `GET /api/v1/models/{author}/{slug}/endpoints`. Free, no tokens,
+         returns `supported_parameters` per provider so ineligible ones are dropped up front.
+      2. For each eligible provider, run the scored scenarios N times **pinned to it** via
+         `provider.order` + `allow_fallbacks: false` — you cannot measure providers routing
+         never sends you to.
+      3. Score per provider, propose a `providerIgnore` list, show the table, let the user
+         approve. Never exclude silently.
+
+      Cost: ~10 providers × 8 scenarios × 5 runs ≈ 400 calls ≈ 8 cents. Cheap enough to re-run
+      monthly.
+
+      **Cheap is not the same as fast.** Measured while pinning: ~28s per call against a slow
+      upstream, because pinning removes routing's load-balancing and you wait on whichever box
+      you asked for. 112 calls took the better part of an hour. A full calibration is therefore
+      a **background job with progress reporting**, not a blocking "test my providers" button —
+      and providers should be swept concurrently, since the whole point is that they are
+      independent.
+
+      **This is what resolves the no-pinning objection.** Pinning is used only as a *test
+      instrument* during calibration and never in the play path; what ships is an exclude
+      list, which keeps every remaining provider and its redundancy, and degrades to today's
+      unfiltered routing on a proxy that ignores the parameter. That is a far weaker
+      commitment than depending on one provider being up.
+
+      Caveats to design around:
+
+      - Results mean "failed *our* extraction tests", not "bad provider". Say so in the UI.
+      - **The list goes stale.** Providers redeploy; an excluded one may improve. Needs a
+        timestamp, and re-validation rather than permanent blacklisting.
+      - Calibration measures quality *per provider*; it does not predict your runtime mix,
+        which is price-weighted and moves.
+      - **Only works where there is an objective right answer** — extraction and worldgen.
+        Narration quality is taste and cannot be auto-scored, so this never applies to it.
+      - Shares everything with the model-comparison feature below; they are the same harness
+        at two levels (which model, then which upstream of that model). Build them together.
+
 ### Ship the model comparison as a user-facing feature
 
 - [ ] **Let users benchmark extraction models from inside the app.** The `--eval` harness is

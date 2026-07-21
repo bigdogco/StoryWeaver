@@ -19,13 +19,33 @@ public sealed class LlmResult
     /// Worth logging — with OpenRouter routing this is not always what you asked for.</summary>
     public string? Model { get; init; }
 
+    /// <summary>
+    /// Which upstream provider served the request. The model id alone does not identify what
+    /// answered: providers behind one id have produced materially different output for an
+    /// identical request, so a result compared across time without this is not comparable.
+    /// </summary>
+    public string? Provider { get; init; }
+
     public LlmUsage? Usage { get; init; }
 
     /// <summary>HTTP calls made, including retries and repair round-trips. Cost signal.</summary>
     public int Attempts { get; init; }
 
-    public static LlmResult Success(string content, string? model, LlmUsage? usage, int attempts) =>
-        new() { IsSuccess = true, Content = content, Model = model, Usage = usage, Attempts = attempts };
+    public static LlmResult Success(
+        string content,
+        string? model,
+        LlmUsage? usage,
+        int attempts,
+        string? provider = null) =>
+        new()
+        {
+            IsSuccess = true,
+            Content = content,
+            Model = model,
+            Provider = provider,
+            Usage = usage,
+            Attempts = attempts,
+        };
 
     public static LlmResult Failure(string error, int attempts = 0) =>
         new() { IsSuccess = false, Error = error, Attempts = attempts };

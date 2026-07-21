@@ -27,12 +27,19 @@ internal static class ExtractionEval
         string[] models,
         int runs,
         IReadOnlyList<EvalScenario> scenarios,
-        bool showDeltas = false)
+        bool showDeltas = false,
+        string[]? providers = null)
     {
         FileLlmLog log = new(settings.Logging);
 
-        Console.WriteLine($"Scenarios: {scenarios.Count}, models: {models.Length}, runs each: {runs}");
-        Console.WriteLine($"Calls: {scenarios.Count * models.Length * runs}");
+        // A null entry means "let routing decide", which is what play does.
+        string?[] targets = providers is { Length: > 0 } ? [.. providers] : [null];
+
+        Console.WriteLine(
+            $"Scenarios: {scenarios.Count}, models: {models.Length}, " +
+            $"providers: {(providers is { Length: > 0 } ? string.Join("/", providers) : "routed")}, " +
+            $"runs each: {runs}");
+        Console.WriteLine($"Calls: {scenarios.Count * models.Length * targets.Length * runs}");
         Console.WriteLine($"Logging to {log.FilePath}");
         Console.WriteLine();
 
@@ -40,8 +47,11 @@ internal static class ExtractionEval
 
         foreach (string model in models)
         {
-            reports.Add(await ScoreModelAsync(settings, log, model, runs, scenarios, showDeltas)
-                .ConfigureAwait(false));
+            foreach (string? provider in targets)
+            {
+                reports.Add(await ScoreModelAsync(settings, log, model, runs, scenarios, showDeltas, provider)
+                    .ConfigureAwait(false));
+            }
         }
 
         PrintSummary(reports);
@@ -54,15 +64,17 @@ internal static class ExtractionEval
         string model,
         int runs,
         IReadOnlyList<EvalScenario> scenarios,
-        bool showDeltas)
+        bool showDeltas,
+        string? provider)
     {
-        Console.WriteLine($"=== {model} ===");
+        string label = provider is null ? model : $"{model} via {provider}";
+        Console.WriteLine($"=== {label} ===");
 
-        StoryWeaverSettings scoped = WithExtractionModel(settings, model);
+        StoryWeaverSettings scoped = WithExtractionModel(settings, model, provider);
         using OpenRouterClient client = new(scoped, log);
         IStateExtractor extractor = new LlmStateExtractor(client);
 
-        ModelReport report = new(model);
+        ModelReport report = new(label);
 
         foreach (EvalScenario scenario in scenarios)
         {
@@ -174,6 +186,7 @@ internal static class ExtractionEval
             ViolatedRules = [.. scenario.Forbidden.Where(r => result.Deltas.Any(r.Matches)).Select(r => r.Description)],
             Proposed = result.Deltas,
             RejectedDeltas = [.. validation.Rejected.Select(r => r.Delta)],
+            Provider = result.Provider,
         };
     }
 
@@ -182,7 +195,10 @@ internal static class ExtractionEval
     /// than mutated so a failure partway through a sweep cannot leave the caller's settings
     /// pointing at whichever model happened to be under test.
     /// </summary>
-    private static StoryWeaverSettings WithExtractionModel(StoryWeaverSettings settings, string model)
+    private static StoryWeaverSettings WithExtractionModel(
+        StoryWeaverSettings settings,
+        string model,
+        string? provider = null)
     {
         RoleSettings existing = settings.GetRole(LlmRole.Extraction);
 
@@ -201,6 +217,10 @@ internal static class ExtractionEval
             RequireParameters = existing.RequireParameters,
             ResponseFormat = existing.ResponseFormat,
             Reasoning = existing.Reasoning,
+            ProviderIgnore = existing.ProviderIgnore,
+
+            // Sampling one upstream at a time. Only the eval does this — see WireProvider.Order.
+            ProviderOrder = provider is null ? null : [provider],
         };
 
         return copy;
@@ -246,7 +266,40 @@ internal static class ExtractionEval
                 }
             }
 
+            PrintProviderBreakdown(report);
             Console.WriteLine();
+        }
+    }
+
+    /// <summary>
+    /// Clean-run rate split by upstream provider.
+    ///
+    /// One model id is routed across several providers and they do not behave the same. A
+    /// scored sweep that does not show this reports an average over a mix it did not choose
+    /// and cannot reproduce — which is how a scenario can read 7/7 one day and 0/7 the next
+    /// with nothing in the repository having changed.
+    /// </summary>
+    private static void PrintProviderBreakdown(ModelReport report)
+    {
+        List<RunScore> runs = [.. report.Scenarios.SelectMany(s => s.Runs)];
+
+        if (runs.Count == 0)
+        {
+            return;
+        }
+
+        Console.WriteLine("  by provider:");
+
+        foreach (IGrouping<string, RunScore> group in runs
+            .GroupBy(r => r.Provider ?? "(unreported)")
+            .OrderByDescending(g => g.Count()))
+        {
+            int clean = group.Count(r => r.Clean);
+            double forbidden = group.Average(r => (double)r.ForbiddenHit);
+
+            Console.WriteLine(
+                $"    {group.Key,-22} {group.Count(),3} run(s), " +
+                $"clean {clean}/{group.Count()}, forbidden/run {forbidden:F2}");
         }
     }
 
@@ -350,5 +403,13 @@ internal static class ExtractionEval
         public IReadOnlyList<StateDelta> Proposed { get; init; } = [];
 
         public IReadOnlyList<StateDelta> RejectedDeltas { get; init; } = [];
+
+        /// <summary>Upstream provider that served this run. The whole point of recording it is
+        /// that runs of the "same model" are not interchangeable.</summary>
+        public string? Provider { get; init; }
+
+        /// <summary>A run counts as clean when it produced every required delta and violated
+        /// nothing. Used only for the per-provider breakdown.</summary>
+        public bool Clean => !Failed && RequiredHit == RequiredTotal && ForbiddenHit == 0;
     }
 }

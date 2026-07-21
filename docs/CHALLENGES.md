@@ -7,6 +7,52 @@ ones that turn out to be non-issues, with the resolution noted.
 
 ## Open
 
+### Providers differ in semantic quality, not just parameter support
+
+**Severity: High.** The one that invalidates measurements rather than breaking a call.
+
+`require_parameters: true` solves providers that *cannot* honour a parameter. It does nothing
+about a provider that honours the schema perfectly and then reasons badly inside it.
+
+Measured 2026-07-21 on `deepseek-v3.2`. The `movement` scenario, which had scored **7/7 across
+three independent sweeps**, scored **0/7** — same commit, same prompt, same scenario. Two
+prompt "fixes" were written and measured against that, both apparently making things worse.
+Then a control run with the *untouched* prompt reproduced 0/7, and a rerun twenty minutes
+later scored **7/7 again**. Nothing in the repository had changed. Only the routing had:
+
+```
+Baidu        7 run(s), clean 7/7, forbidden/run 0.00
+Friendli     6 run(s), clean 3/6, forbidden/run 0.17
+AtlasCloud   1 run(s), clean 0/1, forbidden/run 1.00
+```
+
+AtlasCloud's output was **fully schema-valid** — it emitted a building as a
+`character_introduced` under `characterId: "player"`. No schema and no request parameter can
+catch a valid-but-wrong branch choice.
+
+**What this costs us:** every extraction quality number recorded before this date, including
+"100% across three n=7 sweeps", measured *the model as routed that afternoon*. Those are
+point-in-time observations of a mix we did not choose and cannot reproduce, not properties of
+the model.
+
+**Mitigations:**
+1. **The eval now records the serving provider on every run** and prints a per-provider
+   breakdown. Any future "the model got worse" claim is checkable rather than plausible.
+2. `--providers a,b` pins each upstream in turn (`provider.order` + `allow_fallbacks: false`)
+   so providers can be sampled deliberately instead of waiting for routing to land on them.
+   **Test instrument only — never used in the play path.**
+3. `providerIgnore` on a role: exclude measured-bad providers while keeping every other one.
+   Weaker than pinning on purpose — a proxy that ignores the parameter degrades to today's
+   behaviour rather than failing.
+
+**The process lesson, which is the more valuable half:** three consecutive confident
+conclusions were drawn from provider noise, and the only thing that caught it was running a
+control with the original prompt. *Re-measure the baseline before attributing any change to
+your own edit.* This is the second time on this project that a conclusion has failed to
+survive a repeat, and the first time it nearly cost a day of prompt tuning.
+
+Automating this away is logged in TODO_FUTURE_WORK as provider calibration.
+
 ### OpenRouter silently drops unsupported parameters
 
 **Severity:** High — silent, intermittent, near-unreproducible if hit cold.

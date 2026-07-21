@@ -80,6 +80,36 @@ internal sealed class WireProvider
 {
     [JsonPropertyName("require_parameters")]
     public bool RequireParameters { get; init; }
+
+    /// <summary>
+    /// Providers to try, in order. Paired with <see cref="AllowFallbacks"/> = false this pins
+    /// the request to one upstream.
+    ///
+    /// <b>A test instrument, not a runtime dependency.</b> It exists so a sweep can sample
+    /// each provider deliberately instead of waiting for price-weighted routing to happen to
+    /// land there — you cannot measure providers you are never sent to. Play never sets this;
+    /// depending on a single provider at runtime is exactly the fragility we are avoiding.
+    /// </summary>
+    [JsonPropertyName("order")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public List<string>? Order { get; init; }
+
+    [JsonPropertyName("allow_fallbacks")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public bool? AllowFallbacks { get; init; }
+
+    /// <summary>
+    /// Providers to exclude, keeping every other one.
+    ///
+    /// The runtime lever, and deliberately weaker than pinning: routing keeps all remaining
+    /// providers and their redundancy, and a proxy that does not understand this parameter
+    /// degrades to unfiltered routing rather than failing. Intended to be populated from
+    /// measurement — a provider that returns schema-valid but semantically wrong deltas cannot
+    /// be filtered by <see cref="RequireParameters"/>, because it does support the parameter.
+    /// </summary>
+    [JsonPropertyName("ignore")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public List<string>? Ignore { get; init; }
 }
 
 internal sealed class WireResponseFormat
@@ -112,6 +142,17 @@ internal sealed class OpenRouterResponse
 
     [JsonPropertyName("model")]
     public string? Model { get; init; }
+
+    /// <summary>
+    /// Which upstream provider actually served this request.
+    ///
+    /// One model id is routed across several providers, and they do not behave identically —
+    /// the same scenario has produced correct deltas on one and malformed ones on another
+    /// within the same sweep. Without this recorded, a behaviour change looks like the model
+    /// drifting, or like whatever we last edited, and both are unfalsifiable.
+    /// </summary>
+    [JsonPropertyName("provider")]
+    public string? Provider { get; init; }
 
     [JsonPropertyName("choices")]
     public List<WireChoice>? Choices { get; init; }

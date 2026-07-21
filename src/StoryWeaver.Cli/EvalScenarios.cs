@@ -44,6 +44,7 @@ internal static class EvalScenarios
         NewCharacter,
         Redescription,
         Atmosphere,
+        PlayerArrival,
     ];
 
     /// <summary>
@@ -68,8 +69,9 @@ internal static class EvalScenarios
     /// <item><c>narrator-mention</c> 0/7 — zero deltas. <b>Authorship is irrelevant:</b> the
     /// narrator naming an unknown place and person in passing is dropped exactly like the
     /// player doing it. The dividing line is presence, not who spoke.</item>
-    /// <item><c>player-arrival</c> — see that scenario. It found a genuine bug rather than a
-    /// design question, and is on its way into the scored set.</item>
+    /// <item><c>player-arrival</c> found a genuine bug rather than a design question, and has
+    /// therefore been <b>promoted into the scored set</b> <see cref="All"/>. Its findings are
+    /// recorded on the scenario itself.</item>
     /// </list>
     ///
     /// The first three agree with the retired <c>player-claim</c> case and are consistent
@@ -81,7 +83,6 @@ internal static class EvalScenarios
     [
         PlayerPlace,
         PlayerAbsentCharacter,
-        PlayerArrival,
         NarratorMention,
     ];
 

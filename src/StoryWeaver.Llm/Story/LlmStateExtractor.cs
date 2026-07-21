@@ -125,7 +125,8 @@ public sealed class LlmStateExtractor : IStateExtractor
                 : new ExtractionUsage(
                     result.Usage.PromptTokens,
                     result.Usage.CompletionTokens,
-                    result.Usage.ReasoningTokens));
+                    result.Usage.ReasoningTokens),
+            result.Provider);
     }
 
     private static bool IsJsonObject(string content)

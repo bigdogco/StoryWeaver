@@ -124,7 +124,7 @@ public sealed class OpenRouterClient : ILlmClient, IDisposable
             if (call.Validator is null || call.Validator(content))
             {
                 onChunk?.Invoke(content);
-                return LlmResult.Success(content, outcome.Model, outcome.Usage, attempts);
+                return LlmResult.Success(content, outcome.Model, outcome.Usage, attempts, outcome.Provider);
             }
 
             if (isLastAttempt)
@@ -151,10 +151,35 @@ public sealed class OpenRouterClient : ILlmClient, IDisposable
             Messages = [.. call.Messages.Select(m => new WireMessage { Role = m.Role, Content = m.Content })],
             ResponseFormat = BuildResponseFormat(role, call.Schema),
 
-            // Only sent when the role asks for it. Omitted otherwise so we do not needlessly
-            // constrain routing for calls that do not depend on optional parameters.
-            Provider = role.RequireParameters ? new WireProvider { RequireParameters = true } : null,
+            Provider = BuildProvider(role),
             Reasoning = BuildReasoning(role.Reasoning),
+        };
+    }
+
+    /// <summary>
+    /// The <c>provider</c> block, or null when the role asks for none of it — omitted rather
+    /// than sent empty so routing is not needlessly constrained for calls that do not depend
+    /// on optional parameters.
+    /// </summary>
+    private static WireProvider? BuildProvider(RoleSettings role)
+    {
+        bool pinned = role.ProviderOrder is { Count: > 0 };
+        bool excluding = role.ProviderIgnore is { Count: > 0 };
+
+        if (!role.RequireParameters && !pinned && !excluding)
+        {
+            return null;
+        }
+
+        return new WireProvider
+        {
+            RequireParameters = role.RequireParameters,
+            Order = pinned ? [.. role.ProviderOrder!] : null,
+
+            // Pinning that silently falls back to another provider would defeat the only
+            // reason to pin: knowing which upstream produced the answer.
+            AllowFallbacks = pinned ? false : null,
+            Ignore = excluding ? [.. role.ProviderIgnore!] : null,
         };
     }
 
@@ -340,6 +365,7 @@ public sealed class OpenRouterClient : ILlmClient, IDisposable
             Content = parsed.Content,
             ContentFromReasoning = parsed.ContentCameFromReasoning,
             Model = parsed.Model,
+            Provider = parsed.Provider,
             Usage = parsed.Usage is null
                 ? null
                 : new LlmUsage(
@@ -418,6 +444,9 @@ public sealed class OpenRouterClient : ILlmClient, IDisposable
         public string? Content { get; init; }
 
         public string? Model { get; init; }
+
+        /// <summary>Upstream provider that served the request. See <see cref="LlmResult.Provider"/>.</summary>
+        public string? Provider { get; init; }
 
         public LlmUsage? Usage { get; init; }
 

@@ -29,7 +29,7 @@ internal static class Program
         bool probe = args.Contains("--probe-schema", StringComparer.OrdinalIgnoreCase);
         // Skip anything that is the value of a --flag, or "--models deepseek/x" would be read
         // as a settings file path and the real settings silently ignored.
-        string[] valueFlags = ["--models", "--runs", "--scenarios"];
+        string[] valueFlags = ["--models", "--runs", "--scenarios", "--providers"];
         string? settingsPath = args
             .Where((a, i) => !a.StartsWith("--", StringComparison.Ordinal)
                              && (i == 0 || !valueFlags.Contains(args[i - 1], StringComparer.OrdinalIgnoreCase)))
@@ -90,7 +90,10 @@ internal static class Program
                 }
             }
 
-            return await ExtractionEval.RunAsync(settings, models, runs, scenarios, showDeltas)
+            string[]? providers = Value(args, "--providers")
+                ?.Split(',', StringSplitOptions.RemoveEmptyEntries);
+
+            return await ExtractionEval.RunAsync(settings, models, runs, scenarios, showDeltas, providers)
                 .ConfigureAwait(false);
         }
 
@@ -117,6 +120,7 @@ internal static class Program
         Console.WriteLine("                    --models a,b   models to compare (default: configured)");
         Console.WriteLine("                    --runs N       runs per scenario (default: 3)");
         Console.WriteLine("                    --scenarios x,y  named scenarios, incl. diagnostics");
+        Console.WriteLine("                    --providers a,b  sample each upstream separately");
         Console.WriteLine("                    --show-deltas  print what each run actually proposed");
         return 0;
     }

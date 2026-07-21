@@ -136,6 +136,28 @@ public sealed class RoleSettings
     /// </summary>
     [JsonPropertyName("responseFormat")]
     public LlmResponseFormat ResponseFormat { get; init; } = LlmResponseFormat.Text;
+
+    /// <summary>
+    /// Upstream providers to exclude, keeping all the others.
+    ///
+    /// <c>requireParameters</c> only filters providers that do not *support* a parameter. A
+    /// provider can support the schema, return schema-valid JSON, and still choose the wrong
+    /// delta branch — measured, not hypothetical. Nothing in the request can prevent that, so
+    /// the only defence is to measure and exclude.
+    ///
+    /// Deliberately an exclude list rather than a pin: routing keeps every remaining provider,
+    /// and a proxy that ignores the parameter degrades to today's behaviour instead of
+    /// breaking.
+    /// </summary>
+    [JsonPropertyName("providerIgnore")]
+    public IReadOnlyList<string>? ProviderIgnore { get; init; }
+
+    /// <summary>
+    /// Pin to specific providers, in order. Set by the eval to sample one provider at a time;
+    /// leave unset in normal config. See <c>WireProvider.Order</c>.
+    /// </summary>
+    [JsonPropertyName("providerOrder")]
+    public IReadOnlyList<string>? ProviderOrder { get; init; }
 }
 
 /// <summary>
