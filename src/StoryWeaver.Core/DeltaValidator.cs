@@ -21,6 +21,24 @@ namespace StoryWeaver.Core;
 /// which is the exact failure being prevented.</item>
 /// </list>
 ///
+/// <b>Validation order is ours to choose, not the model's.</b> The batch is sorted into
+/// dependency tiers before checking — declarations first, then everything that can reference
+/// them. An earlier version walked the batch in the order the model happened to emit it, and
+/// that quietly cost us the most common action in the game: asked to move somewhere new, the
+/// extractor emits
+/// <code>
+/// player_moved -> old-mill
+/// location_introduced old-mill
+/// </code>
+/// which is correct and complete, just not in our preferred order. Walking it verbatim
+/// rejected the move for naming a location that "did not exist", then accepted the location
+/// one line later, so exploring a new place recorded nothing. It measured 0/7 and read exactly
+/// like a model failure; a prompt rule written to make the model sort its own output did not
+/// fix it, because the ordering was never the model's problem to solve.
+///
+/// Sorting costs nothing and removes an entire class of dependence on how a model happens to
+/// order its JSON — which, across providers, it does not do consistently.
+///
 /// Rejections are returned, never thrown and never silently dropped. A silently discarded
 /// delta is the same failure mode as a silently dropped lorebook entry: the world quietly
 /// stops matching the story and nothing indicates why.
@@ -43,7 +61,9 @@ public static class DeltaValidator
         // batch contained the same location_introduced three times with different quotes.
         HashSet<string> seen = new(StringComparer.OrdinalIgnoreCase);
 
-        foreach (StateDelta delta in deltas)
+        // Dependency order, not emission order. OrderBy is stable, so deltas within a tier
+        // keep the sequence the model gave them — only the tiers move.
+        foreach (StateDelta delta in deltas.OrderBy(Tier))
         {
             if (!seen.Add(Identity(delta)))
             {
@@ -87,6 +107,30 @@ public static class DeltaValidator
 
         return new ValidationOutcome(accepted, noOps, rejected);
     }
+
+    /// <summary>
+    /// Dependency tier. Lower is validated first, so a delta is never judged against a world
+    /// missing something the same batch declares.
+    ///
+    /// Only three tiers are needed because the delta set is closed and its dependencies are
+    /// shallow: a location depends on nothing, a character may be introduced *into* a location,
+    /// and everything else references entities that already exist by then.
+    ///
+    /// This does not weaken the cascade. Tier 2 still sees only what tiers 0 and 1 actually
+    /// had <i>accepted</i>, so a rejected introduction still poisons every reference to it.
+    /// </summary>
+    private static int Tier(StateDelta delta) => delta switch
+    {
+        // Depend on nothing else in the batch.
+        LocationIntroduced => 0,
+        FactEstablished => 0,
+
+        // May name a location the batch introduced above.
+        CharacterIntroduced => 1,
+
+        // Moves, mood, status, relationships, fact_learned — all reference existing entities.
+        _ => 2,
+    };
 
     /// <summary>
     /// Semantic identity, ignoring <see cref="StateDelta.Evidence"/>. Two deltas asserting

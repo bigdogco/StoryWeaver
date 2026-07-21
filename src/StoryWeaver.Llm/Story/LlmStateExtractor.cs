@@ -54,6 +54,9 @@ public sealed class LlmStateExtractor : IStateExtractor
           new slug id for something genuinely new.
         - Never introduce a character or location that is already in the known ids. If the
           prose merely mentions a known place, that is not an introduction.
+        - A move must name the place the prose actually describes. When that place is new,
+          introduce it and move to the id you just gave it — never redirect the move to a
+          different place that happens to be already known.
         - A description field describes what something IS, permanently. Never put an event
           in a description.
         - Establishing a fact and someone knowing it are separate. When new information is

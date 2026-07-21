@@ -374,6 +374,43 @@ properly, in currency rather than tokens, once turns are real.
 
 ## Resolved
 
+### The validator rejected correct deltas because of their order
+
+**Resolved 2026-07-21.** Ours, not the model's — and it looked exactly like a model failure
+for most of a day.
+
+`DeltaValidator` checked each delta against canon plus everything accepted *earlier in the same
+batch*, walking the batch in the order the model emitted it. That silently assumed the model
+emits in dependency order. It does not:
+
+```
+REJECTED player_moved        -> old-mill
+ok       location_introduced old-mill (Old mill)
+```
+
+Correct and complete output, in an order we did not expect. The move was rejected for naming a
+location that "did not exist", which was then accepted one line later — so walking into a new
+place recorded nothing at all. It measured 0/7 on `player-arrival`, and a prompt rule written
+to make the model sort its own output did not fix it, because the ordering was never the
+model's problem to solve.
+
+**Fix:** sort into dependency tiers before validating — locations and facts, then characters
+(which may be introduced into a new location), then everything referencing existing entities.
+`OrderBy` is stable so within-tier order is preserved, and the cascade is unaffected: later
+tiers see only what earlier ones *accepted*, so a rejected introduction still poisons
+everything referencing it.
+
+**Two lessons worth keeping:**
+
+- **The tell was a metric kept for another purpose.** `rejects 0.33/run` over 21 runs was 7
+  rejections against exactly 7 `player-arrival` runs. The required/forbidden score could never
+  have surfaced this, because required is scored *after* validation and so only ever sees what
+  survived. `--show-deltas`, printing the raw proposal beside the verdict, is what made it
+  visible.
+- **Do not ask a model to work around your own bug.** The instinct to add a prompt rule
+  ("emit the introduction first") was treating a deterministic defect in our code as a
+  behavioural quirk to be coaxed. It was also fragile in principle and ineffective in practice.
+
 ### The narrator had no memory of any previous turn
 
 **Resolved 2026-07-21.** Found while diagnosing what looked like a resume bug after §6.

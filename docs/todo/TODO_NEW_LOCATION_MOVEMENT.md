@@ -1,6 +1,6 @@
 # TODO: Movement to a new location
 
-**Status:** IN PROGRESS — premise revised after the provider investigation
+**Status:** DONE — `player-arrival` 0/7 → 14/14, baseline 86% → 97%
 **Created:** 2026-07-21
 
 ---
@@ -63,9 +63,30 @@ it is not forgotten.
       107 tokens.** `movement` 7/7, `hostility` 14/14, `new-character` 7/7, `revelation` 19/21,
       `player-arrival` 7/14. Providers: StreamLake 39/48 clean, Baidu 8/8. All remaining
       failures are systematic — no provider variance left in the data.
-- [ ] Fix the missing move. Iterate **pinned to Baidu** so a prompt change is measurable
-      without routing noise, then confirm on normal routing.
-- [ ] Revisit the `fact_learned`-for-the-speaker miss (3/7 on Baidu) separately.
+- [x] Fix the missing move. It was **two** further faults, not one:
+
+      **Our validator, rejecting correct output.** The model emitted both deltas in the order
+      *move, then introduce*; `DeltaValidator` walked the batch in emission order and rejected
+      the move for naming a location declared one line later. Fixed by sorting into dependency
+      tiers before checking (locations/facts → characters → everything else). `OrderBy` is
+      stable, so within-tier order is preserved, and the cascade is intact because tier 2 sees
+      only what earlier tiers *accepted*. Verified offline, 15 assertions.
+
+      The tell was `rejects 0.33/run` — 7 rejections across 21 runs, exactly the 7
+      `player-arrival` runs. A required/forbidden score could not have shown it, since required
+      is scored after validation.
+
+      **The model substituting a familiar id.** With rejections gone the score still did not
+      move: it introduced `old-mill` correctly then moved the player to `marrow-square`, a
+      known place the narration never mentions. One narrow prompt rule ("a move must name the
+      place the prose describes; never redirect to a different already-known place") took
+      `player-arrival` to 14/14 with `movement` and `atmosphere` unchanged, and dropped
+      completion tokens 165 → 85.
+
+      **Final: 97% required, forbidden 0.00, rejects 0.00, 54/56 clean runs.**
+
+- [ ] Revisit the `fact_learned`-for-the-speaker miss — still 2/7 on the current baseline.
+      Tracked as the only remaining scored gap.
 
 ## Method rule earned the hard way
 
