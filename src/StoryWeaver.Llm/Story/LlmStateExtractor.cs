@@ -64,7 +64,9 @@ public sealed class LlmStateExtractor : IStateExtractor
           INCLUDING THE SPEAKER, unless the known ids already record them as knowing it.
           Canon only contains what you write down: a character who states a secret but gets
           no fact_learned is recorded as not knowing their own secret, and will contradict
-          themselves later.
+          themselves later. This applies to EVERY fact you establish, not only the first —
+          if one speech reveals three things, emit three fact_established and give each of
+          them its own fact_learned for the speaker and for everyone else who now knows it.
         - fact_learned is only for real information. A character who was merely asked a
           question has learned nothing.
         - Do not restate what is already true. If the state says a mood is "wary", do not
