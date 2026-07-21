@@ -59,6 +59,7 @@ public sealed class LlmNarrator : INarrator
 
     public async Task<string> NarrateAsync(
         string context,
+        IReadOnlyList<StoryBeat> recent,
         string playerInput,
         CancellationToken cancellationToken = default)
     {
@@ -66,11 +67,7 @@ public sealed class LlmNarrator : INarrator
             new LlmCall
             {
                 Role = LlmRole.Narration,
-                Messages =
-                [
-                    LlmMessage.System(SystemPrompt),
-                    LlmMessage.User($"World state:\n\n{context}\n\nThe player: {playerInput}"),
-                ],
+                Messages = BuildMessages(context, recent, playerInput),
             },
             cancellationToken: cancellationToken).ConfigureAwait(false);
 
@@ -82,6 +79,37 @@ public sealed class LlmNarrator : INarrator
         }
 
         return result.Content.Trim();
+    }
+
+    /// <summary>
+    /// System prompt, then the recent story as real alternating user/assistant turns, then
+    /// the current turn.
+    ///
+    /// Replaying history as actual messages rather than pasting a transcript into one blob
+    /// buys two things. It is the shape a chat model was trained on for multi-turn dialogue;
+    /// and it keeps the volatile part — world state, which changes every turn — in the
+    /// <i>last</i> message, so the system prompt plus the whole history stays a stable,
+    /// cacheable prefix. A transcript blob would invalidate that prefix on every single turn.
+    ///
+    /// The replayed user messages carry the player's raw input only, deliberately without the
+    /// world-state block they originally shipped with: stale state in the history would sit
+    /// there competing with the current state below it.
+    /// </summary>
+    private static IReadOnlyList<LlmMessage> BuildMessages(
+        string context,
+        IReadOnlyList<StoryBeat> recent,
+        string playerInput)
+    {
+        List<LlmMessage> messages = new(2 + (recent.Count * 2)) { LlmMessage.System(SystemPrompt) };
+
+        foreach (StoryBeat beat in recent)
+        {
+            messages.Add(LlmMessage.User(beat.PlayerInput));
+            messages.Add(LlmMessage.Assistant(beat.Narration));
+        }
+
+        messages.Add(LlmMessage.User($"World state:\n\n{context}\n\nThe player: {playerInput}"));
+        return messages;
     }
 }
 

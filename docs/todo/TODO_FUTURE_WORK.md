@@ -87,6 +87,14 @@ Small things the incumbents mostly don't do, cheap to add once the foundations e
 
 ## Storage evolution
 
+- [ ] **The narration history window re-reads the whole turn log every turn.** `TurnEngine`
+      calls `LoadHistoryAsync` and takes the last N, which is O(n) per turn against a file that
+      only grows. Fine at bootstrap scale and deliberately not optimized yet, but it is the
+      first thing that will actually hurt in a long world. Two cheap fixes when it does: keep
+      the window in memory across a session and only read from disk on resume, or give the
+      repository a `LoadRecentTurnsAsync(worldId, count)` that a seekable store can answer
+      properly. The second is the one that survives the SQLite move.
+
 - [ ] **JSON → SQLite for the turn log.** Trigger: wanting full-text search over history.
       Likely end state is a hybrid — JSON for entity canon (small, diffable,
       hand-editable), SQLite for the turn log (grows unbounded, needs FTS, wants

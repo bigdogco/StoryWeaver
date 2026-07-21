@@ -44,6 +44,11 @@
     }
   },
 
+  "story": {
+    "_comment": "historyTurns: how many past turns of prose the narrator is reminded of. A turn is TWO messages (player input + narration), so cost is roughly 200-300 tokens per turn against the narration role. Canon holds the long-term truth; this holds the texture canon cannot - what an NPC just said, the thread of a conversation. 0 disables it.",
+    "historyTurns": 10
+  },
+
   "logging": {
     "logPrompts": true,
     "logResponses": true,

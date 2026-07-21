@@ -10,15 +10,32 @@ namespace StoryWeaver.Core;
 /// </summary>
 public sealed class TurnEngine
 {
+    /// <summary>Turns of prose the narrator is reminded of. See <see cref="_historyTurns"/>.</summary>
+    public const int DefaultHistoryTurns = 10;
+
     private readonly INarrator _narrator;
     private readonly IStateExtractor _extractor;
     private readonly IWorldRepository _repository;
 
-    public TurnEngine(INarrator narrator, IStateExtractor extractor, IWorldRepository repository)
+    /// <summary>
+    /// How many past turns of prose to replay to the narrator. A turn is a player input plus
+    /// its narration, so the message count is double this.
+    ///
+    /// Zero disables the window, which is what the loop did before it existed — canon-only
+    /// memory, and the narrator rewriting the scene from scratch every turn.
+    /// </summary>
+    private readonly int _historyTurns;
+
+    public TurnEngine(
+        INarrator narrator,
+        IStateExtractor extractor,
+        IWorldRepository repository,
+        int historyTurns = DefaultHistoryTurns)
     {
         _narrator = narrator;
         _extractor = extractor;
         _repository = repository;
+        _historyTurns = Math.Max(0, historyTurns);
     }
 
     public async Task<TurnOutcome> RunTurnAsync(
@@ -34,8 +51,11 @@ public sealed class TurnEngine
         string narrationContext = ContextAssembler.ForNarration(world);
         string extractionContext = ContextAssembler.ForExtraction(world);
 
+        IReadOnlyList<StoryBeat> recent = await LoadRecentAsync(worldId, cancellationToken)
+            .ConfigureAwait(false);
+
         string narration = await _narrator
-            .NarrateAsync(narrationContext, playerInput, cancellationToken)
+            .NarrateAsync(narrationContext, recent, playerInput, cancellationToken)
             .ConfigureAwait(false);
 
         ExtractionResult extraction;
@@ -79,6 +99,38 @@ public sealed class TurnEngine
         await _repository.AppendTurnAsync(worldId, record, cancellationToken).ConfigureAwait(false);
 
         return new TurnOutcome(record, extractionError);
+    }
+
+    /// <summary>
+    /// The last <see cref="_historyTurns"/> turns as prose, oldest first.
+    ///
+    /// Only narration gets this. Extraction deliberately does not: it scores 100% on the eval
+    /// reading a single turn, and showing it earlier turns invites it to re-extract events
+    /// that are already canon as though they were new.
+    ///
+    /// Reads the whole log to take the tail, which is O(n) per turn. Acceptable at the scale
+    /// this phase plays at, and the repository interface already anticipates moving the turn
+    /// log somewhere that can seek when it stops being acceptable.
+    /// </summary>
+    private async Task<IReadOnlyList<StoryBeat>> LoadRecentAsync(
+        string worldId,
+        CancellationToken cancellationToken)
+    {
+        if (_historyTurns == 0)
+        {
+            return [];
+        }
+
+        IReadOnlyList<TurnRecord> history = await _repository
+            .LoadHistoryAsync(worldId, cancellationToken)
+            .ConfigureAwait(false);
+
+        return
+        [
+            .. history
+                .Skip(Math.Max(0, history.Count - _historyTurns))
+                .Select(t => new StoryBeat(t.PlayerInput, t.Narration)),
+        ];
     }
 
     /// <summary>

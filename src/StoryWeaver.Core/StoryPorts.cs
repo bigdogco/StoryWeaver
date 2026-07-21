@@ -5,11 +5,29 @@ namespace StoryWeaver.Core;
 // the implementations. That keeps the turn loop testable with hand-written fakes and keeps
 // provider concerns from leaking into the domain.
 
-/// <summary>Turns world state and player input into prose.</summary>
+/// <summary>
+/// One past turn as the narrator needs to see it: what the player wrote, and what was
+/// written back. Deliberately not <see cref="TurnRecord"/> — the narrator has no business
+/// seeing deltas, rejections, or raw extraction output, and handing it the whole record
+/// would invite exactly the bookkeeping-while-storytelling that the two-model split exists
+/// to avoid.
+/// </summary>
+public sealed record StoryBeat(string PlayerInput, string Narration);
+
+/// <summary>
+/// Turns world state and player input into prose.
+///
+/// <paramref name="recent"/> is the short-term memory, oldest first. Canon carries the
+/// long-term truth — who is where, what they know, how they feel — but it cannot carry the
+/// texture of the last few minutes: what an NPC actually just said, the thread of a
+/// conversation, what has already been described. Without it the narrator rewrites the scene
+/// from scratch every turn.
+/// </summary>
 public interface INarrator
 {
     Task<string> NarrateAsync(
         string context,
+        IReadOnlyList<StoryBeat> recent,
         string playerInput,
         CancellationToken cancellationToken = default);
 }

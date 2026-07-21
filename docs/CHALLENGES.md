@@ -328,6 +328,31 @@ properly, in currency rather than tokens, once turns are real.
 
 ## Resolved
 
+### The narrator had no memory of any previous turn
+
+**Resolved 2026-07-21.** Found while diagnosing what looked like a resume bug after §6.
+
+Narration was sent exactly two messages — the system prompt, and the current world state plus
+player input. **No prior prose was ever included**, on any turn. Every turn was written by a
+model that had not seen a word of the story, with canon as its only memory.
+
+Canon is the right *long-term* memory, but it cannot hold what an NPC just said, the thread of
+a conversation, or what has already been described. The result is a narrator that re-describes
+the scene from scratch and cannot continue a dialogue.
+
+**Two things worth remembering from how this was found.** It had never been recorded as a
+decision anywhere — it was an unexamined gap that looked like an architectural principle, and
+"canon is the source of truth" quietly justified it. And the bug report was for something
+else entirely: persistence was working perfectly (verified on disk: `turnNumber: 6`, six
+history lines), and resuming merely made an always-present gap *visible*. Checking the disk
+before theorising is what separated the two.
+
+Fixed with a configurable window (`story.historyTurns`, default 10) of recent turns replayed
+as real alternating user/assistant messages, keeping volatile world state in the last message
+so the prefix stays cacheable. Extraction deliberately gets none of it — it scores 100% on the
+eval reading a single turn, and prior turns invite re-extracting settled events as new deltas.
+See the 2026-07-21 devlog.
+
 ### `anyOf` in strict JSON schema — works
 
 **Resolved 2026-07-19** by `--probe-schema`.

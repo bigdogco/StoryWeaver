@@ -27,6 +27,9 @@ public sealed class StoryWeaverSettings
     [JsonPropertyName("logging")]
     public LoggingSettings Logging { get; init; } = new();
 
+    [JsonPropertyName("story")]
+    public StorySettings Story { get; init; } = new();
+
     /// <summary>
     /// Look up a role's settings, or throw with a message naming what is configured.
     /// </summary>
@@ -133,6 +136,26 @@ public sealed class RoleSettings
     /// </summary>
     [JsonPropertyName("responseFormat")]
     public LlmResponseFormat ResponseFormat { get; init; } = LlmResponseFormat.Text;
+}
+
+/// <summary>
+/// Storytelling behaviour that is a taste call rather than a provider concern.
+/// </summary>
+public sealed class StorySettings
+{
+    /// <summary>
+    /// How many past turns of prose the narrator is reminded of.
+    ///
+    /// <b>A turn is two messages</b> — the player's input and the narration answering it — so
+    /// the message count is double this number, and so is the token cost (roughly 200-300
+    /// tokens per remembered turn against the narration role).
+    ///
+    /// Canon covers the long-term truth; this covers the texture canon cannot hold: what an
+    /// NPC actually just said, the thread of a conversation, what has already been described.
+    /// 0 disables it, which is how the loop behaved before this existed.
+    /// </summary>
+    [JsonPropertyName("historyTurns")]
+    public int HistoryTurns { get; init; } = 10;
 }
 
 public sealed class LoggingSettings

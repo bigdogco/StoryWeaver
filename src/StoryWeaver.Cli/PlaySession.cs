@@ -26,7 +26,12 @@ internal static class PlaySession
         using OpenRouterClient client = new(settings, log);
 
         JsonWorldRepository repository = new(SaveRoot);
-        TurnEngine engine = new(new LlmNarrator(client), new LlmStateExtractor(client), repository);
+        int historyTurns = settings.Story.HistoryTurns;
+        TurnEngine engine = new(
+            new LlmNarrator(client),
+            new LlmStateExtractor(client),
+            repository,
+            historyTurns);
 
         // Resume the world if it exists, otherwise seed it and write the first save so the
         // world is on disk before any turn runs.
@@ -39,8 +44,20 @@ internal static class PlaySession
             await repository.SaveAsync(WorldId, world).ConfigureAwait(false);
         }
 
-        PrintBanner(log.FilePath, repository.RootDirectory, resumed, world.TurnNumber);
-        PrintOpeningScene(world);
+        PrintBanner(log.FilePath, repository.RootDirectory, resumed, world.TurnNumber, historyTurns);
+
+        if (resumed)
+        {
+            // The narrator gets the same window as prose; the player should not be the only
+            // one in the room with no memory of what just happened. This replaces the opening
+            // scene rather than following it — the story tail already establishes where they
+            // are, and a static room description after it reads as a reset.
+            await PrintRecentAsync(repository, historyTurns).ConfigureAwait(false);
+        }
+        else
+        {
+            PrintOpeningScene(world);
+        }
 
         while (true)
         {
@@ -186,7 +203,43 @@ internal static class PlaySession
         Console.WriteLine(history[^1].RawExtraction ?? "(no raw extraction recorded)");
     }
 
-    private static void PrintBanner(string logPath, string saveRoot, bool resumed, int turnNumber)
+    /// <summary>
+    /// Replay the tail of the story so a resumed session reads as a continuation. Shows the
+    /// same turns the narrator is being reminded of, so what the player sees and what the
+    /// model remembers do not quietly diverge.
+    /// </summary>
+    private static async Task PrintRecentAsync(IWorldRepository repo, int historyTurns)
+    {
+        if (historyTurns <= 0)
+        {
+            return;
+        }
+
+        IReadOnlyList<TurnRecord> history = await repo.LoadHistoryAsync(WorldId).ConfigureAwait(false);
+
+        if (history.Count == 0)
+        {
+            return;
+        }
+
+        Console.WriteLine($"--- the story so far (last {Math.Min(historyTurns, history.Count)} turns) ---");
+        Console.WriteLine();
+
+        foreach (TurnRecord turn in history.Skip(Math.Max(0, history.Count - historyTurns)))
+        {
+            Console.WriteLine($"> {turn.PlayerInput}");
+            Console.WriteLine();
+            Console.WriteLine(turn.Narration);
+            Console.WriteLine();
+        }
+    }
+
+    private static void PrintBanner(
+        string logPath,
+        string saveRoot,
+        bool resumed,
+        int turnNumber,
+        int historyTurns)
     {
         Console.WriteLine();
         Console.WriteLine(resumed
@@ -194,6 +247,7 @@ internal static class PlaySession
             : "StoryWeaver — play session (new world)");
         Console.WriteLine($"Saving to  {saveRoot}");
         Console.WriteLine($"Logging to {logPath}");
+        Console.WriteLine($"Narrator remembers the last {historyTurns} turns");
         Console.WriteLine();
         Console.WriteLine("Write *actions between asterisks* and speech outside them:");
         Console.WriteLine();
