@@ -25,12 +25,14 @@ internal static class ExtractionEval
     public static async Task<int> RunAsync(
         StoryWeaverSettings settings,
         string[] models,
-        int runs)
+        int runs,
+        IReadOnlyList<EvalScenario> scenarios,
+        bool showDeltas = false)
     {
         FileLlmLog log = new(settings.Logging);
 
-        Console.WriteLine($"Scenarios: {EvalScenarios.All.Count}, models: {models.Length}, runs each: {runs}");
-        Console.WriteLine($"Calls: {EvalScenarios.All.Count * models.Length * runs}");
+        Console.WriteLine($"Scenarios: {scenarios.Count}, models: {models.Length}, runs each: {runs}");
+        Console.WriteLine($"Calls: {scenarios.Count * models.Length * runs}");
         Console.WriteLine($"Logging to {log.FilePath}");
         Console.WriteLine();
 
@@ -38,7 +40,8 @@ internal static class ExtractionEval
 
         foreach (string model in models)
         {
-            reports.Add(await ScoreModelAsync(settings, log, model, runs).ConfigureAwait(false));
+            reports.Add(await ScoreModelAsync(settings, log, model, runs, scenarios, showDeltas)
+                .ConfigureAwait(false));
         }
 
         PrintSummary(reports);
@@ -49,7 +52,9 @@ internal static class ExtractionEval
         StoryWeaverSettings settings,
         ILlmLog log,
         string model,
-        int runs)
+        int runs,
+        IReadOnlyList<EvalScenario> scenarios,
+        bool showDeltas)
     {
         Console.WriteLine($"=== {model} ===");
 
@@ -59,14 +64,19 @@ internal static class ExtractionEval
 
         ModelReport report = new(model);
 
-        foreach (EvalScenario scenario in EvalScenarios.All)
+        foreach (EvalScenario scenario in scenarios)
         {
             ScenarioReport scenarioReport = new(scenario.Name);
 
             for (int run = 0; run < runs; run++)
             {
-                scenarioReport.Runs.Add(
-                    await ScoreRunAsync(extractor, scenario).ConfigureAwait(false));
+                RunScore score = await ScoreRunAsync(extractor, scenario).ConfigureAwait(false);
+                scenarioReport.Runs.Add(score);
+
+                if (showDeltas)
+                {
+                    PrintDeltas(scenario.Name, run, score);
+                }
             }
 
             report.Scenarios.Add(scenarioReport);
@@ -76,6 +86,48 @@ internal static class ExtractionEval
         Console.WriteLine();
         return report;
     }
+
+    /// <summary>
+    /// Dump what the model actually proposed. A score says whether a rule fired; on an open
+    /// design question the interesting part is what it did *instead*, which no pass/fail
+    /// number can show.
+    /// </summary>
+    private static void PrintDeltas(string scenario, int run, RunScore score)
+    {
+        Console.WriteLine($"    [{scenario} run {run + 1}]");
+
+        if (score.Failed)
+        {
+            Console.WriteLine($"      ERROR: {score.Note}");
+            return;
+        }
+
+        if (score.Proposed.Count == 0)
+        {
+            Console.WriteLine("      (no deltas proposed)");
+            return;
+        }
+
+        foreach (StateDelta delta in score.Proposed)
+        {
+            string mark = score.RejectedDeltas.Contains(delta) ? "REJECTED" : "ok      ";
+            Console.WriteLine($"      {mark} {Describe(delta)}");
+        }
+    }
+
+    private static string Describe(StateDelta delta) => delta switch
+    {
+        CharacterMoved d => $"character_moved     {d.CharacterId} -> {d.ToLocationId}",
+        PlayerMoved d => $"player_moved        -> {d.ToLocationId}",
+        StatusChanged d => $"status_changed      {d.CharacterId} = {d.Status}",
+        MoodChanged d => $"mood_changed        {d.CharacterId} = {d.Mood}",
+        RelationshipChanged d => $"relationship_changed {d.CharacterId} = {d.Standing} ({d.Summary})",
+        FactEstablished d => $"fact_established    {d.FactId}: {d.Text}",
+        FactLearned d => $"fact_learned        {d.CharacterId} <- {d.FactId}",
+        CharacterIntroduced d => $"character_introduced {d.CharacterId} ({d.Name}) @ {d.LocationId}",
+        LocationIntroduced d => $"location_introduced {d.LocationId} ({d.Name})",
+        _ => delta.GetType().Name,
+    };
 
     private static async Task<RunScore> ScoreRunAsync(IStateExtractor extractor, EvalScenario scenario)
     {
@@ -120,6 +172,8 @@ internal static class ExtractionEval
             ReasoningTokens = result.Usage?.ReasoningTokens ?? 0,
             MissingRules = [.. scenario.Required.Where(r => !effective.Any(r.Matches)).Select(r => r.Description)],
             ViolatedRules = [.. scenario.Forbidden.Where(r => result.Deltas.Any(r.Matches)).Select(r => r.Description)],
+            Proposed = result.Deltas,
+            RejectedDeltas = [.. validation.Rejected.Select(r => r.Delta)],
         };
     }
 
@@ -290,5 +344,11 @@ internal static class ExtractionEval
         public IReadOnlyList<string> MissingRules { get; init; } = [];
 
         public IReadOnlyList<string> ViolatedRules { get; init; } = [];
+
+        /// <summary>Everything the model proposed, before validation. Kept for
+        /// <c>--show-deltas</c>; scoring uses the fields above.</summary>
+        public IReadOnlyList<StateDelta> Proposed { get; init; } = [];
+
+        public IReadOnlyList<StateDelta> RejectedDeltas { get; init; } = [];
     }
 }

@@ -46,6 +46,120 @@ internal static class EvalScenarios
         Atmosphere,
     ];
 
+    /// <summary>
+    /// Open design questions, deliberately <b>not</b> in <see cref="All"/>.
+    ///
+    /// These ask what the model *does*, not whether it is right — the correct behaviour has
+    /// not been decided. Keeping them out of the scored set matters: the recorded baseline is
+    /// "100% across seven scenarios", and folding in cases whose `Required` rules may
+    /// legitimately fail would change the denominator and make future sweeps
+    /// incomparable to it. Promote one into <see cref="All"/> only once we have decided what
+    /// the right answer is.
+    ///
+    /// Run with <c>--eval --scenarios player-place,player-absent-character</c>.
+    ///
+    /// <b>Results, deepseek-v3.2, n=7 each (2026-07-21):</b>
+    /// <list type="bullet">
+    /// <item><c>player-place</c> 0/7 — zero deltas on every run. A referenced place is not
+    /// recorded in any form.</item>
+    /// <item><c>player-absent-character</c> 0/7 — same, though 2/7 runs correctly caught Mabb
+    /// going still at the brother's name, so the model is reading closely; it simply does not
+    /// treat a mention as a world change.</item>
+    /// <item><c>narrator-mention</c> 0/7 — zero deltas. <b>Authorship is irrelevant:</b> the
+    /// narrator naming an unknown place and person in passing is dropped exactly like the
+    /// player doing it. The dividing line is presence, not who spoke.</item>
+    /// <item><c>player-arrival</c> — see that scenario. It found a genuine bug rather than a
+    /// design question, and is on its way into the scored set.</item>
+    /// </list>
+    ///
+    /// The first three agree with the retired <c>player-claim</c> case and are consistent
+    /// across 21 runs: <b>mention never creates an entity</b>. That is a defensible rule for
+    /// NPC speech, so the answer for the player is a deliberate authoring path
+    /// (<c>/place</c>, <c>/character</c>, <c>/fact</c>) rather than loosening extraction.
+    /// </summary>
+    public static IReadOnlyList<EvalScenario> Diagnostics =>
+    [
+        PlayerPlace,
+        PlayerAbsentCharacter,
+        PlayerArrival,
+        NarratorMention,
+    ];
+
+    /// <summary>Every scenario, scored and diagnostic, for name-based selection.</summary>
+    public static IReadOnlyList<EvalScenario> Everything => [.. All, .. Diagnostics];
+
+    /// <summary>
+    /// <b>Diagnostic.</b> The player names a place that does not exist in canon, as
+    /// backstory rather than as somewhere they are going.
+    ///
+    /// The question this answers: does a place the player asserts ever become real? The
+    /// retired <c>player-claim</c> case showed models treat "someone said a thing" as an event
+    /// rather than world truth (0/7, 0/7, 2/7 across six models) — but that tested a claim
+    /// about an *event*. A named city is a different shape, and the answer matters because the
+    /// narration history window will happily reference Astaria for as many turns as it stays
+    /// in the window, then lose it forever if canon never recorded it.
+    ///
+    /// Note what is deliberately NOT asserted here: the player has not gone to Astaria, so
+    /// any movement delta is wrong.
+    /// </summary>
+    private static EvalScenario PlayerPlace => new(
+        "player-place",
+        "*I set my pack down by the stool.* I've come up from Astaria. Three weeks on the road.",
+        """
+        Hald's rag slows on the counter. "Astaria," he repeats, like the word tastes of
+        something. "Long way to come for marsh water and bad beer." He pulls a mug down from
+        the rack and fills it without being asked, setting it in front of you.
+
+        From his corner, Mabb lifts his head. "Capital folk," he mutters, not quite to you.
+        "Always running from something." He subsides back over his own cup before anyone can
+        answer him.
+        """,
+        Required:
+        [
+            new("Astaria recorded as a location",
+                d => d is LocationIntroduced l && l.LocationId.Contains("astaria", StringComparison.OrdinalIgnoreCase)),
+        ],
+        Forbidden:
+        [
+            new("the player moved to Astaria (they did not go there)",
+                d => d is PlayerMoved p && p.ToLocationId.Contains("astaria", StringComparison.OrdinalIgnoreCase)),
+            new("a known location re-introduced",
+                d => d is LocationIntroduced { LocationId: "marrow-square" or "marrow-tavern" }),
+            new("any character introduced", d => d is CharacterIntroduced),
+        ]);
+
+    /// <summary>
+    /// <b>Diagnostic.</b> The player names a person who is not present and is not in canon.
+    ///
+    /// Same question as <see cref="PlayerPlace"/> for characters, plus a failure mode worth
+    /// catching on its own: an absent person being placed in the room. A
+    /// <c>character_introduced</c> for Tomas is arguably right; a <c>character_moved</c>
+    /// putting him in the tavern is unambiguously wrong, because he is a memory, not a guest.
+    /// </summary>
+    private static EvalScenario PlayerAbsentCharacter => new(
+        "player-absent-character",
+        "*I turn the cup in my hands.* My brother Tomas came through Marrow last winter. Did you see him?",
+        """
+        Hald considers the question longer than it deserves. "Lot of men come through in
+        winter," he says. "Most of them I forget on purpose." He does not ask what Tomas looked
+        like, and he does not look up from the rag.
+
+        Mabb has gone very still in his corner, his fingers stopped on the rim of his mug.
+        """,
+        Required:
+        [
+            new("Tomas recorded as a character",
+                d => d is CharacterIntroduced c && c.CharacterId.Contains("tomas", StringComparison.OrdinalIgnoreCase)),
+        ],
+        Forbidden:
+        [
+            new("Tomas placed in the scene (he is absent)",
+                d => d is CharacterMoved m && m.CharacterId.Contains("tomas", StringComparison.OrdinalIgnoreCase)),
+            new("a known character re-introduced",
+                d => d is CharacterIntroduced { CharacterId: Hald or "drinker-mabb" or Character.PlayerId }),
+            new("any location introduced", d => d is LocationIntroduced),
+        ]);
+
     // PlayerClaim is retired, not deleted. It encoded the decision that a player's assertion
     // becomes a fact, and six models rejected it 0/7, 0/7, 2/7 across 21 samples. Twenty-one
     // samples of unanimous disagreement is a design answer, not a tuning problem — the models
@@ -53,6 +167,105 @@ internal static class EvalScenarios
     // and arguably more correct than the original rule.
     //
     // Kept in the file because the reasoning is worth finding again if someone re-proposes it.
+
+    /// <summary>
+    /// <b>Diagnostic.</b> The player asserts they are <i>going somewhere</i> that is not in
+    /// canon, and the narration follows them there.
+    ///
+    /// The other half of <see cref="PlayerPlace"/>. That case showed a merely-referenced place
+    /// is dropped 7/7. This one tests whether the dividing line is really presence rather than
+    /// authorship: same player, same invented place, but now they are standing in it. If this
+    /// scores well, the practical rule for players is "walk there, do not mention it", and the
+    /// gap is narrower than it first looked.
+    ///
+    /// <b>It does not score well. This found a real bug (2026-07-21, deepseek-v3.2, n=7):</b>
+    /// the player moved to the mill <b>0/7</b>, the mill was recorded 2/7, and 5/7 runs emitted
+    /// the mill as a <c>character_introduced</c> under <c>characterId: "player"</c> — a
+    /// building crammed into a character delta, which the validator then rejects as a
+    /// re-introduction, so nothing at all reaches canon. One run emitted
+    /// <c>player_moved -&gt; marrow-square</c>, the wrong but *familiar* destination; another
+    /// spiralled to <c>finish_reason: length</c>. Verified against the raw JSON: the model
+    /// really emits this, it is not a deserialization fault.
+    ///
+    /// <b>Why this was missed:</b> <see cref="Movement"/> scores 7/7 but only ever moves to
+    /// <c>marrow-square</c>, a place already in canon. Movement to a *new* place — the core
+    /// loop of exploring — was never tested.
+    ///
+    /// Suspected cause: over-correction. Every "never introduce a known entity" rule in the
+    /// extraction prompt was added to stop re-introductions and they worked, but the model now
+    /// appears reluctant to introduce a genuinely new location and reaches for any other
+    /// branch. The machinery is fine — <c>DeltaValidator</c> cascades, so introduce-then-move
+    /// in one batch is supported.
+    /// </summary>
+    private static EvalScenario PlayerArrival => new(
+        "player-arrival",
+        "*I pull my coat tight and follow the track past the last houses, out to the old mill.*",
+        """
+        The track turns to mud past the last of the houses, and the marsh wind comes at you
+        unbroken. The old mill stands where the ground rises, its wheel long stopped and half
+        its roof fallen in. Someone has been here recently: the door hangs open, and the nettles
+        by the step are trodden flat.
+
+        Behind you, Marrow is a smudge of smoke against the grey. Nothing moves in the doorway
+        of the mill.
+        """,
+        Required:
+        [
+            new("the mill recorded as a location",
+                d => d is LocationIntroduced l && l.LocationId.Contains("mill", StringComparison.OrdinalIgnoreCase)),
+            new("the player moved to the mill",
+                d => (d is PlayerMoved p && p.ToLocationId.Contains("mill", StringComparison.OrdinalIgnoreCase))
+                     || (d is CharacterMoved m && m.CharacterId == Character.PlayerId
+                         && m.ToLocationId.Contains("mill", StringComparison.OrdinalIgnoreCase))),
+        ],
+        Forbidden:
+        [
+            new("a known location re-introduced",
+                d => d is LocationIntroduced { LocationId: "marrow-square" or "marrow-tavern" }),
+            new("any character introduced (nobody is there)", d => d is CharacterIntroduced),
+        ]);
+
+    /// <summary>
+    /// <b>Diagnostic.</b> The <i>narrator</i> names an unknown place and an unknown person in
+    /// passing, as background texture. Neither is present and nothing is revealed.
+    ///
+    /// The case we had no data for. <see cref="Atmosphere"/> proved a *known* place named in
+    /// passing is correctly not re-introduced; this asks what happens when the place and person
+    /// are new. It is the general "when does a mentioned thing become a real entity" question
+    /// that also decides the buildings-in-prose gap in TODO_FUTURE_WORK.
+    ///
+    /// Deliberately low on information content, so a <c>fact_established</c> here would be the
+    /// junk-fact failure rather than a legitimate revelation.
+    /// </summary>
+    private static EvalScenario NarratorMention => new(
+        "narrator-mention",
+        "*I warm my hands at the hearth.*",
+        """
+        The fire gives up more smoke than heat. Hald works along the bar, turning mugs
+        upside down on a cloth, and does not look over.
+
+        "Coach from Fenwick's late again," he says, to nobody in particular. "Third week
+        running." Mabb grunts from his corner without lifting his head. "Warden Ilse'll have
+        something to say about that," he offers, and goes back to his cup.
+
+        Outside, the wind works at the shutters.
+        """,
+        Required:
+        [
+            new("Fenwick recorded as a location",
+                d => d is LocationIntroduced l && l.LocationId.Contains("fenwick", StringComparison.OrdinalIgnoreCase)),
+            new("Warden Ilse recorded as a character",
+                d => d is CharacterIntroduced c && c.CharacterId.Contains("ilse", StringComparison.OrdinalIgnoreCase)),
+        ],
+        Forbidden:
+        [
+            new("Ilse placed in the scene (she is absent)",
+                d => d is CharacterMoved m && m.CharacterId.Contains("ilse", StringComparison.OrdinalIgnoreCase)),
+            new("a known character re-introduced",
+                d => d is CharacterIntroduced { CharacterId: Hald or "drinker-mabb" or Character.PlayerId }),
+            new("a fact established from small talk",
+                d => d is FactEstablished),
+        ]);
 
     /// <summary>
     /// <b>Real generated narration, copied verbatim from a live session</b> — not written for

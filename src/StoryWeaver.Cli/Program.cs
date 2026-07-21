@@ -29,7 +29,7 @@ internal static class Program
         bool probe = args.Contains("--probe-schema", StringComparer.OrdinalIgnoreCase);
         // Skip anything that is the value of a --flag, or "--models deepseek/x" would be read
         // as a settings file path and the real settings silently ignored.
-        string[] valueFlags = ["--models", "--runs"];
+        string[] valueFlags = ["--models", "--runs", "--scenarios"];
         string? settingsPath = args
             .Where((a, i) => !a.StartsWith("--", StringComparison.Ordinal)
                              && (i == 0 || !valueFlags.Contains(args[i - 1], StringComparer.OrdinalIgnoreCase)))
@@ -54,8 +54,44 @@ internal static class Program
             string[] models = Value(args, "--models")?.Split(',', StringSplitOptions.RemoveEmptyEntries)
                               ?? [settings.GetRole(LlmRole.Extraction).Model];
             int runs = int.TryParse(Value(args, "--runs"), out int parsed) ? parsed : 3;
+            bool showDeltas = args.Contains("--show-deltas", StringComparer.OrdinalIgnoreCase);
 
-            return await ExtractionEval.RunAsync(settings, models, runs).ConfigureAwait(false);
+            // Default to the scored set. Naming scenarios explicitly also reaches the
+            // diagnostics, which are kept out of the scored set on purpose.
+            string? names = Value(args, "--scenarios");
+            IReadOnlyList<EvalScenario> scenarios;
+
+            if (names is null)
+            {
+                scenarios = EvalScenarios.All;
+            }
+            else
+            {
+                string[] wanted = names.Split(',', StringSplitOptions.RemoveEmptyEntries);
+                scenarios =
+                [
+                    .. EvalScenarios.Everything
+                        .Where(s => wanted.Contains(s.Name, StringComparer.OrdinalIgnoreCase)),
+                ];
+
+                string[] unknown =
+                [
+                    .. wanted.Where(w =>
+                        !EvalScenarios.Everything.Any(s =>
+                            string.Equals(s.Name, w, StringComparison.OrdinalIgnoreCase))),
+                ];
+
+                if (unknown.Length > 0)
+                {
+                    Console.Error.WriteLine($"Unknown scenario(s): {string.Join(", ", unknown)}");
+                    Console.Error.WriteLine(
+                        $"Available: {string.Join(", ", EvalScenarios.Everything.Select(s => s.Name))}");
+                    return 1;
+                }
+            }
+
+            return await ExtractionEval.RunAsync(settings, models, runs, scenarios, showDeltas)
+                .ConfigureAwait(false);
         }
 
         if (args.Contains("--play", StringComparer.OrdinalIgnoreCase))
@@ -73,9 +109,15 @@ internal static class Program
             return await RunSmokeTestAsync(settings).ConfigureAwait(false);
         }
 
-        Console.WriteLine("  --play          play a session (in-memory, two calls per turn)");
+        Console.WriteLine("  --play          play a session (saved to disk, two calls per turn)");
         Console.WriteLine("  --smoke         live API test, two real calls");
         Console.WriteLine("  --probe-schema  live test of the nine-branch delta schema, one real call");
+        Console.WriteLine("  --selftest      offline serialization checks, no API");
+        Console.WriteLine("  --eval          score extraction models against fixed scenarios");
+        Console.WriteLine("                    --models a,b   models to compare (default: configured)");
+        Console.WriteLine("                    --runs N       runs per scenario (default: 3)");
+        Console.WriteLine("                    --scenarios x,y  named scenarios, incl. diagnostics");
+        Console.WriteLine("                    --show-deltas  print what each run actually proposed");
         return 0;
     }
 
