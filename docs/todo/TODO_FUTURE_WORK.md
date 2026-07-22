@@ -306,7 +306,45 @@ Keep it honest:
 
       **Measure, do not guess:** run the same fixed narration set at several effort levels
       and score deltas against a hand-written expected set. Needs §7 first, since a single
-      probe call is not a sample.
+      probe call is not a sample. `--eval --providers <name>` now makes this measurable
+      without routing noise, which it was not when this item was written.
+
+- [ ] **Chain of thought for extraction — held in reserve, not adopted.** Raised by the user,
+      who has had success anchoring models this way elsewhere. Legitimate, and there are three
+      distinct forms; we already run two of them, one of which does less than it appears to.
+
+      **What we have now:**
+
+      1. *Native reasoning tokens* — the `reasoning` config above. Provider-side, invisible in
+         the content, order-independent. Currently unset.
+      2. *Per-delta `evidence`* — and it is **not** chain of thought. In `DeltaSchema` it is the
+         **last** property of every branch, and models generate left to right, so `kind` and
+         `characterId` are already committed by the time the justification is written. It is
+         post-hoc rationalisation. Still valuable — it is how a wrong canon entry is traced back
+         to what the model thought it saw — but it steers nothing.
+
+      **The form that would actually anchor:** a top-level string emitted *before* `deltas`,
+      forcing an analysis before the enumeration. Compatible with `strict: true`.
+
+      > ⚠️ **The property-order trap, and it is ours specifically.** Providers do not preserve
+      > property order — AtlasCloud emits alphabetically, which is the entire reason
+      > `StateDeltaConverter` exists (`kind` arriving last broke System.Text.Json polymorphism).
+      > Alphabetically **`deltas` sorts before `reasoning`**, so on some providers the model
+      > would emit every delta and *then* "reason" about them: the CoT silently degrades into
+      > post-hoc rationalisation, intermittently and only on some upstreams. Naming the field
+      > `analysis` sorts it first, but depending on alphabetical luck is fragile. **Native
+      > reasoning tokens sidestep this entirely** and are the safer form here.
+
+      **Why not now:** extraction is at a verified 100% across three sweeps with forbidden 0.00.
+      There is nothing on the current scenarios for it to fix, and that stability cost a day.
+
+      **When it becomes right:** §9 and beyond. The 100% is eight scenarios on a two-location
+      world; real play has more entities, longer narration, and a ten-turn history window — a
+      much harder input, and CoT helps most exactly when the input gets messy. If extraction
+      degrades there in ways narrow prompt rules do not fix, this is the next lever.
+
+      **Not for narration.** Quality there is taste, cannot be auto-scored, and it is the
+      expensive role — three arguments against, no measurement to settle it.
 
 - [ ] **Reconsider `maxTokens` per role once real turns exist.** Extraction was raised
       800 → 4000 to stop reasoning exhausting the budget. That number is a guess with
