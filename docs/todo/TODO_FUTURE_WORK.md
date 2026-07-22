@@ -68,6 +68,48 @@ Options, roughly in order of appeal for this project:
 
 ---
 
+## Player-authored canon — `/place`, `/character`, `/fact`
+
+- [ ] **Let the player write directly to canon.** Decided, not yet built. The UI will need it
+      regardless: adding a place, a person, or a fact with a good description is world
+      authoring, and the player is the world author.
+
+      **The gap it closes, measured.** Extraction never records a merely-*mentioned* entity —
+      `player-place` 0/7, `player-absent-character` 0/7, `narrator-mention` 0/7. Say "I came
+      from Astaria" and Astaria does not exist. The dividing line is **presence, not
+      authorship**: walk somewhere new and it is recorded (`player-arrival` 14/14), mention it
+      and it is not, and the narrator mentioning it fares no better than the player.
+
+      **That behaviour is correct and should not be "fixed" in extraction.** A character
+      *saying* something is not the same as it being true — players lie, misremember and
+      boast, and NPC speech especially must not become world truth. The retired `player-claim`
+      scenario recorded six models refusing it near-unanimously. The answer is not to weaken
+      the rule but to give the player a door it does not apply to.
+
+      **Why this is now more urgent than it looks:** the narration history window hides the
+      gap. Say Astaria on turn 3 and the narrator references it correctly for ten turns —
+      because it is sitting in the message window, not because anything recorded it. Then it
+      slides out and Astaria ceases to exist, and the narrator can contradict the player's own
+      backstory around turn 14. It looks like it works, right up until it doesn't.
+
+      Implementation notes:
+
+      - **Go through the normal delta path.** Build `LocationIntroduced` /
+        `CharacterIntroduced` / `FactEstablished` and run them through `DeltaValidator` and
+        `DeltaApplier`, so id uniqueness, cross-namespace collisions and the save are all
+        handled by code that already exists and is tested. A second write path into canon is
+        how the two disagree later.
+      - Open design questions, to settle before building: command syntax (positional vs
+        prompted); whether an authored character starts in the player's location or offstage;
+        whether the player automatically `knows` a fact they authored; and whether the action
+        appends a `TurnRecord` for auditability or only saves canon.
+      - Pairs with the "mentioned tier" idea below — entities that exist as
+        referenced-but-unvisited, promotable when reached. That is the general answer to "when
+        does a mentioned thing become real"; this is the deliberate, player-driven one, and the
+        two are complementary rather than competing.
+
+---
+
 ## Player-facing differentiators
 
 Small things the incumbents mostly don't do, cheap to add once the foundations exist.
