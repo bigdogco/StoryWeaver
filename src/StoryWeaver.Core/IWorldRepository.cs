@@ -28,6 +28,19 @@ public interface IWorldRepository
     /// <summary>Append one completed turn to the world's history.</summary>
     Task AppendTurnAsync(string worldId, TurnRecord turn, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Overwrite the most recent turn.
+    ///
+    /// The one exception to history being append-only, and deliberately narrow: re-running
+    /// extraction over prose the player has already read repairs that turn rather than
+    /// creating a second one, because the story did not happen twice. Appending instead would
+    /// duplicate the narration in the log — and therefore in the narrator's memory window,
+    /// which is built from it.
+    ///
+    /// Does nothing when there is no history.
+    /// </summary>
+    Task ReplaceLastTurnAsync(string worldId, TurnRecord turn, CancellationToken cancellationToken = default);
+
     /// <summary>Read back turn history, oldest first.</summary>
     Task<IReadOnlyList<TurnRecord>> LoadHistoryAsync(
         string worldId,

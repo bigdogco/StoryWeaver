@@ -217,6 +217,7 @@ internal static class ExtractionEval
             RequireParameters = existing.RequireParameters,
             ResponseFormat = existing.ResponseFormat,
             Reasoning = existing.Reasoning,
+            TimeoutSeconds = existing.TimeoutSeconds,
             ProviderIgnore = existing.ProviderIgnore,
 
             // Sampling one upstream at a time. Only the eval does this — see WireProvider.Order.

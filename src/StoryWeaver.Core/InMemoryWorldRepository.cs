@@ -44,6 +44,19 @@ public sealed class InMemoryWorldRepository : IWorldRepository
         return Task.CompletedTask;
     }
 
+    public Task ReplaceLastTurnAsync(
+        string worldId,
+        TurnRecord turn,
+        CancellationToken cancellationToken = default)
+    {
+        if (_history.TryGetValue(worldId, out List<TurnRecord>? turns) && turns.Count > 0)
+        {
+            turns[^1] = turn;
+        }
+
+        return Task.CompletedTask;
+    }
+
     public Task<IReadOnlyList<TurnRecord>> LoadHistoryAsync(
         string worldId,
         CancellationToken cancellationToken = default)

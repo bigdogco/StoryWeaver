@@ -82,6 +82,41 @@ public sealed class JsonWorldRepository : IWorldRepository
         await File.AppendAllTextAsync(path, line + "\n", cancellationToken).ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// Rewrites the log with its final entry replaced.
+    ///
+    /// The whole file is rewritten rather than the last line truncated in place: JSONL lines
+    /// vary in length, so seeking back would risk leaving a fragment of the old record behind.
+    /// Written through the same temp-and-move as canon, because a half-rewritten history is
+    /// exactly as bad as a half-written save. Rare enough that the cost does not matter.
+    /// </summary>
+    public async Task ReplaceLastTurnAsync(
+        string worldId,
+        TurnRecord turn,
+        CancellationToken cancellationToken = default)
+    {
+        string path = Path.Combine(WorldDirectory(worldId), HistoryFile);
+
+        if (!File.Exists(path))
+        {
+            return;
+        }
+
+        List<TurnRecord> turns = [.. await LoadHistoryAsync(worldId, cancellationToken).ConfigureAwait(false)];
+
+        if (turns.Count == 0)
+        {
+            return;
+        }
+
+        turns[^1] = turn;
+
+        string temp = path + ".tmp";
+        string body = string.Concat(turns.Select(t => JsonSerializer.Serialize(t, SaveJson.History) + "\n"));
+        await File.WriteAllTextAsync(temp, body, cancellationToken).ConfigureAwait(false);
+        File.Move(temp, path, overwrite: true);
+    }
+
     public async Task<IReadOnlyList<TurnRecord>> LoadHistoryAsync(
         string worldId,
         CancellationToken cancellationToken = default)

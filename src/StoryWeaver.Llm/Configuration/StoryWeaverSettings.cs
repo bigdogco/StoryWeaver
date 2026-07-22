@@ -118,6 +118,17 @@ public sealed class RoleSettings
     public ReasoningSettings? Reasoning { get; init; }
 
     /// <summary>
+    /// Per-role request deadline. Falls back to <see cref="ProviderSettings.TimeoutSeconds"/>
+    /// when unset.
+    ///
+    /// Worth setting for roles whose output is small: extraction returns about 140 tokens and
+    /// normally answers in seconds, so waiting the full provider timeout only delays the retry
+    /// that was going to fix it. Narration writes paragraphs and legitimately needs longer.
+    /// </summary>
+    [JsonPropertyName("timeoutSeconds")]
+    public int? TimeoutSeconds { get; init; }
+
+    /// <summary>
     /// Maps to OpenRouter's <c>provider.require_parameters</c>. When true, routing is
     /// restricted to upstream providers that support every parameter sent.
     ///

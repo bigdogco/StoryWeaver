@@ -79,7 +79,11 @@ internal static class PlaySession
 
             if (input.StartsWith('/'))
             {
-                if (!await AuthoringCommands
+                if (string.Equals(input, "/retry", StringComparison.OrdinalIgnoreCase))
+                {
+                    await RetryExtractionAsync(engine, repository, world).ConfigureAwait(false);
+                }
+                else if (!await AuthoringCommands
                         .TryHandleAsync(input, WorldId, world, repository)
                         .ConfigureAwait(false))
                 {
@@ -105,6 +109,50 @@ internal static class PlaySession
         }
     }
 
+    /// <summary>
+    /// Re-run extraction over the last turn's stored prose.
+    ///
+    /// For when the story was fine and only the bookkeeping failed — a timed-out extraction
+    /// leaves the narration on screen and in history while canon stands still, and a run of
+    /// those is exactly the drift this architecture exists to prevent. Re-narrating instead
+    /// would change prose the player has already read.
+    /// </summary>
+    private static async Task RetryExtractionAsync(
+        TurnEngine engine,
+        IWorldRepository repository,
+        WorldState world)
+    {
+        IReadOnlyList<TurnRecord> history =
+            await repository.LoadHistoryAsync(WorldId).ConfigureAwait(false);
+
+        if (history.Count == 0)
+        {
+            Console.WriteLine("No turns to retry yet.");
+            return;
+        }
+
+        Console.WriteLine("\n(re-extracting the last turn...)\n");
+
+        try
+        {
+            TurnOutcome outcome = await engine
+                .ReExtractAsync(WorldId, world, history[^1])
+                .ConfigureAwait(false);
+
+            if (outcome.ExtractionFailed)
+            {
+                Console.WriteLine($"  [!] Extraction failed again: {outcome.ExtractionError}");
+                return;
+            }
+
+            PrintDeltas(outcome.Turn);
+        }
+        catch (StoryWeaverException ex)
+        {
+            Console.WriteLine($"Retry failed: {ex.Message}");
+        }
+    }
+
     private static void PrintTurn(TurnOutcome outcome)
     {
         Console.WriteLine(outcome.Turn.Narration);
@@ -115,30 +163,36 @@ internal static class PlaySession
             // Distinct from "extraction ran and produced nothing usable". The story continued
             // but canon did not move, and a run of these means drift.
             Console.WriteLine($"  [!] Extraction failed: {outcome.ExtractionError}");
-            Console.WriteLine("  [!] Canon did not change this turn.");
+            Console.WriteLine("  [!] The story continued but canon did not. Use /retry to");
+            Console.WriteLine("  [!] extract this turn again without rewriting the prose.");
             return;
         }
 
-        Console.WriteLine($"  --- turn {outcome.Turn.TurnNumber} ---");
+        PrintDeltas(outcome.Turn);
+    }
 
-        if (outcome.Turn.Applied.Count == 0)
+    private static void PrintDeltas(TurnRecord turn)
+    {
+        Console.WriteLine($"  --- turn {turn.TurnNumber} ---");
+
+        if (turn.Applied.Count == 0)
         {
             Console.WriteLine("  applied: nothing");
         }
         else
         {
-            foreach (StateDelta delta in outcome.Turn.Applied)
+            foreach (StateDelta delta in turn.Applied)
             {
                 Console.WriteLine($"  applied:  {Describe(delta)}");
             }
         }
 
-        foreach (StateDelta delta in outcome.Turn.NoOps)
+        foreach (StateDelta delta in turn.NoOps)
         {
             Console.WriteLine($"  no-op:    {Describe(delta)} (already true)");
         }
 
-        foreach (RejectedDelta rejected in outcome.Turn.Rejected)
+        foreach (RejectedDelta rejected in turn.Rejected)
         {
             Console.WriteLine($"  REJECTED: {Describe(rejected.Delta)}");
             Console.WriteLine($"            {rejected.Reason}");
@@ -186,6 +240,7 @@ internal static class PlaySession
                 Console.WriteLine("  /state  world state as the extractor sees it (with ids)");
                 Console.WriteLine("  /prose  world state as the narrator sees it (no ids)");
                 Console.WriteLine("  /raw    last raw extraction response");
+                Console.WriteLine("  /retry  extract the last turn again, same prose");
                 Console.WriteLine("  /quit   end the session");
                 Console.WriteLine();
                 Console.WriteLine("  Write to canon yourself — extraction only records what is");

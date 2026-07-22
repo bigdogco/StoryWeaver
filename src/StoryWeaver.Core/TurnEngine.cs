@@ -102,6 +102,64 @@ public sealed class TurnEngine
     }
 
     /// <summary>
+    /// Run extraction again over a turn that has already been narrated, using the stored
+    /// player input and prose.
+    ///
+    /// For the case where the story was fine and only the bookkeeping failed — extraction
+    /// timed out, or its output was rejected. Re-narrating would be wasteful and would
+    /// *change the story the player already read*; everything needed is in the
+    /// <see cref="TurnRecord"/>, so this is one cheap call against the small model.
+    ///
+    /// The world is passed as it stands now. Canon may have moved on since, which is exactly
+    /// why validation runs again rather than the old deltas being trusted: a delta that was
+    /// valid when first proposed can be a no-op or a conflict several turns later.
+    ///
+    /// Does not append a new turn. It repairs the record in place, because the story did not
+    /// happen twice.
+    /// </summary>
+    public async Task<TurnOutcome> ReExtractAsync(
+        string worldId,
+        WorldState world,
+        TurnRecord turn,
+        CancellationToken cancellationToken = default)
+    {
+        string extractionContext = ContextAssembler.ForExtraction(world);
+
+        ExtractionResult extraction;
+        string? extractionError = null;
+
+        try
+        {
+            extraction = await _extractor
+                .ExtractAsync(extractionContext, turn.PlayerInput, turn.Narration, cancellationToken)
+                .ConfigureAwait(false);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            extraction = ExtractionResult.Empty();
+            extractionError = ex.Message;
+        }
+
+        ValidationOutcome validation = DeltaValidator.Validate(world, extraction.Deltas);
+        DeltaApplier.Apply(world, validation.Accepted);
+
+        // The turn number is not advanced and no record is appended: this is the same turn,
+        // extracted again.
+        TurnRecord repaired = turn with
+        {
+            Applied = validation.Accepted,
+            NoOps = validation.NoOps,
+            Rejected = validation.Rejected,
+            RawExtraction = extraction.Raw,
+        };
+
+        await _repository.SaveAsync(worldId, world, cancellationToken).ConfigureAwait(false);
+        await _repository.ReplaceLastTurnAsync(worldId, repaired, cancellationToken).ConfigureAwait(false);
+
+        return new TurnOutcome(repaired, extractionError);
+    }
+
+    /// <summary>
     /// The last <see cref="_historyTurns"/> turns as prose, oldest first.
     ///
     /// Only narration gets this. Extraction deliberately does not: it scores 100% on the eval

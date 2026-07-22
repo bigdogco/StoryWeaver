@@ -115,6 +115,40 @@ Options, roughly in order of appeal for this project:
 
 ---
 
+## Reroll a turn
+
+- [ ] **Discard the last turn and narrate it again.** The feature every chat-RP site has, and
+      the one people actually reach for when the prose is fine but *wrong* — the narrator put
+      words in your mouth, misread the room, or produced something dull.
+
+      Distinct from `/retry`, which is already built and only re-runs *extraction* over prose
+      the player has already read. Rerolling changes the story, so it has to undo one.
+
+      **The obstacle: our deltas are not invertible.** `MoodChanged(hald, "wary")` does not
+      record what the mood was before, and `FactLearned` does not record that the character
+      did not previously know it. There is no way to compute an undo from the turn log, so
+      rerolling needs a **snapshot of canon taken before the turn is applied**, plus dropping
+      the last line of `history.jsonl` (which `ReplaceLastTurnAsync` already shows is
+      workable).
+
+      Making deltas invertible instead — carrying the previous value on every delta — was
+      considered and rejected: it doubles the schema surface the extraction model has to fill
+      in correctly, to serve a feature the model should not be thinking about at all. The
+      snapshot keeps the cost in storage, where it is cheap and testable.
+
+      Design notes for later:
+
+      - A single `canon.prev.json` written before each apply gives one level of undo, which is
+        probably all anyone wants. Deeper history is what the turn log is for.
+      - Reroll must **not** feed the discarded narration to the narrator on the retry, or it
+        will anchor on the version being rejected. It is already excluded naturally, since the
+        window is built from history and the record is dropped first.
+      - Worth surfacing what the reroll changed in canon versus the discarded attempt — a
+        reroll that produces different *facts* is more interesting than one that produces
+        different prose, and it is a cheap window into extraction stability.
+
+---
+
 ## Lore entries — the fourth entity type
 
 - [ ] **A named topic with a body of prose, the way a DnD lorebook entry works.** Raised by the

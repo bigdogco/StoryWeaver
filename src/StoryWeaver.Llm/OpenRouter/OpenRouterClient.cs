@@ -21,6 +21,16 @@ public sealed class OpenRouterClient : ILlmClient, IDisposable
     /// failure causes.</summary>
     private const int MaxTotalAttempts = 4;
 
+    /// <summary>
+    /// How many of those attempts may be spent on timeouts.
+    ///
+    /// Timeouts are retried — they usually mean the request landed on an overloaded upstream,
+    /// and OpenRouter routes the retry somewhere else — but they are the one failure that costs
+    /// the full timeout before failing, so the general budget is the wrong bound. Four attempts
+    /// at 120s would leave a player staring at a blank console for eight minutes.
+    /// </summary>
+    private const int MaxTimeoutAttempts = 2;
+
     private static readonly int[] RetryDelaysMs = [1000, 3000, 5000];
 
     private static readonly JsonSerializerOptions SerializeOptions = new()
@@ -40,7 +50,12 @@ public sealed class OpenRouterClient : ILlmClient, IDisposable
 
         _ownsHttpClient = httpClient is null;
         _http = httpClient ?? new HttpClient();
-        _http.Timeout = TimeSpan.FromSeconds(settings.Provider.TimeoutSeconds);
+
+        // Timeouts are applied per request instead, via a linked token in SendAsync. A single
+        // HttpClient.Timeout would force narration and extraction to share one budget, and
+        // they should not: narration writes paragraphs, extraction returns ~140 tokens and has
+        // no business waiting two minutes for them.
+        _http.Timeout = Timeout.InfiniteTimeSpan;
     }
 
     public async Task<LlmResult> CompleteAsync(
@@ -58,7 +73,9 @@ public sealed class OpenRouterClient : ILlmClient, IDisposable
         }
 
         OpenRouterRequest request = BuildRequest(call, role);
+        int timeoutSeconds = role.TimeoutSeconds ?? _settings.Provider.TimeoutSeconds;
         int attempts = 0;
+        int timeouts = 0;
 
         for (int attempt = 1; attempt <= MaxTotalAttempts; attempt++)
         {
@@ -70,19 +87,34 @@ public sealed class OpenRouterClient : ILlmClient, IDisposable
             HttpOutcome outcome;
             try
             {
-                outcome = await SendAsync(json, cancellationToken).ConfigureAwait(false);
+                outcome = await SendAsync(json, timeoutSeconds, cancellationToken).ConfigureAwait(false);
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
                 // Caller-initiated. Distinct from a timeout, and not something to retry.
                 throw;
             }
-            catch (TaskCanceledException ex)
+            catch (OperationCanceledException ex)
             {
-                // HttpClient surfaces its own timeout as TaskCanceledException.
-                _log.Error("Request timed out", ex);
+                // Our own per-request deadline. Retried like any other transient failure: it
+                // almost always means the upstream that won this request's routing is
+                // overloaded, and the retry is routed independently. Previously this returned
+                // immediately with the whole retry budget unused, which turned a recoverable
+                // blip into a lost turn.
+                timeouts++;
+
+                if (timeouts < MaxTimeoutAttempts && !isLastAttempt)
+                {
+                    _log.Info(
+                        $"Timed out after {timeoutSeconds}s " +
+                        $"(attempt {attempt}/{MaxTotalAttempts}). Retrying...");
+                    await DelayAsync(attempt, cancellationToken).ConfigureAwait(false);
+                    continue;
+                }
+
+                _log.Error($"Request timed out after {timeoutSeconds}s", ex);
                 return LlmResult.Failure(
-                    $"Request timed out after {_settings.Provider.TimeoutSeconds}s.", attempts);
+                    $"Request timed out after {timeoutSeconds}s ({timeouts} attempt(s)).", attempts);
             }
             catch (HttpRequestException ex)
             {
@@ -282,8 +314,23 @@ public sealed class OpenRouterClient : ILlmClient, IDisposable
             : string.Concat(content.AsSpan(0, maxChars).TrimEnd(), "\n\n[truncated]");
     }
 
-    private async Task<HttpOutcome> SendAsync(string json, CancellationToken cancellationToken)
+    /// <summary>
+    /// One HTTP round trip, bounded by its own deadline.
+    ///
+    /// The deadline is a linked token rather than <c>HttpClient.Timeout</c> so it can differ
+    /// per role. The caller distinguishes the two cancellation sources by checking whether
+    /// <paramref name="cancellationToken"/> is the one that fired.
+    /// </summary>
+    private async Task<HttpOutcome> SendAsync(
+        string json,
+        int timeoutSeconds,
+        CancellationToken cancellationToken)
     {
+        using CancellationTokenSource deadline =
+            CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        deadline.CancelAfter(TimeSpan.FromSeconds(timeoutSeconds));
+        cancellationToken = deadline.Token;
+
         using HttpRequestMessage message = new(HttpMethod.Post, _settings.Provider.BaseUrl)
         {
             Content = new StringContent(json, Encoding.UTF8, "application/json"),
