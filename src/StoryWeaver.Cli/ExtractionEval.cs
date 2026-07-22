@@ -173,16 +173,28 @@ internal static class ExtractionEval
         // of re-introductions. The validator is a safety net, not evidence of good output.
         List<StateDelta> effective = [.. validation.Accepted, .. validation.NoOps];
 
+        // Apply what was accepted, so outcome rules can be judged against the world the turn
+        // would actually have produced. Safe to mutate: every run builds a fresh world.
+        DeltaApplier.Apply(world, validation.Accepted);
+
+        IReadOnlyList<StateRule> expected = scenario.Expected ?? [];
+        List<string> unmetOutcomes = [.. expected.Where(r => !r.Holds(world)).Select(r => r.Description)];
+
         return new RunScore
         {
-            RequiredHit = scenario.Required.Count(rule => effective.Any(rule.Matches)),
-            RequiredTotal = scenario.Required.Count,
+            RequiredHit = scenario.Required.Count(rule => effective.Any(rule.Matches))
+                          + (expected.Count - unmetOutcomes.Count),
+            RequiredTotal = scenario.Required.Count + expected.Count,
             ForbiddenHit = scenario.Forbidden.Count(rule => result.Deltas.Any(rule.Matches)),
             Rejected = validation.Rejected.Count,
             PromptTokens = result.Usage?.PromptTokens ?? 0,
             CompletionTokens = result.Usage?.CompletionTokens ?? 0,
             ReasoningTokens = result.Usage?.ReasoningTokens ?? 0,
-            MissingRules = [.. scenario.Required.Where(r => !effective.Any(r.Matches)).Select(r => r.Description)],
+            MissingRules =
+            [
+                .. scenario.Required.Where(r => !effective.Any(r.Matches)).Select(r => r.Description),
+                .. unmetOutcomes,
+            ],
             ViolatedRules = [.. scenario.Forbidden.Where(r => result.Deltas.Any(r.Matches)).Select(r => r.Description)],
             Proposed = result.Deltas,
             RejectedDeltas = [.. validation.Rejected.Select(r => r.Delta)],

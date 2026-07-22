@@ -9,6 +9,18 @@ namespace StoryWeaver.Cli;
 internal sealed record DeltaRule(string Description, Func<StateDelta, bool> Matches);
 
 /// <summary>
+/// A check against the world <b>after</b> the accepted deltas are applied.
+///
+/// Some things are properties of the outcome, not of any single delta. Movement is the clear
+/// case: a turn may legitimately report two hops — through a passage and into the room beyond
+/// — and judging the deltas one at a time marks the intermediate hop as an error while the
+/// result is perfectly correct. What matters is where the player ends the turn.
+///
+/// Added after a delta-only rule scored complete, correct multi-step movement as a failure.
+/// </summary>
+internal sealed record StateRule(string Description, Func<WorldState, bool> Holds);
+
+/// <summary>
 /// One eval case: a fixed world, a fixed player input, and fixed narration.
 ///
 /// <b>No narrator call.</b> The narration is hand-written and identical every run, which
@@ -26,9 +38,18 @@ internal sealed record EvalScenario(
     string PlayerInput,
     string Narration,
     IReadOnlyList<DeltaRule> Required,
-    IReadOnlyList<DeltaRule> Forbidden)
+    IReadOnlyList<DeltaRule> Forbidden,
+    Func<WorldState>? Seed = null,
+    IReadOnlyList<StateRule>? Expected = null)
 {
-    public WorldState World() => WorldSeeds.Marrow();
+    /// <summary>
+    /// The world this scenario is scored against. Defaults to the small shared seed.
+    ///
+    /// Overridable because <b>world size is itself a variable</b>. A scenario that passes
+    /// against two locations says nothing about the same prose against forty — and real play
+    /// happens in the second kind of world.
+    /// </summary>
+    public WorldState World() => (Seed ?? WorldSeeds.Marrow)();
 }
 
 internal static class EvalScenarios
@@ -45,6 +66,7 @@ internal static class EvalScenarios
         Redescription,
         Atmosphere,
         PlayerArrival,
+        TwoStageEntry,
     ];
 
     /// <summary>
@@ -84,7 +106,29 @@ internal static class EvalScenarios
         PlayerPlace,
         PlayerAbsentCharacter,
         NarratorMention,
+        PlayerArrivalLarge,
+        TwoStageEntryLarge,
     ];
+
+    /// <summary>
+    /// <b>Diagnostic.</b> <see cref="PlayerArrival"/> word for word, against a world the size
+    /// one actually reaches in play.
+    ///
+    /// Only the world differs, so a difference in score is attributable to world size alone.
+    ///
+    /// Written after real play reproduced the known-id substitution failure that
+    /// <c>player-arrival</c> scores 14/14 on: the extractor emitted
+    /// <c>player_moved -&gt; blind-channels-slipway</c> — the location the player was already
+    /// in — while correctly introducing the new chamber a line later, and quoting the right
+    /// evidence for the move. That session had 7 locations, 6 characters, 44 facts and a
+    /// 10,000-character context block; the scored scenario has 2 locations and 1 fact.
+    ///
+    /// The hypothesis being tested is that a bigger world offers more plausible wrong ids and
+    /// buries the right reasoning in more context. If this scores like the small-world version,
+    /// the hypothesis is wrong and the trigger is something in that particular prose instead.
+    /// </summary>
+    private static EvalScenario PlayerArrivalLarge =>
+        PlayerArrival with { Name = "player-arrival-large", Seed = WorldSeeds.Marrow_Late };
 
     /// <summary>Every scenario, scored and diagnostic, for name-based selection.</summary>
     public static IReadOnlyList<EvalScenario> Everything => [.. All, .. Diagnostics];
@@ -214,17 +258,99 @@ internal static class EvalScenarios
         [
             new("the mill recorded as a location",
                 d => d is LocationIntroduced l && l.LocationId.Contains("mill", StringComparison.OrdinalIgnoreCase)),
-            new("the player moved to the mill",
-                d => (d is PlayerMoved p && p.ToLocationId.Contains("mill", StringComparison.OrdinalIgnoreCase))
-                     || (d is CharacterMoved m && m.CharacterId == Character.PlayerId
-                         && m.ToLocationId.Contains("mill", StringComparison.OrdinalIgnoreCase))),
         ],
         Forbidden:
         [
             new("a known location re-introduced",
                 d => d is LocationIntroduced { LocationId: "marrow-square" or "marrow-tavern" }),
             new("any character introduced (nobody is there)", d => d is CharacterIntroduced),
+        ],
+        Expected:
+        [
+            // Was a delta rule ("a move naming the mill"), which could be satisfied while the
+            // player ended the turn somewhere else entirely — the exact failure seen in real
+            // play. Where they end up is the thing that matters.
+            new("the player ends the turn at the mill",
+                w => w.PlayerLocationId?.Contains("mill", StringComparison.OrdinalIgnoreCase) == true),
         ]);
+
+    /// <summary>
+    /// <b>Diagnostic.</b> One turn, <i>two</i> movements: into an unnamed intermediate space,
+    /// and then through it into a chamber the prose does name.
+    ///
+    /// Modelled on a real failure. The extractor emitted
+    /// <c>player_moved -&gt; blind-channels-slipway</c> — the location already occupied —
+    /// while correctly introducing the new chamber. Reading the evidence it attached showed it
+    /// was not confused about the chamber at all: it quoted the *first* paragraph, and was
+    /// reporting the entry into the outer ruins. That intermediate space is never named as a
+    /// place, so having no id to move to, it reached for a known one.
+    ///
+    /// Every arrival scenario until now had a single clean movement, which is why none of them
+    /// caught this. It is also the "buildings mentioned in prose are not locations" gap wearing
+    /// a different hat — the intermediate space is precisely such a building.
+    ///
+    /// Correct behaviour: the player ends up in the cistern. Whether the shaft bottom also
+    /// deserves an id is a real question, but ending the turn somewhere the prose says you are
+    /// not is wrong under any answer to it.
+    ///
+    /// <b>Reproduced, then fixed (2026-07-21, deepseek-v3.2, n=7 pinned).</b> Before: 6/14
+    /// here, 2/14 in the large world, against `player-arrival` — the same movement in one
+    /// stage — scoring 14/14. So the trigger is the shape of the prose, amplified by world
+    /// size, not world size alone.
+    ///
+    /// The mechanism was visible in the deltas: the model reported the *first* movement and
+    /// then, about half the time, stopped. Where a plausible existing id matched the
+    /// intermediate space it used that and went no further, leaving the player recorded in a
+    /// place the story had already left. One prompt rule — movement records where someone
+    /// *ends* the turn — took this to **14/14**, and the large world from 2/14 to 10/14.
+    /// Promoted to the scored set on that basis; the large-world remainder is tracked as
+    /// <c>two-stage-entry-large</c>.
+    /// </summary>
+    private static EvalScenario TwoStageEntry => new(
+        "two-stage-entry",
+        "*I lift the loose plank aside and lower myself into the well.*",
+        """
+        You brace against the cold stone and drop the last few feet, your boots breaking
+        through a skin of black water at the bottom of the shaft. The air down here is thick
+        and close, tasting of rust and old rot, and the circle of grey sky above you looks a
+        very long way off.
+
+        A low brick tunnel runs off from the shaft. After twenty feet it opens out into a
+        vaulted cistern, wide enough that your light cannot find the far wall. Crates have been
+        stacked against the near side, sodden and split, and something pale is wedged behind
+        them where the water laps at the brick.
+        """,
+        Required:
+        [
+            new("the cistern recorded as a location",
+                d => d is LocationIntroduced l && l.LocationId.Contains("cistern", StringComparison.OrdinalIgnoreCase)),
+        ],
+        Forbidden:
+        [
+            new("a known location re-introduced",
+                d => d is LocationIntroduced { LocationId: "marrow-square" or "marrow-tavern" }),
+        ],
+        Expected:
+        [
+            // Judged on the outcome, not the steps. Reporting the passage and then the room
+            // beyond is two moves and entirely correct; what must not happen is the turn
+            // ending with the player somewhere the prose says they are not.
+            new("the player ends the turn in the cistern",
+                w => w.PlayerLocationId?.Contains("cistern", StringComparison.OrdinalIgnoreCase) == true),
+        ]);
+
+    /// <summary>
+    /// <b>Diagnostic.</b> <see cref="TwoStageEntry"/> word for word in a full-sized world, so
+    /// prose shape and world size can be told apart. Only the seed differs.
+    ///
+    /// <b>Still open at 10/14</b> (was 2/14). The end-of-turn movement rule fixed the small
+    /// world outright but only took this to 5/7, so a larger world genuinely makes the same
+    /// prose harder — more plausible existing ids to settle on, buried in more context. Kept
+    /// as a diagnostic rather than promoted, so the scored set stays a regression guard while
+    /// this stays visibly unfinished.
+    /// </summary>
+    private static EvalScenario TwoStageEntryLarge =>
+        TwoStageEntry with { Name = "two-stage-entry-large", Seed = WorldSeeds.Marrow_Late };
 
     /// <summary>
     /// <b>Diagnostic.</b> The <i>narrator</i> names an unknown place and an unknown person in

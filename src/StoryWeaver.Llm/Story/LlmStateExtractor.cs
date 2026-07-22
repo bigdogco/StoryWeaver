@@ -57,6 +57,10 @@ public sealed class LlmStateExtractor : IStateExtractor
         - A move must name the place the prose actually describes. When that place is new,
           introduce it and move to the id you just gave it — never redirect the move to a
           different place that happens to be already known.
+        - Movement records where someone ENDS the turn. If the prose carries them through
+          more than one space — down a shaft, along a passage, into the chamber beyond —
+          report where they finish. Reporting only the first step leaves them standing in a
+          place the story has already left.
         - A description field describes what something IS, permanently. Never put an event
           in a description.
         - Establishing a fact and someone knowing it are separate. When new information is

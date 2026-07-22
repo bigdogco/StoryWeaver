@@ -343,6 +343,21 @@ Keep it honest:
 - [ ] **Sample size is per provider, not per sweep.** A 56-call sweep that lands 53 times on
       one upstream has n=1 or 2 everywhere else, so the headline is really a measurement of
       whichever provider happened to win the routing.
+- [ ] **World size is a variable, and the scored set barely tests it.** Every hand-written
+      scenario ran against two locations and one fact until `WorldSeeds.Marrow_Late` existed;
+      a real session had seven locations, six characters, forty-four facts and a
+      10,000-character context. Identical prose scored **14/14** in the small world and
+      **2/14** in the large one. Any scenario worth scoring is worth running at both sizes.
+- [ ] **`two-stage-entry-large` is still failing at 10/14** — a turn whose prose carries the
+      player through an intermediate space into a room beyond. Fixed outright in a small world
+      by the end-of-turn movement rule; a large world still gets it wrong 2/7, apparently
+      because more plausible existing ids are available to settle on. Open.
+- [ ] **Score outcomes, not only deltas, wherever the outcome is the point.** A delta rule
+      ("a move naming the mill") can pass while the player ends the turn somewhere else, and it
+      penalises a correct two-hop movement as if the intermediate step were an error. `StateRule`
+      checks the world after accepted deltas are applied. Movement was the case that exposed
+      this; anything else where several valid delta sequences reach the same right answer has
+      the same shape.
 - [ ] **n=7 was not enough to be safe.** A movement failure looked solid at n=7 and did not
       reproduce. For anything close, prefer three independent sweeps over one larger one — the
       cross-run spread is the signal, not a single average.
