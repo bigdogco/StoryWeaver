@@ -124,6 +124,21 @@ Options, roughly in order of appeal for this project:
       Distinct from `/retry`, which is already built and only re-runs *extraction* over prose
       the player has already read. Rerolling changes the story, so it has to undo one.
 
+      **The real argument for it: reroll is the only quality control narration has.**
+      Extraction has an eval — objective right answers, scored, provider-attributed. Narration
+      has nothing, because prose quality is taste and cannot be auto-scored. So the expensive,
+      story-defining half of every turn has no automated check whatsoever, and a provider
+      serving mediocre prose under a pinned model id would be invisible to us. Reroll is the
+      human-in-the-loop substitute for the eval that cannot be written. That is a stronger
+      justification than convenience, and it is why every chat-RP tool has one.
+
+      **Temperature decides what each feature can actually fix.** Narration runs at 0.9, so a
+      reroll genuinely resamples and will produce different prose. Extraction runs at 0.0, so
+      `/retry` on a turn that *succeeded but got it wrong* will mostly reproduce the same
+      deltas — it is reliably useful only when extraction failed outright, or when routing
+      happens to land on a different provider. Worth stating in any UI so the two are not
+      expected to do each other's job.
+
       **The obstacle: our deltas are not invertible.** `MoodChanged(hald, "wary")` does not
       record what the mood was before, and `FactLearned` does not record that the character
       did not previously know it. There is no way to compute an undo from the turn log, so
