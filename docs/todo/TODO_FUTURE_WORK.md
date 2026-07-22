@@ -70,9 +70,18 @@ Options, roughly in order of appeal for this project:
 
 ## Player-authored canon — `/place`, `/character`, `/fact`
 
-- [ ] **Let the player write directly to canon.** Decided, not yet built. The UI will need it
-      regardless: adding a place, a person, or a fact with a good description is world
-      authoring, and the player is the world author.
+- [x] **Built 2026-07-21.** Prompted flow, ids suggested as slugs and shown before use, and
+      everything routed through `DeltaValidator` + `DeltaApplier` + save. An authored character
+      defaults to **offstage** (`LocationId` null) — a brother back home exists without being
+      anywhere — and `/fact` asks whether your own character knows the truth you just wrote,
+      since an author may record something their character has not discovered.
+
+      Deliberately does **not** append a `TurnRecord`: the turn log feeds the narrator's prose
+      memory window, and an authoring action has no prose. Canon already carries the change, so
+      the narrator sees it through the state block on the next turn without being handed a
+      fabricated narration line. A proper UI will log authoring separately.
+
+      Original justification, kept because it is the reason the feature exists:
 
       **The gap it closes, measured.** Extraction never records a merely-*mentioned* entity —
       `player-place` 0/7, `player-absent-character` 0/7, `narrator-mention` 0/7. Say "I came
@@ -99,14 +108,52 @@ Options, roughly in order of appeal for this project:
         `DeltaApplier`, so id uniqueness, cross-namespace collisions and the save are all
         handled by code that already exists and is tested. A second write path into canon is
         how the two disagree later.
-      - Open design questions, to settle before building: command syntax (positional vs
-        prompted); whether an authored character starts in the player's location or offstage;
-        whether the player automatically `knows` a fact they authored; and whether the action
-        appends a `TurnRecord` for auditability or only saves canon.
       - Pairs with the "mentioned tier" idea below — entities that exist as
         referenced-but-unvisited, promotable when reached. That is the general answer to "when
         does a mentioned thing become real"; this is the deliberate, player-driven one, and the
         two are complementary rather than competing.
+
+---
+
+## Lore entries — the fourth entity type
+
+- [ ] **A named topic with a body of prose, the way a DnD lorebook entry works.** Raised by the
+      user, and it is a better fit than the "faction with a standing toward the player" shape
+      that was considered first — an organisation, a war, a religion, a bloodline is *reference
+      material*, not a simulated actor.
+
+      **Why this is not a `Fact`.** A fact is one proposition that is true or not, and it is
+      deliberately nameless because a name would invite the extraction model to invent titles
+      for statements. A lore entry is a *named topic with a body*. Crucially the nameless
+      argument does not apply, because **lore is authored and never extracted** — a human
+      writes the title. Shredding "the King's Investigators" into six atomic facts would be
+      both tedious and lossy.
+
+      | | `Fact` | Lore entry |
+      |---|---|---|
+      | shape | one proposition | named topic with a body |
+      | name | deliberately none | the whole point |
+      | origin | mostly extracted in play | authored only |
+      | changes | established as the story runs | mostly static |
+
+      **Decided: per-character knowledge, reusing `Knows`.** So one character has heard of the
+      Investigators and another has not, and an NPC cannot reference an order they do not know.
+      That is the mechanic separating this from a chat log, and secret organisations are
+      exactly where it pays off. Consequence to design for: `Character.Knows` would hold ids of
+      two different kinds, so either the id namespace stays globally unique (it already is —
+      see `DeltaValidator.Taken`) or `Knows` splits.
+
+      **The catch: this is what forces retrieval.** `ContextAssembler` currently dumps the
+      entire world into every prompt. Fine for two locations and three characters, hopeless at
+      forty lore entries. Adding lore is the point at which keyword-triggered injection stops
+      being optional, and it brings the classic "why did it forget the Duke?" failure with it —
+      hence the already-logged item about surfacing which entries fired and which were
+      budget-cut.
+
+      **One rule to hold:** lore is for things with *no* entity representation. Once something
+      becomes a real `Character` or `Location`, that entity is authoritative. Otherwise a lore
+      entry about Hald and the `Character` Hald drift apart, which is the exact incoherence the
+      canon store exists to prevent.
 
 ---
 

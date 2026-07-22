@@ -79,7 +79,13 @@ internal static class PlaySession
 
             if (input.StartsWith('/'))
             {
-                HandleCommand(input, world, repository);
+                if (!await AuthoringCommands
+                        .TryHandleAsync(input, WorldId, world, repository)
+                        .ConfigureAwait(false))
+                {
+                    HandleCommand(input, world, repository);
+                }
+
                 continue;
             }
 
@@ -181,6 +187,13 @@ internal static class PlaySession
                 Console.WriteLine("  /prose  world state as the narrator sees it (no ids)");
                 Console.WriteLine("  /raw    last raw extraction response");
                 Console.WriteLine("  /quit   end the session");
+                Console.WriteLine();
+                Console.WriteLine("  Write to canon yourself — extraction only records what is");
+                Console.WriteLine("  present in a scene, never what is merely mentioned:");
+                Console.WriteLine();
+                Console.WriteLine("  /place      add a location");
+                Console.WriteLine("  /character  add a person (may be offstage)");
+                Console.WriteLine("  /fact       add a truth, and choose whether you know it");
                 break;
 
             default:
