@@ -20,10 +20,22 @@ internal static class PlaySession
     private const string WorldId = "marrow";
     private const string SaveRoot = "saves";
 
+    /// <summary>
+    /// Where the pack lives. Content, as opposed to <see cref="SaveRoot"/>, which is state —
+    /// the split that lets a world be edited between sessions and shared without somebody's
+    /// playthrough inside it. Only lore reads from here so far.
+    /// </summary>
+    private const string PackRoot = "worlds";
+
     public static async Task<int> RunAsync(StoryWeaverSettings settings)
     {
         FileLlmLog log = new(settings.Logging);
         using OpenRouterClient client = new(settings, log);
+
+        // Authored content, loaded once. A malformed entry throws by name and line rather
+        // than vanishing — a silently dropped lore entry is the failure this genre is worst
+        // at, and it is the one thing here worth failing a startup over.
+        LoreBook lore = MarkdownLoreReader.Load(Path.Combine(PackRoot, WorldId, "lore"));
 
         JsonWorldRepository repository = new(SaveRoot);
         int historyTurns = settings.Story.HistoryTurns;
@@ -31,7 +43,8 @@ internal static class PlaySession
             new LlmNarrator(client),
             new LlmStateExtractor(client),
             repository,
-            historyTurns);
+            historyTurns,
+            lore);
 
         // Resume the world if it exists, otherwise seed it and write the first save so the
         // world is on disk before any turn runs.
@@ -44,7 +57,7 @@ internal static class PlaySession
             await repository.SaveAsync(WorldId, world).ConfigureAwait(false);
         }
 
-        PrintBanner(log.FilePath, repository.RootDirectory, resumed, world.TurnNumber, historyTurns);
+        PrintBanner(log.FilePath, repository.RootDirectory, resumed, world.TurnNumber, historyTurns, lore);
 
         if (resumed)
         {
@@ -84,10 +97,10 @@ internal static class PlaySession
                     await RetryExtractionAsync(engine, repository, world).ConfigureAwait(false);
                 }
                 else if (!await AuthoringCommands
-                        .TryHandleAsync(input, WorldId, world, repository)
+                        .TryHandleAsync(input, WorldId, world, repository, lore)
                         .ConfigureAwait(false))
                 {
-                    HandleCommand(input, world, repository);
+                    HandleCommand(input, world, repository, lore);
                 }
 
                 continue;
@@ -214,20 +227,24 @@ internal static class PlaySession
         _ => delta.GetType().Name,
     };
 
-    private static void HandleCommand(string input, WorldState world, IWorldRepository repo)
+    private static void HandleCommand(string input, WorldState world, IWorldRepository repo, LoreBook lore)
     {
         switch (input)
         {
+            case "/lore":
+                PrintLore(world, lore);
+                break;
+
             case "/state":
                 Console.WriteLine();
-                Console.WriteLine(ContextAssembler.ForExtraction(world));
+                Console.WriteLine(ContextAssembler.ForExtraction(world, lore));
                 break;
 
             // Worth having its own command: this is the view that must contain no ids, and
             // eyeballing it is the only check that the narrator cannot leak one into prose.
             case "/prose":
                 Console.WriteLine();
-                Console.WriteLine(ContextAssembler.ForNarration(world));
+                Console.WriteLine(ContextAssembler.ForNarration(world, lore));
                 break;
 
             case "/raw":
@@ -240,6 +257,7 @@ internal static class PlaySession
                 Console.WriteLine();
                 Console.WriteLine("  /state  world state as the extractor sees it (with ids)");
                 Console.WriteLine("  /prose  world state as the narrator sees it (no ids)");
+                Console.WriteLine("  /lore   the pack's lore, and who has heard of what");
                 Console.WriteLine("  /raw    last raw extraction response");
                 Console.WriteLine("  /retry  extract the last turn again, same prose");
                 Console.WriteLine("  /quit   end the session");
@@ -251,11 +269,84 @@ internal static class PlaySession
                 Console.WriteLine("  /character  add a person (may be offstage)");
                 Console.WriteLine("  /fact       add a truth, and choose whether you know it");
                 Console.WriteLine("  /rename     rename someone — their id stays the same");
+                Console.WriteLine("  /knows      let a character have heard of a lore entry");
                 break;
 
             default:
                 Console.WriteLine($"Unknown command '{input}'. Try /help.");
                 break;
+        }
+    }
+
+    /// <summary>
+    /// The pack's lore, and who has heard of each entry.
+    ///
+    /// Read-only, unlike the other authoring commands. Lore is authored in files, so a
+    /// <c>/lore add</c> would be a second way to write content that the Lore Writer window
+    /// will eventually own — and two writers of the same files is how a format starts
+    /// disagreeing with itself.
+    ///
+    /// The knowledge column is the part worth looking at: it is the feature's whole premise,
+    /// and the only way to see that an NPC is being kept ignorant on purpose.
+    /// </summary>
+    private static void PrintLore(WorldState world, LoreBook lore)
+    {
+        Console.WriteLine();
+
+        if (lore.Count == 0)
+        {
+            Console.WriteLine("  No lore entries. Add markdown files under worlds/marrow/lore/.");
+            return;
+        }
+
+        foreach (LoreEntry entry in lore.All)
+        {
+            // Only the stored side is listed per name. A common entry is known by everyone by
+            // definition, and printing the whole cast under it would bury the distinction
+            // that matters — who was *told*, versus who simply lives here.
+            List<string> knownBy =
+            [
+                .. world.Characters.Values
+                    .Where(c => c.Knows.Contains(entry.Id))
+                    .Select(c => c.Name)
+                    .OrderBy(n => n, StringComparer.Ordinal),
+            ];
+
+            List<string> flags = [];
+
+            if (entry.Always)
+            {
+                flags.Add("always");
+            }
+
+            if (entry.Common)
+            {
+                flags.Add("common");
+            }
+
+            Console.WriteLine($"  {entry.Title}  ({entry.Id})");
+            Console.WriteLine($"    priority {entry.Priority}"
+                              + (flags.Count == 0 ? string.Empty : $", {string.Join(", ", flags)}"));
+
+            if (entry.Keys.Count > 0)
+            {
+                Console.WriteLine($"    keys: {string.Join(", ", entry.Keys)}");
+            }
+
+            if (entry.Common)
+            {
+                Console.WriteLine(knownBy.Count == 0
+                    ? "    heard of by: everyone (common knowledge)"
+                    : $"    heard of by: everyone (common knowledge); told directly: {string.Join(", ", knownBy)}");
+            }
+            else
+            {
+                Console.WriteLine(knownBy.Count == 0
+                    ? "    heard of by: nobody"
+                    : $"    heard of by: {string.Join(", ", knownBy)}");
+            }
+
+            Console.WriteLine();
         }
     }
 
@@ -309,7 +400,8 @@ internal static class PlaySession
         string saveRoot,
         bool resumed,
         int turnNumber,
-        int historyTurns)
+        int historyTurns,
+        LoreBook lore)
     {
         Console.WriteLine();
         Console.WriteLine(resumed
@@ -318,6 +410,12 @@ internal static class PlaySession
         Console.WriteLine($"Saving to  {saveRoot}");
         Console.WriteLine($"Logging to {logPath}");
         Console.WriteLine($"Narrator remembers the last {historyTurns} turns");
+
+        // Stated even when zero. "No lore loaded" is information; an absent line reads as a
+        // feature that is not there, which is how a mistyped pack path stays invisible.
+        Console.WriteLine(lore.Count == 0
+            ? "No lore entries loaded"
+            : $"Lore: {lore.Count} entr{(lore.Count == 1 ? "y" : "ies")} — {string.Join(", ", lore.Ids)}");
         Console.WriteLine();
         Console.WriteLine("Write *actions between asterisks* and speech outside them:");
         Console.WriteLine();

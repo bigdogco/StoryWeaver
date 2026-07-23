@@ -80,6 +80,11 @@ public sealed class LlmStateExtractor : IStateExtractor
           them its own fact_learned for the speaker and for everyone else who now knows it.
         - fact_learned is only for real information. A character who was merely asked a
           question has learned nothing.
+        - The world lore list holds authored topics. When someone is told about a topic that
+          is already listed there — the order, the cult, the war — emit fact_learned for the
+          listener against THAT topic's id. Do not establish new facts restating what the
+          topic already covers, and never establish the topic itself. Only add a fact for
+          something specific the lore does not already say.
         - Do not restate what is already true. If the state says a mood is "wary", do not
           emit mood_changed to "wary" again. Report changes, not the current situation.
         - Emit mood_changed whenever the prose shows a shift in how a character feels, even

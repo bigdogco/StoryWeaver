@@ -166,9 +166,11 @@ Options, roughly in order of appeal for this project:
 
 ## Lore entries — the fourth entity type
 
-**Designed 2026-07-23 — see [`docs/design/LORE_ENTRIES.md`](../design/LORE_ENTRIES.md), all
-decisions settled, ready to build. Tracked in `TODO_LORE_ENTRIES.md`.** The notes below are
-the thinking that fed into it and are kept for context.
+**Built 2026-07-24.** Design: [`docs/design/LORE_ENTRIES.md`](../design/LORE_ENTRIES.md).
+Devlog: [`docs/devlog/2026-07-24_lore-entries.md`](../devlog/2026-07-24_lore-entries.md).
+Remaining work — keyed retrieval, budgeting, cut reporting, and the redundant-facts gap — is
+tracked in `TODO_LORE_ENTRIES.md`. The notes below are the thinking that fed into it, kept for
+context.
 
 Added by the design pass and not captured below: a **Lore Writer** editor window is the
 expected authoring surface once a UI exists, which is what makes markdown files the right

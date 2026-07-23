@@ -26,16 +26,24 @@ public sealed class TurnEngine
     /// </summary>
     private readonly int _historyTurns;
 
+    /// <summary>
+    /// The pack's lore. Authored content, not canon — it is read into prompts and never
+    /// written, so it is held here rather than on <see cref="WorldState"/>.
+    /// </summary>
+    private readonly LoreBook _lore;
+
     public TurnEngine(
         INarrator narrator,
         IStateExtractor extractor,
         IWorldRepository repository,
-        int historyTurns = DefaultHistoryTurns)
+        int historyTurns = DefaultHistoryTurns,
+        LoreBook? lore = null)
     {
         _narrator = narrator;
         _extractor = extractor;
         _repository = repository;
         _historyTurns = Math.Max(0, historyTurns);
+        _lore = lore ?? LoreBook.Empty;
     }
 
     public async Task<TurnOutcome> RunTurnAsync(
@@ -48,8 +56,8 @@ public sealed class TurnEngine
         // will eventually write one into the prose — while the extractor cannot work without
         // them. Both are built before narration so the extractor sees the world as it was
         // when the prose was written, not as it is after this turn's changes.
-        string narrationContext = ContextAssembler.ForNarration(world);
-        string extractionContext = ContextAssembler.ForExtraction(world);
+        string narrationContext = ContextAssembler.ForNarration(world, _lore);
+        string extractionContext = ContextAssembler.ForExtraction(world, _lore);
 
         IReadOnlyList<StoryBeat> recent = await LoadRecentAsync(worldId, cancellationToken)
             .ConfigureAwait(false);
@@ -75,7 +83,7 @@ public sealed class TurnEngine
             extractionError = ex.Message;
         }
 
-        ValidationOutcome validation = DeltaValidator.Validate(world, extraction.Deltas);
+        ValidationOutcome validation = DeltaValidator.Validate(world, extraction.Deltas, _lore);
 
         // Commit order: mutate, bump the turn counter, then persist. Nothing here can fail
         // partway in the in-memory case; the JSON repository is what makes the write atomic,
@@ -123,7 +131,7 @@ public sealed class TurnEngine
         TurnRecord turn,
         CancellationToken cancellationToken = default)
     {
-        string extractionContext = ContextAssembler.ForExtraction(world);
+        string extractionContext = ContextAssembler.ForExtraction(world, _lore);
 
         ExtractionResult extraction;
         string? extractionError = null;
@@ -140,7 +148,7 @@ public sealed class TurnEngine
             extractionError = ex.Message;
         }
 
-        ValidationOutcome validation = DeltaValidator.Validate(world, extraction.Deltas);
+        ValidationOutcome validation = DeltaValidator.Validate(world, extraction.Deltas, _lore);
         DeltaApplier.Apply(world, validation.Accepted);
 
         // The turn number is not advanced and no record is appended: this is the same turn,

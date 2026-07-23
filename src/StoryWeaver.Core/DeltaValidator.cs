@@ -45,8 +45,13 @@ namespace StoryWeaver.Core;
 /// </summary>
 public static class DeltaValidator
 {
-    public static ValidationOutcome Validate(WorldState world, IReadOnlyList<StateDelta> deltas)
+    public static ValidationOutcome Validate(
+        WorldState world,
+        IReadOnlyList<StateDelta> deltas,
+        LoreBook? lore = null)
     {
+        LoreBook book = lore ?? LoreBook.Empty;
+
         List<StateDelta> accepted = [];
         List<StateDelta> noOps = [];
         List<RejectedDelta> rejected = [];
@@ -56,6 +61,10 @@ public static class DeltaValidator
         HashSet<string> characters = new(world.Characters.Keys, StringComparer.OrdinalIgnoreCase);
         HashSet<string> locations = new(world.Locations.Keys, StringComparer.OrdinalIgnoreCase);
         HashSet<string> facts = new(world.Facts.Keys, StringComparer.OrdinalIgnoreCase);
+
+        // Lore is authored content, never canon, so it is read-only here: an id may be
+        // *referenced* by fact_learned and may never be created, overwritten, or shadowed.
+        HashSet<string> loreIds = new(book.Ids, StringComparer.OrdinalIgnoreCase);
 
         // Deltas already seen this batch, ignoring evidence text. Models pad: one observed
         // batch contained the same location_introduced three times with different quotes.
@@ -71,7 +80,7 @@ public static class DeltaValidator
                 continue;
             }
 
-            string? problem = Check(delta, characters, locations, facts);
+            string? problem = Check(delta, characters, locations, facts, loreIds);
 
             if (problem is not null)
             {
@@ -191,7 +200,8 @@ public static class DeltaValidator
         StateDelta delta,
         HashSet<string> characters,
         HashSet<string> locations,
-        HashSet<string> facts)
+        HashSet<string> facts,
+        HashSet<string> lore)
     {
         return delta switch
         {
@@ -201,8 +211,8 @@ public static class DeltaValidator
                 : characters.Contains(d.CharacterId)
                     ? $"character '{d.CharacterId}' already exists. Introducing a known " +
                       "character overwrites them; use a state change instead."
-                : Taken(d.CharacterId, locations, facts)
-                    ? $"id '{d.CharacterId}' is already in use by a location or fact."
+                : Taken(d.CharacterId, locations, facts, lore)
+                    ? $"id '{d.CharacterId}' is already in use by a location, fact or lore entry."
                 : d.LocationId is { } loc && !Blank(loc) && !locations.Contains(loc)
                     ? $"location '{loc}' does not exist."
                 : null,
@@ -213,8 +223,8 @@ public static class DeltaValidator
                 : locations.Contains(d.LocationId)
                     ? $"location '{d.LocationId}' already exists. Mentioning a known place " +
                       "is not introducing it."
-                : Taken(d.LocationId, characters, facts)
-                    ? $"id '{d.LocationId}' is already in use by a character or fact."
+                : Taken(d.LocationId, characters, facts, lore)
+                    ? $"id '{d.LocationId}' is already in use by a character, fact or lore entry."
                 : null,
 
             // No uniqueness check on the name: two guards may both be "Guard", and identity
@@ -258,17 +268,27 @@ public static class DeltaValidator
                     ? $"standing {d.Standing} is outside -100..100."
                 : null,
 
+            // The rule that keeps "lore is authored, never extracted" true in practice rather
+            // than only in intent. Extraction may record that someone *learned* an entry; it
+            // may never bring one into existence, nor shadow one with a same-id fact.
             FactEstablished d =>
                 Blank(d.FactId) ? "factId is empty."
                 : Blank(d.Text) ? "text is empty."
                 : facts.Contains(d.FactId) ? $"fact '{d.FactId}' already exists."
+                : lore.Contains(d.FactId)
+                    ? $"'{d.FactId}' is a lore entry. Lore is authored, not established in " +
+                      "play — a character can learn it, but it cannot be created here."
                 : Taken(d.FactId, characters, locations)
                     ? $"id '{d.FactId}' is already in use by a character or location."
+                    // Lore is checked above with a more specific message, so it is
+                    // deliberately absent from this Taken call.
                 : null,
 
+            // Accepts a lore id as readily as a fact id. One namespace is what lets learning
+            // lore in play reuse this delta instead of needing a kind of its own.
             FactLearned d =>
                 !characters.Contains(d.CharacterId) ? $"character '{d.CharacterId}' does not exist."
-                : !facts.Contains(d.FactId)
+                : !facts.Contains(d.FactId) && !lore.Contains(d.FactId)
                     ? $"fact '{d.FactId}' does not exist. A character cannot learn a fact that " +
                       "was never established — emit fact_established first."
                 : null,
@@ -280,16 +300,19 @@ public static class DeltaValidator
     private static bool Blank(string? value) => string.IsNullOrWhiteSpace(value);
 
     /// <summary>
-    /// Ids must be unique across characters, locations, and facts — not merely within each.
+    /// Ids must be unique across characters, locations, facts and lore — not merely within
+    /// each.
     ///
     /// Found the hard way: extraction emitted <c>location_introduced</c> with the id
     /// <c>innkeeper-hald</c>, which exists as a character but not as a location. The per-type
     /// check passed, so a character's id was silently reused as a place. Nothing downstream
     /// would have flagged it, and the two entities would then share an identity forever.
     ///
+    /// Lore joins the same namespace, which is what allows <see cref="Character.Knows"/> to
+    /// hold both fact and lore ids without ambiguity.
     /// </summary>
-    private static bool Taken(string id, HashSet<string> first, HashSet<string> second) =>
-        first.Contains(id) || second.Contains(id);
+    private static bool Taken(string id, params HashSet<string>[] namespaces) =>
+        namespaces.Any(set => set.Contains(id));
 }
 
 /// <summary>

@@ -22,7 +22,12 @@ internal static class Program
         // for an API key.
         if (args.Contains("--selftest", StringComparer.OrdinalIgnoreCase))
         {
-            return JsonSelfTest.Run();
+            // Both suites run; the exit code is the worse of the two, so a lore failure
+            // cannot be hidden by serialization passing.
+            int json = JsonSelfTest.Run();
+            Console.WriteLine();
+            int lore = LoreSelfTest.Run();
+            return Math.Max(json, lore);
         }
 
         bool smoke = args.Contains("--smoke", StringComparer.OrdinalIgnoreCase);

@@ -22,7 +22,8 @@ public static class ContextAssembler
     /// Prose-facing view. Names only — no ids anywhere, including in connections. Anything
     /// id-shaped that appears here can end up in the story.
     /// </summary>
-    public static string ForNarration(WorldState world) => Build(world, withIds: false);
+    public static string ForNarration(WorldState world, LoreBook? lore = null) =>
+        Build(world, lore ?? LoreBook.Empty, withIds: false);
 
     /// <summary>
     /// Bookkeeping view. Ids beside every name, plus an explicit roster of known ids.
@@ -32,9 +33,10 @@ public static class ContextAssembler
     /// catches both, but catching them means dropping the delta — better that the model does
     /// not need correcting.
     /// </summary>
-    public static string ForExtraction(WorldState world) => Build(world, withIds: true);
+    public static string ForExtraction(WorldState world, LoreBook? lore = null) =>
+        Build(world, lore ?? LoreBook.Empty, withIds: true);
 
-    private static string Build(WorldState world, bool withIds)
+    private static string Build(WorldState world, LoreBook lore, bool withIds)
     {
         StringBuilder builder = new();
 
@@ -73,18 +75,23 @@ public static class ContextAssembler
         }
 
         builder.AppendLine();
-        AppendPlayer(builder, world, withIds);
-        AppendNpcs(builder, world, withIds);
+        AppendPlayer(builder, world, lore, withIds);
+        AppendNpcs(builder, world, lore, withIds);
+        AppendLore(builder, lore, withIds);
 
         if (withIds)
         {
-            AppendKnownIds(builder, world);
+            AppendKnownIds(builder, world, lore);
         }
 
         return builder.ToString().TrimEnd();
     }
 
-    private static void AppendPlayer(StringBuilder builder, WorldState world, bool withIds)
+    private static void AppendPlayer(
+        StringBuilder builder,
+        WorldState world,
+        LoreBook lore,
+        bool withIds)
     {
         if (world.Player is not { } player)
         {
@@ -97,11 +104,15 @@ public static class ContextAssembler
 
         // The one knowledge set that constrains narration rather than dialogue: the prose
         // must not reveal something the player has not learned.
-        AppendKnowledge(builder, world, player, withIds, whenEmpty: null);
+        AppendKnowledge(builder, world, lore, player, withIds, whenEmpty: null);
         builder.AppendLine();
     }
 
-    private static void AppendNpcs(StringBuilder builder, WorldState world, bool withIds)
+    private static void AppendNpcs(
+        StringBuilder builder,
+        WorldState world,
+        LoreBook lore,
+        bool withIds)
     {
         List<Character> npcs = [.. world.NpcsWithPlayer()];
 
@@ -126,7 +137,7 @@ public static class ContextAssembler
 
             // Stated explicitly when empty. An absent section reads as "not mentioned"; this
             // has to read as "knows nothing", or the model fills the gap itself.
-            AppendKnowledge(builder, world, npc, withIds, whenEmpty: "Knows: nothing recorded.");
+            AppendKnowledge(builder, world, lore, npc, withIds, whenEmpty: "Knows: nothing recorded.");
             builder.AppendLine();
         }
     }
@@ -134,13 +145,19 @@ public static class ContextAssembler
     private static void AppendKnowledge(
         StringBuilder builder,
         WorldState world,
+        LoreBook lore,
         Character character,
         bool withIds,
         string? whenEmpty)
     {
         List<Fact> known = [.. world.KnownFacts(character)];
 
-        if (known.Count == 0)
+        // Lore a character has heard of, by title only. The body belongs in one place — the
+        // lore section — and repeating it per character would multiply the largest text in
+        // the prompt by the size of the cast.
+        List<LoreEntry> heardOf = [.. lore.KnownBy(character)];
+
+        if (known.Count == 0 && heardOf.Count == 0)
         {
             if (whenEmpty is not null)
             {
@@ -150,15 +167,84 @@ public static class ContextAssembler
             return;
         }
 
-        builder.AppendLine("Knows:");
-
-        foreach (Fact fact in known)
+        if (known.Count > 0)
         {
-            builder.AppendLine(withIds ? $"  - ({fact.Id}) {fact.Text}" : $"  - {fact.Text}");
+            builder.AppendLine("Knows:");
+
+            foreach (Fact fact in known)
+            {
+                builder.AppendLine(withIds ? $"  - ({fact.Id}) {fact.Text}" : $"  - {fact.Text}");
+            }
+        }
+
+        if (heardOf.Count > 0)
+        {
+            builder.AppendLine("Has heard of:");
+
+            foreach (LoreEntry entry in heardOf)
+            {
+                builder.AppendLine(withIds ? $"  - ({entry.Id}) {entry.Title}" : $"  - {entry.Title}");
+            }
         }
     }
 
-    private static void AppendKnownIds(StringBuilder builder, WorldState world)
+    /// <summary>
+    /// The lore block.
+    ///
+    /// <b>Bodies for the narrator, titles for the extractor.</b> The narrator needs the prose;
+    /// the extractor needs only enough to emit <c>fact_learned</c> against an id, and handing
+    /// it several paragraphs of reference material invites exactly the invention the
+    /// extraction prompt spends most of its length suppressing. The same split as ids
+    /// themselves, introduced for a different reason and still paying out.
+    ///
+    /// Position matters and is already solved: this sits in the volatile block that narration
+    /// keeps in the *last* message, so the system prompt and replayed history stay a stable,
+    /// cacheable prefix. Injecting lore mid-prompt is the usual way a lorebook becomes
+    /// expensive — see CHALLENGES.md — and an earlier decision avoided it by accident.
+    /// </summary>
+    private static void AppendLore(StringBuilder builder, LoreBook lore, bool withIds)
+    {
+        List<LoreEntry> selected = [.. lore.Selected()];
+
+        if (selected.Count == 0)
+        {
+            return;
+        }
+
+        builder.AppendLine("## World lore");
+        builder.AppendLine();
+
+        if (withIds)
+        {
+            builder.AppendLine(
+                "Reference topics that exist in this world. A character may learn one the same " +
+                "way they learn a fact. You may never establish one — they are authored, not " +
+                "discovered.");
+            builder.AppendLine();
+
+            foreach (LoreEntry entry in selected)
+            {
+                builder.AppendLine($"  - ({entry.Id}) {entry.Title}");
+            }
+
+            builder.AppendLine();
+            return;
+        }
+
+        builder.AppendLine(
+            "Background for your own use. Do not recite it. A character may only refer to a " +
+            "topic they have heard of.");
+        builder.AppendLine();
+
+        foreach (LoreEntry entry in selected)
+        {
+            builder.AppendLine($"### {entry.Title}");
+            builder.AppendLine(entry.Body);
+            builder.AppendLine();
+        }
+    }
+
+    private static void AppendKnownIds(StringBuilder builder, WorldState world, LoreBook lore)
     {
         builder.AppendLine("## Known ids");
         builder.AppendLine();
@@ -169,6 +255,11 @@ public static class ContextAssembler
         builder.AppendLine($"Characters: {Join(world.Characters.Keys)}");
         builder.AppendLine($"Locations:  {Join(world.Locations.Keys)}");
         builder.AppendLine($"Facts:      {Join(world.Facts.Keys)}");
+
+        if (lore.Count > 0)
+        {
+            builder.AppendLine($"Lore:       {Join(lore.Ids)}");
+        }
     }
 
     private static string Label(string name, string id, bool withIds) =>

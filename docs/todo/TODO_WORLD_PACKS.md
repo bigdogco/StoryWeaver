@@ -21,8 +21,9 @@ Design: [`docs/design/WORLD_PACKS.md`](../design/WORLD_PACKS.md).
 
 ## Build now — with the lore work, not separately
 
-- [ ] Lore entries load from `worlds/{pack}/lore/*.md`
-- [ ] Pack root as an explicit parameter, not the working directory
+- [x] Lore entries load from `worlds/{pack}/lore/*.md` — done 2026-07-24, the first pack exists
+- [ ] Pack root as an explicit parameter, not the working directory. **Still a constant**
+      (`PlaySession.PackRoot`), so a pack is found relative to the cwd exactly as saves are
 - [ ] `saves/` root configured rather than cwd-relative — currently the reason `play.ps1`
       forces the cwd and harness testing needs a temp directory
 

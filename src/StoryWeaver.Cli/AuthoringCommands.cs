@@ -3,7 +3,8 @@ using StoryWeaver.Core;
 namespace StoryWeaver.Cli;
 
 /// <summary>
-/// Player-authored canon: <c>/place</c>, <c>/character</c>, <c>/fact</c>, <c>/rename</c>.
+/// Player-authored canon: <c>/place</c>, <c>/character</c>, <c>/fact</c>, <c>/rename</c>,
+/// <c>/knows</c>.
 ///
 /// Extraction deliberately never records a merely *mentioned* entity — measured at 0/7 for a
 /// place the player names, a person they name, and a place the narrator names in passing. The
@@ -25,14 +26,18 @@ internal static class AuthoringCommands
         string input,
         string worldId,
         WorldState world,
-        IWorldRepository repository)
+        IWorldRepository repository,
+        LoreBook? lore = null)
     {
-        Func<WorldState, IReadOnlyList<StateDelta>?>? prompt = input.ToLowerInvariant() switch
+        LoreBook book = lore ?? LoreBook.Empty;
+
+        Func<WorldState, LoreBook, IReadOnlyList<StateDelta>?>? prompt = input.ToLowerInvariant() switch
         {
-            "/place" => PromptPlace,
-            "/character" => PromptCharacter,
-            "/fact" => PromptFact,
-            "/rename" => PromptRename,
+            "/place" => static (w, _) => PromptPlace(w),
+            "/character" => static (w, _) => PromptCharacter(w),
+            "/fact" => static (w, _) => PromptFact(w),
+            "/rename" => static (w, _) => PromptRename(w),
+            "/knows" => PromptKnows,
             _ => null,
         };
 
@@ -41,7 +46,7 @@ internal static class AuthoringCommands
             return false;
         }
 
-        IReadOnlyList<StateDelta>? deltas = prompt(world);
+        IReadOnlyList<StateDelta>? deltas = prompt(world, book);
 
         if (deltas is null)
         {
@@ -49,7 +54,7 @@ internal static class AuthoringCommands
             return true;
         }
 
-        await CommitAsync(deltas, worldId, world, repository).ConfigureAwait(false);
+        await CommitAsync(deltas, worldId, world, repository, book).ConfigureAwait(false);
         return true;
     }
 
@@ -179,13 +184,75 @@ internal static class AuthoringCommands
         }];
     }
 
+    /// <summary>
+    /// Grant a character knowledge of a lore entry — "Hald has heard of the Investigators".
+    ///
+    /// The authoring counterpart to learning one in play. It emits <see cref="FactLearned"/>
+    /// against a lore id, which works because facts and lore share one id namespace; that is
+    /// the same property that saves the extractor from needing a delta kind of its own.
+    ///
+    /// A seeded world starts with nobody having heard of anything, which is correct but
+    /// unusable — an author needs to say that the innkeeper knows what the cult is without
+    /// waiting for a scene to establish it.
+    /// </summary>
+    private static IReadOnlyList<StateDelta>? PromptKnows(WorldState world, LoreBook lore)
+    {
+        if (lore.Count == 0)
+        {
+            Console.WriteLine("  This world has no lore entries.");
+            return null;
+        }
+
+        Console.WriteLine("  Characters:");
+
+        foreach (Character existing in world.Characters.Values.OrderBy(c => c.Id, StringComparer.Ordinal))
+        {
+            Console.WriteLine($"    {existing.Id} — {existing.Name}");
+        }
+
+        string? characterId = Ask("Character id");
+        if (characterId is null)
+        {
+            return null;
+        }
+
+        if (world.FindCharacter(characterId) is not { } character)
+        {
+            Console.WriteLine($"  No character with id '{characterId}'.");
+            return null;
+        }
+
+        Console.WriteLine("  Lore:");
+
+        foreach (LoreEntry entry in lore.All)
+        {
+            string mark = character.Knows.Contains(entry.Id) ? "already knows" : "has not heard";
+            Console.WriteLine($"    {entry.Id} — {entry.Title} ({mark})");
+        }
+
+        string? loreId = Ask("Lore id");
+        if (loreId is null)
+        {
+            return null;
+        }
+
+        if (!lore.Contains(loreId))
+        {
+            Console.WriteLine($"  No lore entry with id '{loreId}'.");
+            return null;
+        }
+
+        return [new FactLearned(characterId, loreId) { Evidence = "Authored by the player." }];
+    }
+
     private static async Task CommitAsync(
         IReadOnlyList<StateDelta> deltas,
         string worldId,
         WorldState world,
-        IWorldRepository repository)
+        IWorldRepository repository,
+        LoreBook lore)
     {
-        ValidationOutcome validation = DeltaValidator.Validate(world, deltas);
+        ValidationOutcome validation = DeltaValidator.Validate(world, deltas, lore);
 
         foreach (RejectedDelta rejected in validation.Rejected)
         {

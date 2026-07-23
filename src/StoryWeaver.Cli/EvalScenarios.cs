@@ -40,8 +40,15 @@ internal sealed record EvalScenario(
     IReadOnlyList<DeltaRule> Required,
     IReadOnlyList<DeltaRule> Forbidden,
     Func<WorldState>? Seed = null,
-    IReadOnlyList<StateRule>? Expected = null)
+    IReadOnlyList<StateRule>? Expected = null,
+    Func<LoreBook>? Lore = null)
 {
+    /// <summary>
+    /// The pack lore this scenario is scored against. Empty for every scenario that predates
+    /// lore, which keeps their measurements comparable to the recorded baselines.
+    /// </summary>
+    public LoreBook LoreBook() => (Lore ?? (static () => Core.LoreBook.Empty))();
+
     /// <summary>
     /// The world this scenario is scored against. Defaults to the small shared seed.
     ///
@@ -110,7 +117,91 @@ internal static class EvalScenarios
         PlayerArrivalLarge,
         TwoStageEntryLarge,
         NameRevealLarge,
+        LoreLearned,
+        LoreNotEstablished,
     ];
+
+    /// <summary>
+    /// <b>Diagnostic — the load-bearing question for the whole lore design.</b>
+    ///
+    /// Lore ids share one namespace with facts precisely so that learning an entry in play
+    /// can reuse <c>fact_learned</c> instead of needing a delta kind of its own. That saving
+    /// is only real if the extractor will actually emit <c>fact_learned</c> against a lore id
+    /// without being told to — it is instructed that facts are single propositions, and a
+    /// lore entry is not one.
+    ///
+    /// Hald knows the cult; the player does not. He explains it. The player should come out
+    /// of the turn having heard of it.
+    ///
+    /// <b>If this scores badly the design owes a <c>lore_learned</c> delta</b>, which is
+    /// recoverable but not free — a schema branch, a prompt rule, and a new thing to measure.
+    /// Measured before committing to the cheaper answer rather than after.
+    /// </summary>
+    private static EvalScenario LoreLearned => new(
+        "lore-learned",
+        "That sign on the medallion — the weeping woman. What is it?",
+        """
+        Hald's cloth stops moving. He looks at the door, then back at you, and lowers his
+        voice until it barely carries across the counter.
+
+        "That's Shurus. The Drowned Father." He says the name like it costs him something.
+        "There's an old faith out in the fen — the Blind, folk call them. They hold that the
+        marsh keeps what it takes. Drown in the deep bog and you don't go into the dark, you
+        wake up in it. Walk the reeds. Keep secrets in the mud. Forever." He puts the cloth
+        down. "That's all I'll say on it."
+        """,
+        Required:
+        [
+            new("the player has heard of the cult",
+                d => d is FactLearned { CharacterId: Character.PlayerId, FactId: "cult-of-the-blind" }),
+        ],
+        Forbidden:
+        [
+            new("the cult established as a fact",
+                d => d is FactEstablished { FactId: "cult-of-the-blind" }),
+        ],
+        Seed: WorldSeeds.Marrow_WithLore,
+        Expected:
+        [
+            new("the player now knows the cult entry",
+                w => w.Player?.Knows.Contains("cult-of-the-blind") == true),
+        ],
+        Lore: WorldSeeds.MarrowLore);
+
+    /// <summary>
+    /// <b>Diagnostic.</b> The other half: lore is authored and must never be *created* by
+    /// extraction.
+    ///
+    /// The player asks about the Investigators, whom nobody in the room has heard of. The
+    /// tempting wrong answer is to establish the topic as a fact — which is exactly the
+    /// behaviour §9 found the model reaching for whenever the delta set could not express
+    /// something.
+    ///
+    /// The validator rejects a <c>fact_established</c> against a lore id regardless, so this
+    /// measures whether the *model* respects the boundary or whether the net is doing all the
+    /// work. That distinction is the reason forbidden rules are scored on raw output.
+    /// </summary>
+    private static EvalScenario LoreNotEstablished => new(
+        "lore-not-established",
+        "*I set the seal on the counter, face up.* King's Investigator. I'd like the truth now, if it's convenient.",
+        """
+        Hald looks at the seal for a long moment without touching it. Something goes out of
+        his shoulders — not relief, the opposite. Behind you a stool scrapes as Mabb decides
+        he has business elsewhere and does not quite manage to stand up.
+
+        "Didn't think you people came out this far," Hald says at last.
+        """,
+        Required: [],
+        Forbidden:
+        [
+            new("a lore topic established as a fact",
+                d => d is FactEstablished { FactId: "kings-investigators" or "cult-of-the-blind" }),
+            new("a lore topic introduced as an entity",
+                d => d is CharacterIntroduced { CharacterId: "kings-investigators" }
+                     or LocationIntroduced { LocationId: "kings-investigators" }),
+        ],
+        Seed: WorldSeeds.Marrow_WithLore,
+        Lore: WorldSeeds.MarrowLore);
 
     /// <summary>
     /// <b>Diagnostic.</b> <see cref="NameReveal"/> word for word, against a world the size one

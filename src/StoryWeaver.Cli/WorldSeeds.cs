@@ -83,6 +83,69 @@ internal static class WorldSeeds
     }
 
     /// <summary>
+    /// The lore the eval scenarios run against.
+    ///
+    /// Hand-built rather than read from <c>worlds/marrow/lore/</c> deliberately: an eval that
+    /// changes score because somebody edited a pack file is measuring the wrong thing. The
+    /// text is deliberately close to the shipped entries so the measurement stays
+    /// representative.
+    /// </summary>
+    public static LoreBook MarrowLore() => new(
+    [
+        new LoreEntry
+        {
+            Id = "kingdom-of-vaska",
+            Title = "The Kingdom of Vaska",
+            Body =
+                "The kingdom these marshes belong to, ruled from the capital at Astaria. King " +
+                "Aldric the Fourth has held the throne for nineteen years — long enough that " +
+                "most people in the marsh towns have never known another king, and far enough " +
+                "away that it makes very little difference to them which one it is.",
+            Keys = ["kingdom", "vaska", "king"],
+            Always = true,
+            Common = true,
+            Priority = 30,
+        },
+        new LoreEntry
+        {
+            Id = "kings-investigators",
+            Title = "The King's Investigators",
+            Body =
+                "An order answering directly to the crown, empowered to enter any holding and " +
+                "question any subject without a local warrant. They wear no uniform; an " +
+                "investigator carries a seal, and the seal is the authority. In the marsh towns " +
+                "they are half-rumour — everyone has heard of them, almost nobody has met one.",
+            Keys = ["investigator", "king's men", "the order"],
+            Priority = 10,
+        },
+        new LoreEntry
+        {
+            Id = "cult-of-the-blind",
+            Title = "The Cult of the Blind",
+            Body =
+                "An old faith worshipping Shurus, the Drowned Father — a god of still water and " +
+                "things kept under it. Its sign is a weeping woman with her eyes gouged out. The " +
+                "cult holds that the marsh preserves what it takes: a follower the water claims " +
+                "wakes in the deep bog and becomes the marsh itself, forever.",
+            Keys = ["cult", "shurus", "drowned father"],
+            Priority = 20,
+        },
+    ]);
+
+    /// <summary>
+    /// Marrow where Hald has heard of the cult and nobody else has.
+    ///
+    /// The asymmetry is the entire point, and it mirrors the seeded fact `well-boarded` that
+    /// exactly one NPC knows — the shape that proved per-character knowledge works.
+    /// </summary>
+    public static WorldState Marrow_WithLore()
+    {
+        WorldState world = Marrow();
+        world.Characters["innkeeper-hald"].Knows.Add("cult-of-the-blind");
+        return world;
+    }
+
+    /// <summary>
     /// Marrow plus somebody nobody has named yet.
     ///
     /// The id and the name are deliberately *both* placeholders — <c>hooded-drinker</c>,

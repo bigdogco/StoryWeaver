@@ -145,7 +145,8 @@ internal static class ExtractionEval
     private static async Task<RunScore> ScoreRunAsync(IStateExtractor extractor, EvalScenario scenario)
     {
         WorldState world = scenario.World();
-        string context = ContextAssembler.ForExtraction(world);
+        LoreBook lore = scenario.LoreBook();
+        string context = ContextAssembler.ForExtraction(world, lore);
 
         ExtractionResult result;
         try
@@ -159,7 +160,7 @@ internal static class ExtractionEval
             return new RunScore { Failed = true, Note = ex.Message };
         }
 
-        ValidationOutcome validation = DeltaValidator.Validate(world, result.Deltas);
+        ValidationOutcome validation = DeltaValidator.Validate(world, result.Deltas, lore);
 
         // Required and forbidden are measured at deliberately different points.
         //

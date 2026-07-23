@@ -39,6 +39,20 @@ Also seen the same day, twice: the provider that reports **no name** returned de
 that ignores the schema and a provider that omits its own identity appear to be the same
 provider, which makes "unreported" a useful signal in its own right.
 
+**Third instance, 2026-07-24 — and now a rule rather than an anecdote.** Adding one lore entry
+to a scenario's context appeared to drop `lore-learned` from 14/14 to 8/14, which reads exactly
+like context crowding. Pinned, on identical input: **Baidu 14/14, Venice 10/14.** The earlier
+measurement had routed entirely to Baidu; a provider new to the mix was the whole difference.
+
+That is four times — AtlasCloud, the world-size hypothesis, the name-reveal work, and this —
+that the by-provider table has been the only thing between a routing artefact and a written-up
+finding about our own code. Stated as a working rule:
+
+> **No single routed sweep is evidence about a change.** A before/after comparison is only
+> meaningful with the provider mix held fixed, which means `--providers` on both halves.
+
+The by-provider table is not diagnostics. It is the control.
+
 AtlasCloud's output was **fully schema-valid** — it emitted a building as a
 `character_introduced` under `characterId: "player"`. No schema and no request parameter can
 catch a valid-but-wrong branch choice.
@@ -389,6 +403,16 @@ false canon stored as true will eventually be narrated as true.
 entity type without relieving the pressure just gives the overflow a new place to pool. The
 underlying fix is to give the delta set the expressiveness the model keeps reaching for —
 rename/identity reveal, attribution and truth value on facts.
+
+**Fourth instance, 2026-07-24, and the prediction above was right.** With lore entries in
+place, a character explaining an authored topic produced the correct
+`fact_learned player <- cult-of-the-blind` *and* two new facts paraphrasing what the entry
+already says (`shurus-drowned-father`, `blind-faith-fen`). The prompt rule explicitly says not
+to. Required behaviour was bought; tidiness was not.
+
+So the pressure survives a new entity type, exactly as predicted — the overflow simply pools
+next to it. Whatever fixes this has to change what `fact_established` is *for*, not add
+somewhere else for content to go.
 
 **Read the workarounds as a specification.** A model routing around the schema is a more
 reliable signal than an outright failure, precisely because it looks like success.
