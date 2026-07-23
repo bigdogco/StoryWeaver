@@ -166,6 +166,16 @@ Options, roughly in order of appeal for this project:
 
 ## Lore entries — the fourth entity type
 
+**Designed 2026-07-23 — see [`docs/design/LORE_ENTRIES.md`](../design/LORE_ENTRIES.md), all
+decisions settled, ready to build. Tracked in `TODO_LORE_ENTRIES.md`.** The notes below are
+the thinking that fed into it and are kept for context.
+
+Added by the design pass and not captured below: a **Lore Writer** editor window is the
+expected authoring surface once a UI exists, which is what makes markdown files the right
+storage — the tool writes them, and they stay readable for diffing, sharing and hand-editing.
+Once that window exists it should be the *only* writer, since a strict parser and a
+hand-editor adding unknown keys are a bad combination.
+
 - [ ] **A named topic with a body of prose, the way a DnD lorebook entry works.** Raised by the
       user, and it is a better fit than the "faction with a standing toward the player" shape
       that was considered first — an organisation, a war, a religion, a bloodline is *reference
