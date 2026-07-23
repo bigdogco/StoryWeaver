@@ -258,6 +258,83 @@ Small things the incumbents mostly don't do, cheap to add once the foundations e
 
 ---
 
+## Dice-resolved checks — combat and everything else uncertain
+
+- [ ] **Resolve uncertain actions with a roll the narrator is told about, rather than letting
+      it decide.** Raised as thinking-out-loud; recorded because it fits the architecture
+      unusually well and the reasoning is worth not losing.
+
+      **Why it fits.** Canon is the source of truth and prose is a rendering of it. A die roll
+      is canon — a fact the model cannot argue with. The loop becomes:
+
+      ```
+      1. roll      code. deterministic, auditable, no API call
+      2. narrate   the LLM renders the verdict as prose
+      3. extract   as today
+      ```
+
+      **The rule the whole thing hinges on:** the roll happens *before* narration and the
+      narrator is **told the outcome, never asked to decide it**. The moment the model decides
+      who wins, the answer is whatever it felt like — which is the chat-log-as-state failure
+      this project exists to avoid.
+
+      It also settles a tension already in the code. `LlmNarrator.SystemPrompt` carries "do not
+      resolve the encounter for them", a rule added because the narrator kept deciding
+      outcomes. Today the answer to "what happens?" is the model's taste; dice make it a fact.
+
+      **Cost is ~zero** — no extra call, just another line in the narration prompt.
+
+      ### Build it as a *check*, not a combat system
+
+      The mechanic is really "an uncertain action with an outcome": picking a lock, lying to a
+      guard, crossing the bog at night, persuading Hald. Combat is one case. A general check
+      gets far more for the same work and avoids a combat subsystem sitting awkwardly beside
+      everything else. Opposed rolls work for all of it.
+
+      ### Prerequisites and hazards
+
+      - **No stats exist.** `Character` has description, location, status, mood, knows,
+        relationship — nothing to roll against. Lightest version: one number per character, or
+        a per-check difficulty the world author sets.
+      - **`Status` is the only mechanical hook**, and `"wounded"` is already a natural
+        consequence. Probably enough for v1. HP is a bigger commitment, easy to add later.
+      - **Items do not exist** (see above). A check system survives that better than a combat
+        system would.
+      - **Double-counting is the real hazard.** If code applies "player is wounded" *and*
+        extraction reads the prose and emits `StatusChanged(wounded)`, two sources are writing
+        one fact — precisely the disagreement the canon store prevents. Roll consequences must
+        be applied by code as deltas, with extraction told not to re-derive them.
+
+      ### The upside hiding in it
+
+      **"Did the narration contradict the dice?" is objectively checkable** — the first
+      property of *narration* that could be evaluated. Prose quality is taste and unscoreable,
+      which is why reroll is currently its only quality control. A verdict gives a hook.
+
+      ### Open questions, to settle before any code
+
+      1. **What happens when you lose?** Death, capture, a wound that persists? Combat without
+         stakes is prose with extra steps, and the answer shapes the domain model more than the
+         dice do.
+      2. **Who sets the difficulty** — the world author, or the LLM proposing a target number
+         that code then rolls against? The second is more flexible and much less predictable.
+
+      **Sequencing:** after §9. Not because it is risky, but because a long session is what
+      tells you how combat should feel in this game, and it touches the domain model — the one
+      place where guessing is expensive.
+
+- [ ] **A way for a world author to *write* rules like this, rather than them being code.**
+      The natural follow-on: if checks are data (what is rolled, against what, what the
+      outcomes are), a world could ship its own. Sits with the "narration style belongs to the
+      world author" and "prompts as editable files" items — all three are the same underlying
+      move of pulling authored content out of `const string`s and C# and into world data.
+
+      Worth resisting the urge to design a rules *language* early. The likely path is a small
+      declarative block covering a handful of check types, and only generalising once several
+      real worlds want something it cannot express.
+
+---
+
 ## Prompts as editable files
 
 - [ ] **No prompt string lives in code.** Every prompt — narrator system prompt, extractor
