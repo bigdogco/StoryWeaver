@@ -256,6 +256,51 @@ Small things the incumbents mostly don't do, cheap to add once the foundations e
       thing become a real entity", and answering it for buildings answers it for most
       scenery.
 
+- [ ] **A character cannot be renamed.** *Found in §9 play, 2026-07-23 — next up.* Nothing in
+      the delta set changes a character's name, so someone introduced anonymously keeps that
+      name forever. Nessa was named in the prose on turn 15 and is still `"Shivering figure"`
+      in canon at turn 51; her real name is stored in a *fact*, which is why the narration
+      reads correctly and only a canon audit found it.
+
+      Anonymous-stranger-becomes-named-person is one of the most common moves in the medium.
+      Wants a delta — `character_renamed`, or a broader `character_identified` that can also
+      revise the description, since a reveal usually changes both.
+
+      Open question to settle first: does the id change too? Keeping the id stable
+      (`figure-in-cistern` forever) preserves every reference for free but leaves canon full of
+      ids that no longer describe anything. Changing it means rewriting references across
+      characters' `knows`, locations, and history.
+
+- [ ] **Facts have no truth value and no attribution.** *Found in §9 play, 2026-07-23.* A lie
+      is stored identically to a truth. The model already improvises around this — it wrote
+      "claims" into both the id and the text of `hald-claims-roof-leaking` — but did not do so
+      for the same character's other lie, which is now simply false canon.
+
+      Wants a speaker/source on a fact and some notion of contested-vs-established. Interacts
+      with per-character knowledge in a way worth thinking through: a character believing
+      something false is a *feature*, and possibly the more interesting modelling than a global
+      truth flag.
+
+- [ ] **Momentary events land in permanent canon.** *Found in §9 play, 2026-07-23.* Two sword
+      strikes on a creature that died two turns later are permanent world facts
+      (`drowned-follower-wounded-again`, `...-again-2` — the suffix is the model resolving its
+      own id collision). The `status_changed` chain already carried the real state. Facts are
+      replayed into context and compete for budget, so this is sediment crowding out substance.
+
+      Note this is the same pressure as the two items above, from a third direction: see
+      *The fact store absorbs everything the delta set cannot express* in `CHALLENGES.md`.
+      **Sequence the lore-entry work after this** — a fourth entity type added while the
+      pressure is unrelieved just gives the overflow somewhere new to pool.
+
+- [ ] **`relationship_changed` never fires in real play.** *Found in §9 play, 2026-07-23.*
+      Zero across 51 turns, through an attempted murder and a coerced alliance. A stronger
+      model emits it reliably on a scenario *built* to provoke it, so this is not a capability
+      gap — standing moves by accumulation across many turns and a per-turn extractor sees one.
+
+      Strongest candidate for the periodic reconciliation pass (compare canon against the last
+      N turns) rather than more prompt work. `mood_changed` fired 46 times in the same session,
+      which is the control: per-turn observables extract fine.
+
 ---
 
 ## Dice-resolved checks — combat and everything else uncertain

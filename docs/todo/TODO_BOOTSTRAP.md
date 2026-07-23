@@ -347,11 +347,24 @@ often and how badly it goes wrong before deciding what to do about it.
 
 ### 9. Validation
 
-- [ ] `dotnet build` clean
-- [ ] Manual play session — target ~50 turns
-- [ ] Review: did state stay coherent? How often did extraction get it wrong?
-- [ ] Record findings in `docs/CHALLENGES.md`
-- [ ] Devlog entry before commit (per CLAUDE.md)
+- [x] `dotnet build` clean — 0 warnings, 0 errors
+- [x] Manual play session — **51 turns**, `saves/marrow`, 2026-07-22 → 2026-07-23
+- [x] Review: did state stay coherent? How often did extraction get it wrong?
+
+      Yes. 209 deltas applied, 8 rejected (0.16/turn), 9 no-ops, 12 turns changing nothing,
+      no corruption and no history/canon desync. One rejection lost information; the other
+      seven are the validator working. Every `player_moved` landed in the right room —
+      the two-stage movement fix held under real play.
+
+      The headline result is a walk-on: a guard last seen on turn 13 returned on turn 51
+      with the right name, armour, weapon, location and status, against a 10-turn narration
+      window. Canon does not degrade with distance, which is the entire thesis.
+
+      Failures found are gaps in what the delta set can *express*, not extraction quality.
+      Full analysis in `TODO_S9_VALIDATION.md`.
+- [x] Record findings in `docs/CHALLENGES.md`
+- [x] Devlog entry before commit (per CLAUDE.md) —
+      `docs/devlog/2026-07-23_fifty-turn-validation.md`
 
 ---
 
@@ -377,8 +390,13 @@ often and how badly it goes wrong before deciding what to do about it.
 
 ## Definition of done
 
-- Solution builds clean
-- A world can be created, played for multiple turns, saved, reloaded, and continued
-- Character state visibly updates as a result of narration
-- Extraction results and conflicts are inspectable
-- All above tasks checked off, devlog written, `TODO_FUTURE_WORK.md` updated
+- [x] Solution builds clean
+- [x] A world can be created, played for multiple turns, saved, reloaded, and continued
+- [x] Character state visibly updates as a result of narration
+- [x] Extraction results and conflicts are inspectable
+- [x] All above tasks checked off, devlog written, `TODO_FUTURE_WORK.md` updated
+
+**Bootstrap complete, 2026-07-23**, closed by the §9 play session. Two items remain checked-off
+with caveats worth carrying forward rather than treating as done: rejected deltas are printed
+but not yet *prominent* (§7), and `relationship_changed` has never fired outside a scenario
+built to provoke it. Both are logged in `TODO_FUTURE_WORK.md`.

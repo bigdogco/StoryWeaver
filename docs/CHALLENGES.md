@@ -131,9 +131,11 @@ the defining hazard of the integration, not a run of bad luck.
 
 ---
 
-### Extraction reliability is unproven
+### Extraction reliability
 
-**Severity:** High — the architecture rests on it.
+**Severity:** High — the architecture rests on it. **Substantially answered by §9;** see the
+verdict at the end of this section. The history below is kept because how the answer was
+reached matters as much as the answer.
 
 The entire canon-vs-narration design assumes a cheap model can reliably read creative
 prose and emit correct structured state deltas. This is unvalidated. Small models may be
@@ -267,6 +269,34 @@ across a scene, and a per-turn extractor sees one turn. If so, relationship drif
 belong in a periodic reconciliation pass looking at several turns at once, rather than in
 the per-turn extraction at all.
 
+**§9 verdict, 2026-07-23 — 51 turns of real play.** The question this section was opened to
+answer. 209 deltas applied, 8 rejected (0.16/turn), 9 no-ops, no corruption, no history/canon
+desync, every `player_moved` landing in the right room.
+
+Exactly one rejection lost information: two `fact_learned` on turn 23 referenced a fact that
+was never established. Note that the dependency-tier sort cannot help there — nothing existed
+in the batch to sort ahead of. The other seven are the validator doing its job.
+
+**Extraction is reliable enough. The architecture stands.** The failures §9 found are gaps in
+what the delta set can *express*, not in the model's ability to fill it — see *The fact store
+absorbs everything the delta set cannot express* above.
+
+**But the omission problem is confirmed, and it is worse in play than in the eval.** Across
+51 turns: **zero `relationship_changed`.** Not one — through Hald ordering an armed man to
+attack the player, through the player killing that man, through Hald being coerced into
+service as a guide, and through him ending the session back in his own tavern having survived
+it. Every character's standing is still exactly what it was seeded at.
+
+The 2026-07-20 finding that a stronger model emits `relationship_changed` reliably held on a
+*scenario built to provoke it*, where the shift is the point of the passage. It does not
+survive contact with a long session, where standing moves by accumulation across many turns
+and a per-turn extractor sees one turn at a time. This is now the strongest evidence for the
+periodic reconciliation pass floated above, rather than more prompt work.
+
+The contrast is instructive: `mood_changed` fired 46 times in 51 turns — healthy, and the
+earlier concern about it is closed. Mood is a per-turn observable and extraction gets it.
+Standing is not, and extraction never will, because the evidence is not in the window.
+
 ---
 
 ### Reasoning tokens are billed against `max_tokens`, and running out is silent
@@ -310,6 +340,92 @@ Two traps in it:
   is no symptom to prompt an investigation. Startup validation now rejects a role that
   configures reasoning without `requireParameters`, and rejects a `reasoning.maxTokens`
   that leaves no room under the role's `maxTokens`.
+
+---
+
+### The fact store absorbs everything the delta set cannot express
+
+**Severity: High.** Found in §9 play, 2026-07-23. One finding wearing three costumes.
+
+`fact_established` is the only open-ended slot in the schema — arbitrary text, no structure to
+violate — so whenever the model meets a limit in the closed delta set, that is where the
+overflow goes. Three instances in a single 51-turn session:
+
+- **A name reveal.** No delta changes a character's name, so the figure introduced anonymously
+  on turn 14 is `"Shivering figure"` in canon permanently, while her real name lives in a fact
+  (`figure-name-nessa`). The narrator reads correctly *from the fact*, which is why the prose
+  looked fine and only a canon audit found it. Two further facts
+  (`figure-is-young-woman`, `figure-in-cistern-location`) carry what are properly character
+  attributes.
+- **A lie.** Facts have no truth value and no attribution, so a claim and a truth are stored
+  identically. `hald-claims-roof-leaking` shows the model inventing its own workaround — it
+  wrote "claims" into the id and text because there was nowhere else to put it.
+  `hald-looking-for-stray`, the same character's other lie, got no such treatment and is now
+  simply false canon.
+- **Blow-by-blow.** `drowned-follower-wounded-again` and `...-again-2` recorded individual sword
+  strikes as permanent world truth, on a creature that died two turns later. The `-2` suffix is
+  the model resolving its own id collision. The `status_changed` chain already carried the real
+  state correctly.
+
+**Why it matters beyond tidiness.** Facts are replayed into context and compete for budget, so
+sediment crowds out substance — which links this directly to *Silent lore drops* below. And
+false canon stored as true will eventually be narrated as true.
+
+**Design consequence:** this is load-bearing for the queued lore-entry work. Adding a fourth
+entity type without relieving the pressure just gives the overflow a new place to pool. The
+underlying fix is to give the delta set the expressiveness the model keeps reaching for —
+rename/identity reveal, attribution and truth value on facts.
+
+**Read the workarounds as a specification.** A model routing around the schema is a more
+reliable signal than an outright failure, precisely because it looks like success.
+
+---
+
+### Time of day, and other re-framings, spawn duplicate locations
+
+**Severity:** Medium. Found in §9 play, 2026-07-23.
+
+Turn 29 introduced `marrow-square-night` ("Marrow Square (night)") as a location distinct from
+`marrow-square`, with a description carrying events rather than permanent character: *"the
+aftermath of a fight lingers: the smoldering corpse of Hald's companion."* Turn 30 then moved
+the player to `marrow-square`, correctly — the model caught itself, and canon is left with an
+orphan location nobody ever entered.
+
+Self-correction meant no visible damage this time. It will not always. Two entities for one
+place splits characters, connections and facts across both.
+
+Same underlying question as *buildings mentioned in prose are not locations* in
+`TODO_FUTURE_WORK.md`: when does a described thing become an entity — and, the half not yet
+asked, when is it the same entity in different clothes.
+
+---
+
+### Two delta kinds move the player
+
+**Severity:** Low — asymmetric by construction, harmless so far.
+
+Turn 47 moved the player with `character_moved` and `characterId: "player"` instead of
+`player_moved`. It applied correctly: `world.Player` and `FindCharacter("player")` return the
+same object, which is the payoff of treating the player as an ordinary character.
+
+But the duplicate-detection keys differ — `moved:player:X` vs `player-moved:X` — so a batch
+emitting both slips past the check, and any validator rule written against one kind is
+bypassable through the other. Either normalise `character_moved` on the player id into
+`PlayerMoved` before validation, or make the dedup key identical for both.
+
+---
+
+### Player-authored canon is unvalidated and permanent
+
+**Severity:** Low. Found in §9 play, 2026-07-23.
+
+`/fact`, `/place` and `/character` text is stored exactly as typed and reaches the narrator as
+authoritative prose. From the session: *"Cult of the Blind is an encient cult worhiping an old
+god Shurus. A violent and dakr god, aso is its members."*
+
+No harm observed — the narrator read through it without trouble. Recorded because the input
+path has no validation and the output is permanent world truth. An optional cleanup pass is the
+obvious answer; the risk to weigh is a cleanup step quietly changing an author's meaning.
 
 ---
 
