@@ -83,6 +83,44 @@ internal static class WorldSeeds
     }
 
     /// <summary>
+    /// Marrow plus somebody nobody has named yet.
+    ///
+    /// The id and the name are deliberately *both* placeholders — <c>hooded-drinker</c>,
+    /// "Hooded drinker" — because that is what a real anonymous introduction looks like: the
+    /// extractor slugs an id from the only description available. §9 produced exactly this
+    /// (<c>figure-in-cistern</c>, "Shivering figure") and then had no way to revise it.
+    ///
+    /// Nothing here is named "Sera", so a character or fact carrying that name can only have
+    /// come from the narration under test. A fixture must not contain a plausible wrong
+    /// answer that a scoring rule reads as right.
+    /// </summary>
+    public static WorldState Marrow_Anonymous() => AddHoodedDrinker(Marrow());
+
+    /// <summary>
+    /// <see cref="Marrow_Anonymous"/> against a world the size play reaches. A large world
+    /// offers many more known ids for a rename to be misdirected at, which is the shape of
+    /// failure that world size amplified for movement.
+    /// </summary>
+    public static WorldState Marrow_AnonymousLate() => AddHoodedDrinker(Marrow_Late());
+
+    private static WorldState AddHoodedDrinker(WorldState world)
+    {
+        world.Characters["hooded-drinker"] = new Character
+        {
+            Id = "hooded-drinker",
+            Name = "Hooded drinker",
+            Description =
+                "Someone sitting alone at the end of the bar with their hood up, nursing a " +
+                "drink they have not touched. They have not given a name.",
+            LocationId = "marrow-tavern",
+            Status = "normal",
+            Mood = "watchful",
+        };
+
+        return world;
+    }
+
+    /// <summary>
     /// Marrow after a long session: the same opening, grown to the size a world actually
     /// reaches in play.
     ///

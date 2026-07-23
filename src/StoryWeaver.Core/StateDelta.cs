@@ -56,6 +56,29 @@ public sealed record MoodChanged(string CharacterId, string Mood) : StateDelta;
 public sealed record RelationshipChanged(string CharacterId, int Standing, string Summary)
     : StateDelta;
 
+/// <summary>
+/// A character already in canon is now known by a different name — most often because the
+/// story revealed the identity of someone introduced anonymously.
+///
+/// <b>The id never changes.</b> Only the name does, so every existing reference — a
+/// character's <c>Knows</c>, the turn history, anything future lore adds — stays valid for
+/// free. Ids are internal: the narrator is sent names only, so a stale-looking id costs
+/// nothing, while rewriting one would mean rewriting every reference to buy readability in
+/// a file the player never sees.
+///
+/// <see cref="Description"/> is optional because a reveal usually revises both — "a
+/// shivering figure in rags" becomes "Nessa, a young woman from the village" — but a bare
+/// name reveal must not be forced to invent one.
+///
+/// Added after §9: a character introduced anonymously kept that name for 36 turns while
+/// the prose called her something else, and the extractor, having no way to say this,
+/// stored her real name as a *fact* instead.
+/// </summary>
+public sealed record CharacterRenamed(
+    string CharacterId,
+    string Name,
+    string? Description) : StateDelta;
+
 /// <summary>A new piece of world truth entered canon. Establishing a fact says nothing
 /// about who knows it — that is <see cref="FactLearned"/>.</summary>
 public sealed record FactEstablished(string FactId, string Text) : StateDelta;

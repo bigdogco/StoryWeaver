@@ -26,6 +26,19 @@ Friendli     6 run(s), clean 3/6, forbidden/run 0.17
 AtlasCloud   1 run(s), clean 0/1, forbidden/run 1.00
 ```
 
+**Second instance, 2026-07-23, milder and worth contrasting.** On `name-reveal-large`, Baidu
+filed the revealed name as a fact on 4 of 7 runs where DeepInfra did so on 0 of 7 — same
+model, same prompt, same scenario. But Baidu emitted the correct `character_renamed` *as
+well*, scoring 21/21 on required. That is a provider weighting a prohibition in the prompt
+more weakly, not one reasoning badly, and the result is a redundant fact rather than a corrupt
+entity. Recorded rather than added to `providerIgnore` — the exclude list should be reserved
+for providers that produce wrong canon, or it will quietly narrow routing to nothing.
+
+Also seen the same day, twice: the provider that reports **no name** returned deltas shaped
+`{type, id, name}` and `{type, id, content}` — `response_format` ignored outright. A provider
+that ignores the schema and a provider that omits its own identity appear to be the same
+provider, which makes "unreported" a useful signal in its own right.
+
 AtlasCloud's output was **fully schema-valid** — it emitted a building as a
 `character_introduced` under `characterId: "player"`. No schema and no request parameter can
 catch a valid-but-wrong branch choice.
@@ -351,12 +364,13 @@ Two traps in it:
 violate — so whenever the model meets a limit in the closed delta set, that is where the
 overflow goes. Three instances in a single 51-turn session:
 
-- **A name reveal.** No delta changes a character's name, so the figure introduced anonymously
-  on turn 14 is `"Shivering figure"` in canon permanently, while her real name lives in a fact
-  (`figure-name-nessa`). The narrator reads correctly *from the fact*, which is why the prose
+- **A name reveal.** ~~No delta changes a character's name~~ — **fixed 2026-07-23** by
+  `character_renamed`; see the resolved entry below. The figure introduced anonymously on turn
+  14 was `"Shivering figure"` in canon permanently, while her real name lived in a fact
+  (`figure-name-nessa`). The narrator read correctly *from the fact*, which is why the prose
   looked fine and only a canon audit found it. Two further facts
   (`figure-is-young-woman`, `figure-in-cistern-location`) carry what are properly character
-  attributes.
+  attributes, and those remain.
 - **A lie.** Facts have no truth value and no attribution, so a claim and a truth are stored
   identically. `hald-claims-roof-leaking` shows the model inventing its own workaround — it
   wrote "claims" into the id and text because there was nowhere else to put it.
@@ -489,6 +503,38 @@ properly, in currency rather than tokens, once turns are real.
 ---
 
 ## Resolved
+
+### A character could not be renamed
+
+**Resolved 2026-07-23** by the `character_renamed` delta and the `/rename` command.
+
+Found in §9: a character introduced anonymously kept that name forever, so the figure from
+turn 14 was still `"Shivering figure"` at turn 51 while the prose had called her Nessa since
+turn 15. The extractor had stored her real name as a *fact*, which is why narration read
+correctly and only a canon audit found it.
+
+**Ids are opaque, names are mutable.** The id never changes, so every existing reference
+survives a reveal. `Entity.Name` was already `{ get; set; }`, documented "May change; the id
+may not" — the domain model was built for this and only the delta set had not caught up.
+
+`name-reveal` scores 21/21 required, 0 forbidden, clean 7/7, and the extractor emitted the
+rename against the correct existing id on every run in every configuration. Full scored set
+moves to **100% across 9 scenarios**.
+
+**Two things worth keeping, both about measurement rather than the feature:**
+
+- **The `two-stage-entry` scoring bug, written again.** The first forbidden rule flagged any
+  fact mentioning the revealed name and fired 5/7 on `sera-knows-player: "Sera Voight knows
+  who the player is"` — a legitimate fact that merely refers to her. A rule must target the
+  workaround, not every sentence the right answer appears in. Having recorded the lesson eight
+  days earlier did not prevent the repeat; reading the deltas behind a failing rule did.
+- **World size was confounded with provider, again.** Routed, the large-world variant scored
+  5/7 forbidden against the small world's 0/7 — which looks exactly like the world-size effect
+  `two-stage-entry-large` genuinely has. Pinned to DeepInfra it is 0/7; pinned to Baidu, 4/7.
+  The small run had gone entirely to DeepInfra. See the provider-variance entry above: the
+  by-provider table printed on every run is the only reason this did not become a finding.
+
+---
 
 ### The validator rejected correct deltas because of their order
 

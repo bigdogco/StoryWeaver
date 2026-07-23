@@ -209,6 +209,7 @@ internal static class PlaySession
         FactEstablished d => $"fact {d.FactId}: {d.Text}",
         FactLearned d => $"{d.CharacterId} learned {d.FactId}",
         CharacterIntroduced d => $"new character {d.CharacterId} ({d.Name})",
+        CharacterRenamed d => $"{d.CharacterId} is now called {d.Name}",
         LocationIntroduced d => $"new location {d.LocationId} ({d.Name})",
         _ => delta.GetType().Name,
     };
@@ -249,6 +250,7 @@ internal static class PlaySession
                 Console.WriteLine("  /place      add a location");
                 Console.WriteLine("  /character  add a person (may be offstage)");
                 Console.WriteLine("  /fact       add a truth, and choose whether you know it");
+                Console.WriteLine("  /rename     rename someone — their id stays the same");
                 break;
 
             default:

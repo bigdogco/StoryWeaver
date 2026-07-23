@@ -128,7 +128,8 @@ public static class DeltaValidator
         // May name a location the batch introduced above.
         CharacterIntroduced => 1,
 
-        // Moves, mood, status, relationships, fact_learned — all reference existing entities.
+        // Moves, mood, status, relationships, renames, fact_learned — all reference entities
+        // that exist by now.
         _ => 2,
     };
 
@@ -147,6 +148,7 @@ public static class DeltaValidator
         FactEstablished d => $"fact:{d.FactId}",
         FactLearned d => $"learned:{d.CharacterId}:{d.FactId}",
         CharacterIntroduced d => $"new-char:{d.CharacterId}",
+        CharacterRenamed d => $"rename:{d.CharacterId}:{d.Name}",
         LocationIntroduced d => $"new-loc:{d.LocationId}",
         _ => delta.ToString() ?? delta.GetType().Name,
     };
@@ -162,6 +164,13 @@ public static class DeltaValidator
     /// </summary>
     private static bool IsNoOp(WorldState world, StateDelta delta) => delta switch
     {
+        // Only a no-op when it would change nothing at all. A rename carrying a revised
+        // description is real work even when the name already matches — that is the shape of
+        // a reveal that fills in who someone is without renaming them.
+        CharacterRenamed d => world.FindCharacter(d.CharacterId) is { } target
+            && Same(target.Name, d.Name)
+            && (string.IsNullOrWhiteSpace(d.Description) || Same(target.Description, d.Description)),
+
         CharacterMoved d => Same(world.FindCharacter(d.CharacterId)?.LocationId, d.ToLocationId),
         PlayerMoved d => Same(world.Player?.LocationId, d.ToLocationId),
         StatusChanged d => Same(world.FindCharacter(d.CharacterId)?.Status, d.Status),
@@ -206,6 +215,15 @@ public static class DeltaValidator
                       "is not introducing it."
                 : Taken(d.LocationId, characters, facts)
                     ? $"id '{d.LocationId}' is already in use by a character or fact."
+                : null,
+
+            // No uniqueness check on the name: two guards may both be "Guard", and identity
+            // lives in the id regardless. The only thing that must hold is that the character
+            // exists — renaming a stranger the batch never introduced is the failure worth
+            // catching, since it would otherwise silently do nothing.
+            CharacterRenamed d =>
+                !characters.Contains(d.CharacterId) ? $"character '{d.CharacterId}' does not exist."
+                : Blank(d.Name) ? "name is empty."
                 : null,
 
             CharacterMoved d =>

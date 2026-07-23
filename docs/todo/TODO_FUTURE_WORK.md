@@ -256,20 +256,16 @@ Small things the incumbents mostly don't do, cheap to add once the foundations e
       thing become a real entity", and answering it for buildings answers it for most
       scenery.
 
-- [ ] **A character cannot be renamed.** *Found in §9 play, 2026-07-23 — next up.* Nothing in
-      the delta set changes a character's name, so someone introduced anonymously keeps that
-      name forever. Nessa was named in the prose on turn 15 and is still `"Shivering figure"`
-      in canon at turn 51; her real name is stored in a *fact*, which is why the narration
-      reads correctly and only a canon audit found it.
+- [x] ~~**A character cannot be renamed.**~~ **Done 2026-07-23.** `character_renamed` carries
+      an optional revised description; `/rename` is the authoring path. Ids are permanently
+      opaque and names mutable, so no reference ever needs rewriting. `name-reveal` scores
+      21/21 and the scored set is 100% across 9 scenarios. See
+      `docs/devlog/2026-07-23_character-rename.md`.
 
-      Anonymous-stranger-becomes-named-person is one of the most common moves in the medium.
-      Wants a delta — `character_renamed`, or a broader `character_identified` that can also
-      revise the description, since a reveal usually changes both.
-
-      Open question to settle first: does the id change too? Keeping the id stable
-      (`figure-in-cistern` forever) preserves every reference for free but leaves canon full of
-      ids that no longer describe anything. Changing it means rewriting references across
-      characters' `knows`, locations, and history.
+      Still open, inherited from the same finding: `figure-is-young-woman` and
+      `figure-in-cistern-location` remain *facts* carrying what are properly character
+      attributes. A rename fixes the name; it does not stop description-shaped truths landing
+      in the fact store.
 
 - [ ] **Facts have no truth value and no attribution.** *Found in §9 play, 2026-07-23.* A lie
       is stored identically to a truth. The model already improvises around this — it wrote

@@ -46,6 +46,21 @@ public static class DeltaApplier
                 };
                 break;
 
+            // Name and description only. The id is deliberately untouched — see
+            // CharacterRenamed — so every reference to this character survives the reveal.
+            case CharacterRenamed d:
+                if (world.FindCharacter(d.CharacterId) is { } renamed)
+                {
+                    renamed.Name = d.Name;
+
+                    if (!string.IsNullOrWhiteSpace(d.Description))
+                    {
+                        renamed.Description = d.Description;
+                    }
+                }
+
+                break;
+
             case CharacterMoved d:
                 if (world.FindCharacter(d.CharacterId) is { } moved)
                 {

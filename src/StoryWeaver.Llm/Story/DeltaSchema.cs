@@ -129,6 +129,19 @@ public static class DeltaSchema
               },
               {
                 "type": "object",
+                "description": "A character who IS in the known ids is now called something else — usually because the story revealed the name of someone introduced anonymously. Use their existing id; the id never changes.",
+                "properties": {
+                  "kind": { "type": "string", "enum": ["character_renamed"] },
+                  "characterId": { "type": "string", "description": "The character's EXISTING id from the known ids. Do not invent a new one." },
+                  "name": { "type": "string", "description": "The name they are known by now, e.g. 'Nessa'." },
+                  "description": { "type": ["string", "null"], "description": "A revised description, or null to keep the current one. Who they are, not what just happened." },
+                  "evidence": { "type": "string" }
+                },
+                "required": ["kind", "characterId", "name", "description", "evidence"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
                 "description": "A place that is NOT in the known ids appeared for the first time. Merely mentioning a known place is not introducing it.",
                 "properties": {
                   "kind": { "type": "string", "enum": ["location_introduced"] },

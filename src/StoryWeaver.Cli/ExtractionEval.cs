@@ -137,6 +137,7 @@ internal static class ExtractionEval
         FactEstablished d => $"fact_established    {d.FactId}: {d.Text}",
         FactLearned d => $"fact_learned        {d.CharacterId} <- {d.FactId}",
         CharacterIntroduced d => $"character_introduced {d.CharacterId} ({d.Name}) @ {d.LocationId}",
+        CharacterRenamed d => $"character_renamed   {d.CharacterId} -> {d.Name}",
         LocationIntroduced d => $"location_introduced {d.LocationId} ({d.Name})",
         _ => delta.GetType().Name,
     };

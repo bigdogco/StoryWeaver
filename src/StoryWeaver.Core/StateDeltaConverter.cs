@@ -33,6 +33,7 @@ public sealed class StateDeltaConverter : JsonConverter<StateDelta>
         ["fact_established"] = typeof(FactEstablished),
         ["fact_learned"] = typeof(FactLearned),
         ["character_introduced"] = typeof(CharacterIntroduced),
+        ["character_renamed"] = typeof(CharacterRenamed),
         ["location_introduced"] = typeof(LocationIntroduced),
     };
 

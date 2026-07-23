@@ -61,6 +61,13 @@ public sealed class LlmStateExtractor : IStateExtractor
           more than one space — down a shaft, along a passage, into the chamber beyond —
           report where they finish. Reporting only the first step leaves them standing in a
           place the story has already left.
+        - When the story reveals the name of someone already in the known ids — an
+          anonymous figure who gives their name, a stranger someone greets — emit
+          character_renamed with their EXISTING id. Do not introduce them again as a new
+          character, and do not record the name as a fact. A name is not a world truth, it
+          is who somebody is: "the shivering figure is called Nessa" belongs in her name
+          field, not in the fact store. Their id stays exactly as it was, however wrong it
+          now looks.
         - A description field describes what something IS, permanently. Never put an event
           in a description.
         - Establishing a fact and someone knowing it are separate. When new information is

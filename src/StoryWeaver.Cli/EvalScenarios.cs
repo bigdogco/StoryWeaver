@@ -67,6 +67,7 @@ internal static class EvalScenarios
         Atmosphere,
         PlayerArrival,
         TwoStageEntry,
+        NameReveal,
     ];
 
     /// <summary>
@@ -108,7 +109,17 @@ internal static class EvalScenarios
         NarratorMention,
         PlayerArrivalLarge,
         TwoStageEntryLarge,
+        NameRevealLarge,
     ];
+
+    /// <summary>
+    /// <b>Diagnostic.</b> <see cref="NameReveal"/> word for word, against a world the size one
+    /// reaches in play. Only the seed differs, so any gap is attributable to world size — the
+    /// variable that turned a 14/14 movement scenario into 2/14 and was invisible until it
+    /// was tested.
+    /// </summary>
+    private static EvalScenario NameRevealLarge =>
+        NameReveal with { Name = "name-reveal-large", Seed = WorldSeeds.Marrow_AnonymousLate };
 
     /// <summary>
     /// <b>Diagnostic.</b> <see cref="PlayerArrival"/> word for word, against a world the size
@@ -538,6 +549,75 @@ internal static class EvalScenarios
             new("Hald re-introduced", d => d is CharacterIntroduced { CharacterId: Hald }),
             new("the player given a relationship to themselves",
                 d => d is RelationshipChanged { CharacterId: Character.PlayerId }),
+        ]);
+
+    /// <summary>
+    /// Someone already in canon gives their name. The scenario written for the §9 finding:
+    /// a character introduced anonymously kept that placeholder name for 36 turns while the
+    /// prose called her something else, because no delta could change it.
+    ///
+    /// <b>Scored on the outcome, not the delta.</b> Two sequences reach the right world — a
+    /// bare <c>character_renamed</c>, or one that also revises the description — and judging
+    /// the steps would punish the more complete answer. That lesson cost a day on
+    /// <c>two-stage-entry</c>, where a rule forbidding "any move that is not to the cistern"
+    /// failed correct two-hop movement.
+    ///
+    /// The two <see cref="Forbidden"/> rules are the workarounds the model actually reached
+    /// for when it had no rename available: introducing a *second* copy of the same person,
+    /// and filing the name as a world fact. A name is not a world truth — it is who somebody
+    /// is — and a fact store that accumulates them is the §9 failure in miniature.
+    ///
+    /// Note what is deliberately *not* forbidden: other facts. A reveal usually carries real
+    /// information alongside the name, and forbidding all of it would fail a good extraction.
+    /// </summary>
+    private static EvalScenario NameReveal => new(
+        "name-reveal",
+        "*I sit down at the end of the bar, one stool along from the hooded drinker.* You've been nursing that for an hour. Who are you?",
+        """
+        For a while she says nothing. Then she reaches up and pushes the hood back off her
+        head — dark hair flattened by the rain, a face younger than the stillness suggested,
+        a long white scar running from her ear to the corner of her jaw.
+
+        "Sera," she says. "Sera Voight." She turns the untouched cup a half-circle on the
+        wood without drinking from it. "And I know who you are, which is why I've been sitting
+        here." Behind the counter, Hald has stopped wiping and is watching the pair of you.
+        """,
+        Required:
+        [
+            new("the hooded drinker is renamed",
+                d => d is CharacterRenamed { CharacterId: "hooded-drinker" }),
+        ],
+        Forbidden:
+        [
+            new("a second copy of her introduced",
+                d => d is CharacterIntroduced),
+            // Narrowly: a fact whose content IS the naming. An earlier version of this rule
+            // forbade any fact mentioning "Sera" and fired 5/7 on
+            // `sera-knows-player: "Sera Voight knows who the player is"` — a legitimate fact
+            // straight out of the prose that merely refers to her by name. Scoring must
+            // target the workaround, not every sentence the answer appears in.
+            new("her name filed as a fact",
+                d => d is FactEstablished f
+                     && (f.FactId.Contains("name", StringComparison.OrdinalIgnoreCase)
+                         || f.Text.Contains("is named", StringComparison.OrdinalIgnoreCase)
+                         || f.Text.Contains("is called", StringComparison.OrdinalIgnoreCase)
+                         || f.Text.Contains("name is", StringComparison.OrdinalIgnoreCase)
+                         || f.Text.Contains("goes by", StringComparison.OrdinalIgnoreCase))),
+            new("renamed under an invented id",
+                d => d is CharacterRenamed c && c.CharacterId != "hooded-drinker"),
+        ],
+        Seed: WorldSeeds.Marrow_Anonymous,
+        Expected:
+        [
+            new("she is called Sera in canon",
+                w => w.FindCharacter("hooded-drinker")?.Name
+                         .Contains("Sera", StringComparison.OrdinalIgnoreCase) == true),
+            // Phrased against the entity graph rather than a character count, because this
+            // scenario is also run against a much larger seed and a count would silently
+            // mean something different there.
+            new("she is still one character, not two",
+                w => w.Characters.Values.Count(
+                    c => c.Name.Contains("Sera", StringComparison.OrdinalIgnoreCase)) == 1),
         ]);
 
     /// <summary>A genuinely new character. The positive control for

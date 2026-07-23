@@ -46,6 +46,11 @@ internal static class JsonSelfTest
             """{"kind":"character_introduced","characterId":"a","name":"A","description":"d","locationId":null,"evidence":"q"}""",
             typeof(CharacterIntroduced));
 
+        failures += Check(
+            "rename with a null description",
+            """{"kind":"character_renamed","characterId":"figure-in-cistern","name":"Nessa","description":null,"evidence":"q"}""",
+            typeof(CharacterRenamed));
+
         failures += CheckRoundTrip();
         failures += CheckCrossNamespaceIds();
         failures += CheckRejects("unknown kind", """{"kind":"teleported","characterId":"h"}""");

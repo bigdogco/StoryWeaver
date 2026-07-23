@@ -3,7 +3,7 @@ using StoryWeaver.Core;
 namespace StoryWeaver.Cli;
 
 /// <summary>
-/// Player-authored canon: <c>/place</c>, <c>/character</c>, <c>/fact</c>.
+/// Player-authored canon: <c>/place</c>, <c>/character</c>, <c>/fact</c>, <c>/rename</c>.
 ///
 /// Extraction deliberately never records a merely *mentioned* entity — measured at 0/7 for a
 /// place the player names, a person they name, and a place the narrator names in passing. The
@@ -32,6 +32,7 @@ internal static class AuthoringCommands
             "/place" => PromptPlace,
             "/character" => PromptCharacter,
             "/fact" => PromptFact,
+            "/rename" => PromptRename,
             _ => null,
         };
 
@@ -129,6 +130,55 @@ internal static class AuthoringCommands
         return deltas;
     }
 
+    /// <summary>
+    /// Rename someone already in canon — the manual counterpart to the extractor's
+    /// <see cref="CharacterRenamed"/>, and the repair tool for worlds played before it existed.
+    ///
+    /// The id is shown but not offered for editing. It is permanent by design, and a prompt
+    /// that displays it without a way to change it is clearer than one that hides it: the
+    /// player sees that <c>figure-in-cistern</c> is now Nessa, and that this is fine.
+    /// </summary>
+    private static IReadOnlyList<StateDelta>? PromptRename(WorldState world)
+    {
+        Console.WriteLine("  Characters:");
+
+        foreach (Character existing in world.Characters.Values.OrderBy(c => c.Id, StringComparer.Ordinal))
+        {
+            Console.WriteLine($"    {existing.Id} — {existing.Name}");
+        }
+
+        string? id = Ask("Character id");
+        if (id is null)
+        {
+            return null;
+        }
+
+        if (world.FindCharacter(id) is not { } character)
+        {
+            Console.WriteLine($"  No character with id '{id}'.");
+            return null;
+        }
+
+        Console.WriteLine($"  Renaming {character.Id} — the id stays as it is.");
+        Console.WriteLine($"  Currently: {character.Name} — {character.Description}");
+
+        string? name = Ask("New name");
+        if (name is null)
+        {
+            return null;
+        }
+
+        // Blank keeps the existing description. A reveal often rewrites it — "a shivering
+        // figure in rags" is no longer who she is once she has a name — but not always, and
+        // making it mandatory would mean retyping a good description to change a name.
+        string? description = AskOptional("New description (blank = keep current)");
+
+        return [new CharacterRenamed(id, name, description)
+        {
+            Evidence = "Renamed by the player.",
+        }];
+    }
+
     private static async Task CommitAsync(
         IReadOnlyList<StateDelta> deltas,
         string worldId,
@@ -142,9 +192,14 @@ internal static class AuthoringCommands
             Console.WriteLine($"  REJECTED: {rejected.Reason}");
         }
 
+        foreach (StateDelta noOp in validation.NoOps)
+        {
+            Console.WriteLine($"  no change: {Summarize(noOp)}");
+        }
+
         if (validation.Accepted.Count == 0)
         {
-            Console.WriteLine("  Nothing was added.");
+            Console.WriteLine("  Canon is unchanged.");
             return;
         }
 
@@ -153,7 +208,7 @@ internal static class AuthoringCommands
 
         foreach (StateDelta delta in validation.Accepted)
         {
-            Console.WriteLine($"  added: {Summarize(delta)}");
+            Console.WriteLine($"  {Summarize(delta)}");
         }
 
         Console.WriteLine("  Saved to canon.");
@@ -161,10 +216,12 @@ internal static class AuthoringCommands
 
     private static string Summarize(StateDelta delta) => delta switch
     {
-        LocationIntroduced d => $"place {d.LocationId} ({d.Name})",
-        CharacterIntroduced d => $"character {d.CharacterId} ({d.Name})"
+        LocationIntroduced d => $"added place {d.LocationId} ({d.Name})",
+        CharacterIntroduced d => $"added character {d.CharacterId} ({d.Name})"
                                  + (d.LocationId is null ? " — offstage" : $" @ {d.LocationId}"),
-        FactEstablished d => $"fact {d.FactId}: {d.Text}",
+        CharacterRenamed d => $"renamed {d.CharacterId} to {d.Name}"
+                              + (d.Description is null ? string.Empty : ", description revised"),
+        FactEstablished d => $"added fact {d.FactId}: {d.Text}",
         FactLearned d => $"{d.CharacterId} knows {d.FactId}",
         _ => delta.GetType().Name,
     };
