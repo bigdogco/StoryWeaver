@@ -104,6 +104,9 @@ internal static class LoreSelfTest
             """,
             e => e.Common && !e.Always);
 
+        failures += CheckSeedRoundTrip();
+        failures += CheckSeedForcesTurnZero();
+        failures += CheckMissingPackIsEmpty();
         failures += CheckLoreIsNotEstablishable();
         failures += CheckLoreCanBeLearned();
         failures += CheckCommonIsKnownByEveryone();
@@ -171,6 +174,118 @@ internal static class LoreSelfTest
 
         Console.WriteLine("  FAIL  learning a lore entry did not reach the character.");
         return 1;
+    }
+
+    /// <summary>
+    /// A seed written and read back is the same world.
+    ///
+    /// The claim that made packs cheap is that a seed needs no format of its own — it is a
+    /// <c>WorldState</c> at turn 0, using the options that already write canon. That claim is
+    /// worth one test, because the failure mode is a mood or a relationship standing quietly
+    /// not surviving the trip, which would look like a behaviour change in whatever got
+    /// measured next.
+    /// </summary>
+    private static int CheckSeedRoundTrip()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), "sw-seed-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(Path.Combine(directory, "marrow"));
+
+        try
+        {
+            WorldState original = WorldSeeds.Marrow();
+            WorldPackWriter.WriteSeed(Path.Combine(directory, "marrow", WorldPack.SeedFile), original);
+
+            WorldState? read = WorldPack.Load(directory, "marrow").Seed;
+
+            if (read is null)
+            {
+                Console.WriteLine("  FAIL  a written seed did not load back.");
+                return 1;
+            }
+
+            Character? hald = read.FindCharacter("innkeeper-hald");
+
+            bool same = read.Locations.Count == original.Locations.Count
+                        && read.Characters.Count == original.Characters.Count
+                        && read.Facts.Count == original.Facts.Count
+                        && hald is not null
+                        && hald.Mood == "guarded"
+                        && hald.RelationshipToPlayer.Standing == -10
+                        && hald.Knows.Contains("well-boarded")
+                        // Case-insensitivity is carried by a converter and is exactly the sort
+                        // of thing a round trip loses; it cost a bug once already.
+                        && read.FindCharacter("INNKEEPER-HALD") is not null;
+
+            if (!same)
+            {
+                Console.WriteLine("  FAIL  a seed did not survive the round trip intact.");
+                return 1;
+            }
+
+            Console.WriteLine("  ok    a seed round-trips through the canon format");
+            return 0;
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    /// <summary>
+    /// A save copied in as a seed starts a new world, not one that opens at turn 51. Copying
+    /// a save is an entirely plausible way to author a pack.
+    /// </summary>
+    private static int CheckSeedForcesTurnZero()
+    {
+        string directory = Path.Combine(Path.GetTempPath(), "sw-seed-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(Path.Combine(directory, "marrow"));
+
+        try
+        {
+            WorldState midStory = WorldSeeds.Marrow();
+            midStory.TurnNumber = 51;
+
+            WorldPackWriter.WriteSeed(Path.Combine(directory, "marrow", WorldPack.SeedFile), midStory);
+
+            if (midStory.TurnNumber != 51)
+            {
+                Console.WriteLine("  FAIL  writing a seed mutated the world it was given.");
+                return 1;
+            }
+
+            if (WorldPack.Load(directory, "marrow").Seed?.TurnNumber != 0)
+            {
+                Console.WriteLine("  FAIL  a seed did not start at turn 0.");
+                return 1;
+            }
+
+            Console.WriteLine("  ok    a seed always starts at turn 0");
+            return 0;
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    /// <summary>
+    /// A pack that is not there is an empty one. The harness has always been able to run with
+    /// no content on disk and that stays true — a fresh clone must not need a pack to play.
+    /// </summary>
+    private static int CheckMissingPackIsEmpty()
+    {
+        WorldPack pack = WorldPack.Load(
+            Path.Combine(Path.GetTempPath(), "sw-absent-" + Guid.NewGuid().ToString("N")),
+            "nothing");
+
+        if (pack.HasSeed || pack.Lore.Count != 0)
+        {
+            Console.WriteLine("  FAIL  a missing pack was not empty.");
+            return 1;
+        }
+
+        Console.WriteLine("  ok    a missing pack loads as empty");
+        return 0;
     }
 
     /// <summary>

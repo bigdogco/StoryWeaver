@@ -17,13 +17,27 @@ namespace StoryWeaver.Cli;
 /// </summary>
 internal static class PlaySession
 {
-    private const string WorldId = "marrow";
+    /// <summary>
+    /// Which pack to play. Content — the authored world.
+    /// </summary>
+    private const string PackId = "marrow";
+
+    /// <summary>
+    /// Which save to play it in. State — this playthrough.
+    ///
+    /// The same string as <see cref="PackId"/> today, and a separate constant on purpose:
+    /// they are different identifiers that have been sharing one name, and a pack supporting
+    /// several saves is only a matter of choosing this at startup. Kept identical for now so
+    /// existing saves keep working untouched.
+    /// </summary>
+    private const string SaveId = "marrow";
+
     private const string SaveRoot = "saves";
 
     /// <summary>
-    /// Where the pack lives. Content, as opposed to <see cref="SaveRoot"/>, which is state —
-    /// the split that lets a world be edited between sessions and shared without somebody's
-    /// playthrough inside it. Only lore reads from here so far.
+    /// Where packs live. Content, as opposed to <see cref="SaveRoot"/>, which is state — the
+    /// split that lets a world be edited between sessions and shared without somebody's
+    /// playthrough inside it.
     /// </summary>
     private const string PackRoot = "worlds";
 
@@ -32,10 +46,10 @@ internal static class PlaySession
         FileLlmLog log = new(settings.Logging);
         using OpenRouterClient client = new(settings, log);
 
-        // Authored content, loaded once. A malformed entry throws by name and line rather
-        // than vanishing — a silently dropped lore entry is the failure this genre is worst
-        // at, and it is the one thing here worth failing a startup over.
-        LoreBook lore = MarkdownLoreReader.Load(Path.Combine(PackRoot, WorldId, "lore"));
+        // Authored content, loaded once. Malformed content throws by name and line rather
+        // than vanishing — a silently dropped lore entry or an unreadable seed is the failure
+        // this genre is worst at, and the one thing worth failing a startup over.
+        WorldPack pack = WorldPack.Load(PackRoot, PackId);
 
         JsonWorldRepository repository = new(SaveRoot);
         int historyTurns = settings.Story.HistoryTurns;
@@ -44,20 +58,24 @@ internal static class PlaySession
             new LlmStateExtractor(client),
             repository,
             historyTurns,
-            lore);
+            pack.Lore);
 
-        // Resume the world if it exists, otherwise seed it and write the first save so the
-        // world is on disk before any turn runs.
-        WorldState? loaded = await repository.LoadAsync(WorldId).ConfigureAwait(false);
+        // Resume the save if it exists, otherwise start from the pack's seed and write the
+        // first save so the world is on disk before any turn runs.
+        //
+        // The built-in seed is the fallback for a pack that ships none. It is a fixture, not
+        // content: the eval scenarios need worlds derived by mutating a base, which is a thing
+        // C# does well and JSON does not.
+        WorldState? loaded = await repository.LoadAsync(SaveId).ConfigureAwait(false);
         bool resumed = loaded is not null;
-        WorldState world = loaded ?? WorldSeeds.Marrow();
+        WorldState world = loaded ?? pack.Seed ?? WorldSeeds.Marrow();
 
         if (!resumed)
         {
-            await repository.SaveAsync(WorldId, world).ConfigureAwait(false);
+            await repository.SaveAsync(SaveId, world).ConfigureAwait(false);
         }
 
-        PrintBanner(log.FilePath, repository.RootDirectory, resumed, world.TurnNumber, historyTurns, lore);
+        PrintBanner(log.FilePath, repository.RootDirectory, resumed, world.TurnNumber, historyTurns, pack);
 
         if (resumed)
         {
@@ -97,10 +115,10 @@ internal static class PlaySession
                     await RetryExtractionAsync(engine, repository, world).ConfigureAwait(false);
                 }
                 else if (!await AuthoringCommands
-                        .TryHandleAsync(input, WorldId, world, repository, lore)
+                        .TryHandleAsync(input, SaveId, world, repository, pack.Lore)
                         .ConfigureAwait(false))
                 {
-                    HandleCommand(input, world, repository, lore);
+                    HandleCommand(input, world, repository, pack.Lore);
                 }
 
                 continue;
@@ -110,7 +128,7 @@ internal static class PlaySession
             {
                 Console.WriteLine("\n(thinking...)\n");
                 TurnOutcome outcome = await engine
-                    .RunTurnAsync(WorldId, world, input)
+                    .RunTurnAsync(SaveId, world, input)
                     .ConfigureAwait(false);
 
                 PrintTurn(outcome);
@@ -136,7 +154,7 @@ internal static class PlaySession
         WorldState world)
     {
         IReadOnlyList<TurnRecord> history =
-            await repository.LoadHistoryAsync(WorldId).ConfigureAwait(false);
+            await repository.LoadHistoryAsync(SaveId).ConfigureAwait(false);
 
         if (history.Count == 0)
         {
@@ -149,7 +167,7 @@ internal static class PlaySession
         try
         {
             TurnOutcome outcome = await engine
-                .ReExtractAsync(WorldId, world, history[^1])
+                .ReExtractAsync(SaveId, world, history[^1])
                 .ConfigureAwait(false);
 
             if (outcome.ExtractionFailed)
@@ -352,7 +370,7 @@ internal static class PlaySession
 
     private static void PrintLastRaw(IWorldRepository repo)
     {
-        IReadOnlyList<TurnRecord> history = repo.LoadHistoryAsync(WorldId).GetAwaiter().GetResult();
+        IReadOnlyList<TurnRecord> history = repo.LoadHistoryAsync(SaveId).GetAwaiter().GetResult();
 
         if (history.Count == 0)
         {
@@ -376,7 +394,7 @@ internal static class PlaySession
             return;
         }
 
-        IReadOnlyList<TurnRecord> history = await repo.LoadHistoryAsync(WorldId).ConfigureAwait(false);
+        IReadOnlyList<TurnRecord> history = await repo.LoadHistoryAsync(SaveId).ConfigureAwait(false);
 
         if (history.Count == 0)
         {
@@ -401,21 +419,32 @@ internal static class PlaySession
         bool resumed,
         int turnNumber,
         int historyTurns,
-        LoreBook lore)
+        WorldPack pack)
     {
         Console.WriteLine();
         Console.WriteLine(resumed
             ? $"StoryWeaver — play session (resumed at turn {turnNumber})"
             : "StoryWeaver — play session (new world)");
+        Console.WriteLine($"Pack       {pack.Directory}");
         Console.WriteLine($"Saving to  {saveRoot}");
         Console.WriteLine($"Logging to {logPath}");
         Console.WriteLine($"Narrator remembers the last {historyTurns} turns");
 
+        // Where the starting world came from. Only interesting on a new world, and worth
+        // saying then: a pack whose seed failed to be found silently falls back to the
+        // built-in fixture, and the two look identical from the opening scene.
+        if (!resumed)
+        {
+            Console.WriteLine(pack.HasSeed
+                ? $"Seeded from {Path.Combine(pack.Directory, WorldPack.SeedFile)}"
+                : "Seeded from the built-in world (this pack ships no seed.json)");
+        }
+
         // Stated even when zero. "No lore loaded" is information; an absent line reads as a
         // feature that is not there, which is how a mistyped pack path stays invisible.
-        Console.WriteLine(lore.Count == 0
+        Console.WriteLine(pack.Lore.Count == 0
             ? "No lore entries loaded"
-            : $"Lore: {lore.Count} entr{(lore.Count == 1 ? "y" : "ies")} — {string.Join(", ", lore.Ids)}");
+            : $"Lore: {pack.Lore.Count} entr{(pack.Lore.Count == 1 ? "y" : "ies")} — {string.Join(", ", pack.Lore.Ids)}");
         Console.WriteLine();
         Console.WriteLine("Write *actions between asterisks* and speech outside them:");
         Console.WriteLine();

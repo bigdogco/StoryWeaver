@@ -22,10 +22,33 @@ Design: [`docs/design/WORLD_PACKS.md`](../design/WORLD_PACKS.md).
 ## Build now — with the lore work, not separately
 
 - [x] Lore entries load from `worlds/{pack}/lore/*.md` — done 2026-07-24, the first pack exists
+- [x] `seed.json` — the pack is now the source of truth for a new world
+- [x] Pack id and save id separated (`PackId` / `SaveId`). Identical strings today, so existing
+      saves keep working; supporting several saves per pack is now a matter of choosing `SaveId`
+      at startup rather than a change to how anything is stored
 - [ ] Pack root as an explicit parameter, not the working directory. **Still a constant**
       (`PlaySession.PackRoot`), so a pack is found relative to the cwd exactly as saves are
 - [ ] `saves/` root configured rather than cwd-relative — currently the reason `play.ps1`
       forces the cwd and harness testing needs a temp directory
+
+## Built 2026-07-24
+
+- [x] `WorldPack.Load(root, id)` — reads `seed.json` and `lore/`. A missing pack is empty, so
+      a fresh clone still plays; a seed that exists and cannot be read throws, because an
+      author who wrote one and silently got the built-in world would have no way to tell
+- [x] Seed validation: the player must start somewhere that exists in the seed
+- [x] `WorldPackWriter.WriteSeed` and `--write-seed`, which generated `worlds/marrow/seed.json`
+      from `WorldSeeds.Marrow()` so the two are provably identical rather than approximately so
+- [x] Turn number forced to 0 on both read and write — copying a save in as a seed is a
+      plausible way to author a pack and must not open a new world at turn 51
+- [x] Banner reports the pack directory and, on a new world, which seed it came from
+- [x] Three self-tests: round trip, turn-0 enforcement, missing pack is empty
+- [x] `WorldSeeds` kept as the eval fixture. The derived worlds (`Marrow_Late`, the
+      `_Anonymous` variants) are built by mutating a base, which C# does well and JSON does
+      not — and an eval whose fixture changes when someone edits a pack measures the wrong thing
+
+**Verified:** a new world is byte-identical to the pack seed; the existing 51-turn save resumes
+untouched with canon unchanged.
 
 ## Audit, 2026-07-24 — the seed format already exists
 
@@ -53,8 +76,11 @@ that is fine — they are test fixtures, not content.
 ## Build later — when something needs it
 
 - [ ] `world.json` manifest, with a version a save can record
-- [ ] `seed.json` replacing `WorldSeeds` in C#
 - [ ] Opening message, and the loader check that every name in it exists in the seed
-- [ ] Multiple saves per pack — today `marrow` is both the world id and the save directory
+- [ ] Multiple saves per pack — the ids are separated now, so this is a startup choice plus
+      whatever UI offers it
 - [ ] Per-pack narration prompt overrides
 - [ ] Pack installing / sharing
+- [ ] **`/knows` is now redundant for authoring** — a seed carries `"knows": [...]` per
+      character directly. Kept for mid-session authoring; worth revisiting once a Lore Writer
+      exists

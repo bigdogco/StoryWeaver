@@ -1,0 +1,74 @@
+{
+  "turnNumber": 0,
+  "characters": {
+    "drinker-mabb": {
+      "description": "An old marsh-hand nursing a mug in the corner. Talks when drunk, which is often.",
+      "locationId": "marrow-tavern",
+      "status": "drunk",
+      "mood": "maudlin",
+      "knows": [],
+      "relationshipToPlayer": {
+        "standing": 0,
+        "summary": "no strong feelings"
+      },
+      "lastSeenTurn": null,
+      "id": "drinker-mabb",
+      "name": "Mabb"
+    },
+    "innkeeper-hald": {
+      "description": "The innkeeper of the Drowned Crow. Heavyset, watchful, wipes the same patch of counter when he is thinking.",
+      "locationId": "marrow-tavern",
+      "status": "normal",
+      "mood": "guarded",
+      "knows": [
+        "well-boarded"
+      ],
+      "relationshipToPlayer": {
+        "standing": -10,
+        "summary": "suspicious of strangers"
+      },
+      "lastSeenTurn": null,
+      "id": "innkeeper-hald",
+      "name": "Hald"
+    },
+    "player": {
+      "description": "A traveller, recently arrived in Marrow.",
+      "locationId": "marrow-tavern",
+      "status": "normal",
+      "mood": "neutral",
+      "knows": [],
+      "relationshipToPlayer": {
+        "standing": 0,
+        "summary": "no strong feelings"
+      },
+      "lastSeenTurn": null,
+      "id": "player",
+      "name": "You"
+    }
+  },
+  "locations": {
+    "marrow-square": {
+      "description": "A rutted market square, mostly empty. The well at its centre is boarded over.",
+      "connections": [
+        "marrow-tavern"
+      ],
+      "id": "marrow-square",
+      "name": "Marrow Square"
+    },
+    "marrow-tavern": {
+      "description": "A low-ceilinged taproom in the town of Marrow. Peat smoke, spilled ale, and the sour cold that comes off the marsh outside. A handful of locals keep to their own tables and their own business.",
+      "connections": [
+        "marrow-square"
+      ],
+      "id": "marrow-tavern",
+      "name": "The Drowned Crow"
+    }
+  },
+  "facts": {
+    "well-boarded": {
+      "id": "well-boarded",
+      "text": "The well in Marrow Square was boarded over after something was found in it.",
+      "establishedTurn": 0
+    }
+  }
+}

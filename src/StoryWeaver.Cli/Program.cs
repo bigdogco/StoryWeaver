@@ -30,6 +30,14 @@ internal static class Program
             return Math.Max(json, lore);
         }
 
+        // Writes the built-in seed out as a pack file. One-shot authoring aid: it guarantees
+        // the JSON seed and the C# fixture start identical, which is the only way to be sure
+        // the move to packs changed nothing.
+        if (args.Contains("--write-seed", StringComparer.OrdinalIgnoreCase))
+        {
+            return SeedWriter.Run(Value(args, "--write-seed-to") ?? "worlds/marrow/seed.json");
+        }
+
         bool smoke = args.Contains("--smoke", StringComparer.OrdinalIgnoreCase);
         bool probe = args.Contains("--probe-schema", StringComparer.OrdinalIgnoreCase);
         // Skip anything that is the value of a --flag, or "--models deepseek/x" would be read
