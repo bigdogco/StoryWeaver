@@ -24,23 +24,60 @@ Design: [`docs/design/FACT_HYGIENE.md`](../design/FACT_HYGIENE.md).
 - [ ] Source on facts, truth value, or both? (design argues source only)
 - [ ] One `entity_described` delta or two?
 
-## Build — sequenced cheapest first
+## Measurement — done first, and it changed the plan
 
-- [ ] The knowledge-worthiness test in the extraction prompt, alongside the durability test
-- [ ] Prompt line: a completed action is not a fact unless someone could later act on knowing it
-- [ ] Prompt line: never write a fact about who knows something — emit `fact_learned`
-- [ ] `entity_described` delta — drains the largest fixable category
-- [ ] `source` on `FactEstablished` — the original request
+Devlog: [`2026-07-24_fact-hygiene-measurement.md`](../devlog/2026-07-24_fact-hygiene-measurement.md).
 
-## Measurement
+- [x] Eval: description-shaped prose does not produce a fact — **forbidden 0.00, small and
+      large world.** Would not fail
+- [x] Eval: a completed action does not produce a fact — **forbidden 0.00.** Would not fail
+- [x] Eval: a revelation does not produce a who-knows-what fact — **7/7 required, forbidden
+      0.00.** Would not fail
+- [x] Work out why: **8 of the 11 description-facts describe something with no entity at all.**
+      The scenarios described a *room*, which has a `Location` to hold its description
+- [x] Rewrite the scenarios in the shape that actually fails
 
-Each step scores against the audit's own categories, which is why the audit came first.
+**Result: the design was aimed one level too shallow.** "Descriptions land in facts" is mostly a
+missing *entity type*, not a missing delta. `character_described` fixes 3 of 11, not the
+largest category as claimed.
 
-- [ ] Eval: description-shaped prose does not produce a fact
-- [ ] Eval: a completed action does not produce a fact
-- [ ] Eval: a lie is attributed rather than stated as truth
-- [ ] Re-run the audit against a fresh play session and compare the category split
-- [ ] Full scored sweep, provider pinned — no routed sweep is evidence (CHALLENGES.md)
+## What the reproductions found
+
+- [x] `object-described` — **an item becomes a `character_introduced`, 7/7.** A knife standing
+      in the tavern with a name and a location, because that is the only delta that can bring a
+      thing into canon. Same shape as the AtlasCloud failure in `CHALLENGES.md`, reproduced on
+      a good provider
+- [x] `blow-landed` — **`status_changed` never fires, 0/7.** Hald is beaten unconscious and the
+      model writes `mood_changed = injured`. **Mood is absorbing status.** Forbidden was 0.00,
+      so the fact-store theory was wrong about combat too
+- [x] `sub-space-described` — 1/7. Real in play, weakly provoked by this scenario
+- [x] Third unprompted sighting of the attribution instinct: *"Mabb claims he found the ritual
+      knife in the reeds"*
+
+## Build — resequenced by evidence
+
+- [ ] **`status` vs `mood` in the extraction prompt.** 7/7 measured failure, prompt-fixable,
+      and `blow-landed` already exists to measure the fix
+- [ ] **`Item` as an entity type.** 7/7 measured failure. The answer to most description-facts
+      and to items-as-characters. Wants its own design pass — see
+      `TODO_FUTURE_WORK.md`, where it has been logged since a player bought a beer
+- [ ] **`source` on `FactEstablished`.** Three independent sightings of the model asking for it
+- [ ] **`character_described` / `location_described`.** Still worth having, correctly sized at
+      3 of 11
+
+## Not building — no measured failure to fix
+
+- [x] ~~Prompt line: a completed action is not a fact~~ — `event-not-fact` cannot reproduce it
+- [x] ~~Prompt line: never write a fact about who knows something~~ — `knowledge-not-fact`
+      scores clean
+- [ ] The knowledge-worthiness test — **decided, and deliberately not written yet.** It is a
+      good test and there is currently no scenario that fails without it. Revisit if the
+      category reappears in a fresh play session
+
+## Still true, still logged
+
+- [ ] Re-run the fact audit against a fresh play session and compare the category split. This
+      is the measurement that matters, and it needs a session played on the current build
 
 ## Out of scope, logged
 

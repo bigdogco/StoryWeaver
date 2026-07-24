@@ -53,6 +53,17 @@ finding about our own code. Stated as a working rule:
 
 The by-provider table is not diagnostics. It is the control.
 
+**Postscript, 2026-07-24: AtlasCloud was partly right about something.** Its signature failure
+here — emitting a *building* as a `character_introduced` — was written up as a provider
+reasoning badly. The `object-described` scenario now reproduces exactly that shape **7/7 on
+DeepInfra**, a provider with a clean record: an object with no `Item` type to hold it becomes a
+character, standing in the room, with a name and a description.
+
+The provider was worse at hiding a pressure that was always there. That does not retract the
+finding — AtlasCloud scored 0/21 on revelation and its exclusion stands — but it is a useful
+correction: a failure that looks like provider noise can also be a domain-model gap that a bad
+provider surfaces first.
+
 AtlasCloud's output was **fully schema-valid** — it emitted a building as a
 `character_introduced` under `characterId: "player"`. No schema and no request parameter can
 catch a valid-but-wrong branch choice.
@@ -416,6 +427,35 @@ somewhere else for content to go.
 
 **Read the workarounds as a specification.** A model routing around the schema is a more
 reliable signal than an outright failure, precisely because it looks like success.
+
+---
+
+### Mood absorbs status
+
+**Severity: Medium.** Measured 2026-07-24 by the `blow-landed` scenario, 7/7.
+
+`Status` and `Mood` are documented as distinct — physical or situational condition versus
+emotional register — and separated deliberately, because mood turns over constantly and status
+rarely does. The model does not reliably respect the split.
+
+Hald is driven into his own counter, struck above the ear with a blade, and goes down bleeding.
+`status_changed` **never fires**. What comes back every run is:
+
+```
+mood_changed  innkeeper-hald = injured
+```
+
+The §9 audit saw the edge of this without naming it: `guard-tomas` ended the session with mood
+`startled` and status `terrified`, `drinker-mabb` with mood `terrified` and status `drunk`.
+Terror is in both fields on different characters.
+
+Consequences: a wounded character reads as merely upset, `status` stays at whatever it was
+seeded with, and anything that later keys off physical condition — dice checks, death, healing
+— has nothing to read.
+
+Prompt-fixable, and `blow-landed` exists to measure the fix. Worth noting the same scenario
+scored `forbidden` 0.00, so the fact-store theory this was found under was wrong about combat:
+the defect is the field, not the fact.
 
 ---
 

@@ -119,7 +119,252 @@ internal static class EvalScenarios
         NameRevealLarge,
         LoreLearned,
         LoreNotEstablished,
+        DescriptionNotFact,
+        EventNotFact,
+        KnowledgeNotFact,
+        DescriptionNotFactLarge,
+        EventNotFactLarge,
+        ObjectDescribed,
+        BlowLanded,
+        SubSpaceDescribed,
     ];
+
+    /// <summary>
+    /// <b>Diagnostic — reproduces a real failure.</b> An object is produced and described in
+    /// detail, and the domain model has no <c>Item</c>.
+    ///
+    /// Turn 17 of the 51-turn save is this shape: Nessa reveals what she took from the bucket,
+    /// and extraction emitted <c>medallion-description</c> — a paragraph about a silver
+    /// medallion, filed as a durable world truth because there was nowhere else for it to go.
+    ///
+    /// <b>This scenario expects to fail, and that is the point.</b> The earlier
+    /// <c>description-not-fact</c> scored a clean 0.00 by describing a *room*, which has an
+    /// entity to hold its description; 8 of the 11 description-facts in the save describe
+    /// something with no entity at all. A scenario that cannot reproduce the failure cannot
+    /// measure a fix for it.
+    /// </summary>
+    private static EvalScenario ObjectDescribed => new(
+        "object-described",
+        "*I hold out my hand.* Let me see it.",
+        """
+        Mabb looks at your palm for a long moment. Then he reaches inside his coat and brings
+        out something wrapped in oilcloth, and unwinds it on the table between you.
+
+        It is a knife, but not a working one. The blade is short and leaf-shaped, black with
+        age, and the hilt is bone carved into a column of small overlapping faces, each one
+        with its eyes shut. It has been broken and mended at the tang with a collar of grey
+        metal that does not match. When you pick it up it is colder than the room.
+
+        "Found it in the reeds," Mabb says, in the voice of a man who did not find it in the
+        reeds.
+        """,
+        Required: [],
+        Forbidden:
+        [
+            new("the object described as a fact",
+                d => d is FactEstablished f
+                     && (f.FactId.Contains("knife", StringComparison.OrdinalIgnoreCase)
+                         || f.FactId.Contains("descri", StringComparison.OrdinalIgnoreCase)
+                         || f.Text.Contains("blade", StringComparison.OrdinalIgnoreCase)
+                         || f.Text.Contains("hilt", StringComparison.OrdinalIgnoreCase))),
+            new("the object introduced as a character",
+                d => d is CharacterIntroduced),
+            new("the object introduced as a location",
+                d => d is LocationIntroduced),
+        ]);
+
+    /// <summary>
+    /// <b>Diagnostic — reproduces a real failure.</b> Blows land on a character who is already
+    /// in canon.
+    ///
+    /// Turns 40 and 41 produced <c>drowned-follower-wounded-again</c> and
+    /// <c>...-again-2</c> — individual sword strikes as permanent world truths, on a creature
+    /// that died two turns later. The <c>-2</c> suffix is the model resolving its own id
+    /// collision, which is a tell that it knew it was writing the same kind of thing twice.
+    ///
+    /// The correct answer is <c>status_changed</c>, which fired correctly in play. The
+    /// question is whether the blow-by-blow facts come with it.
+    /// </summary>
+    private static EvalScenario BlowLanded => new(
+        "blow-landed",
+        "*I put my shoulder into the counter, driving it into Hald's ribs, then swing the flat of my blade at his head.*",
+        """
+        The counter goes into Hald's midsection with a sound like a dropped sack and he folds
+        over it, breath leaving him in a whoop. Bottles walk off the shelf behind him and
+        break. Your blade comes round flat and catches him above the ear — not the edge, but
+        enough. He goes down on one knee in the spilled ale, one hand clamped to the side of
+        his head, blood coming through his fingers in a thin dark line.
+
+        Across the room Mabb has flattened himself against the wall and is not moving at all.
+        """,
+        Required:
+        [
+            new("Hald's condition changes",
+                d => d is StatusChanged { CharacterId: Hald }),
+        ],
+        Forbidden:
+        [
+            new("a blow recorded as a fact",
+                d => d is FactEstablished f
+                     && (f.Text.Contains("struck", StringComparison.OrdinalIgnoreCase)
+                         || f.Text.Contains("hit ", StringComparison.OrdinalIgnoreCase)
+                         || f.Text.Contains("blade", StringComparison.OrdinalIgnoreCase)
+                         || f.Text.Contains("counter", StringComparison.OrdinalIgnoreCase)
+                         || f.FactId.Contains("wound", StringComparison.OrdinalIgnoreCase)
+                         || f.FactId.Contains("struck", StringComparison.OrdinalIgnoreCase)
+                         || f.FactId.Contains("attack", StringComparison.OrdinalIgnoreCase))),
+        ]);
+
+    /// <summary>
+    /// <b>Diagnostic — reproduces a real failure.</b> A space inside a known location is
+    /// described, and it is not itself a location.
+    ///
+    /// The save has three of these: <c>well-base-description</c>, <c>tunnel-fork-location</c>,
+    /// <c>cistern-tunnel-smell</c>. Each describes somewhere the player can perceive but not
+    /// *be* — the bottom of a well seen from the top, a fork further down a passage.
+    ///
+    /// The open design question underneath is the one already logged for buildings: when does
+    /// a described space become a <c>Location</c>? This measures what the model does while
+    /// that is unanswered.
+    /// </summary>
+    private static EvalScenario SubSpaceDescribed => new(
+        "sub-space-described",
+        "*I lean over the well and look down.*",
+        """
+        The shaft goes down further than the light does. Perhaps twenty feet of wet brick,
+        greened where the damp runs, and then a floor of packed earth and slick flagstones
+        with a shine of standing water on them. Set into the wall down there is an iron grate,
+        half submerged, and beside it the flagstones are gouged — four long parallel scores in
+        the stone, pale against the wet.
+
+        Something is dripping down there with a slow regularity that is not the well.
+        """,
+        Required: [],
+        Forbidden:
+        [
+            new("the shaft's contents described as a fact",
+                d => d is FactEstablished f
+                     && (f.Text.Contains("flagstone", StringComparison.OrdinalIgnoreCase)
+                         || f.Text.Contains("brick", StringComparison.OrdinalIgnoreCase)
+                         || f.FactId.Contains("descri", StringComparison.OrdinalIgnoreCase)
+                         || f.FactId.Contains("base", StringComparison.OrdinalIgnoreCase))),
+        ]);
+
+    /// <summary>
+    /// <b>Diagnostic.</b> <see cref="DescriptionNotFact"/> against a world the size play
+    /// reaches. Only the seed differs.
+    ///
+    /// Written because the small-world versions scored a clean forbidden 0.00 at baseline
+    /// while the 51-turn save contains 11 description-facts and 12 event-facts. Something
+    /// separates the scenario from play, and world size is the variable that has already
+    /// explained one such gap — <c>two-stage-entry</c> went 14/14 small and 2/14 large.
+    /// </summary>
+    private static EvalScenario DescriptionNotFactLarge =>
+        DescriptionNotFact with { Name = "description-not-fact-large", Seed = WorldSeeds.Marrow_Late };
+
+    private static EvalScenario EventNotFactLarge =>
+        EventNotFact with { Name = "event-not-fact-large", Seed = WorldSeeds.Marrow_Late };
+
+    /// <summary>
+    /// <b>Diagnostic.</b> Rich description of a place the player already knows.
+    ///
+    /// The largest fixable category in the fact audit: 11 of 53 facts in the 51-turn save were
+    /// descriptions filed as world truths — the altar's appearance, the mill's floor, the smell
+    /// of a tunnel. Each one passes the prompt's own durability test ("would it still be true
+    /// if nobody mentioned it?") and each one belongs on the entity.
+    ///
+    /// Nothing here is new. No character arrives, nobody speaks, nothing is revealed. A turn
+    /// that looks closely at a known room should change the room's description or change
+    /// nothing at all.
+    /// </summary>
+    private static EvalScenario DescriptionNotFact => new(
+        "description-not-fact",
+        "*I take a proper look around the taproom for the first time.*",
+        """
+        The Drowned Crow is longer than it looked from the door, and lower — the beams are
+        black with a century of peat smoke and hang close enough that a tall man would learn
+        to stoop. The floor is packed earth strewn with rushes gone grey. Along the far wall,
+        three barrels stand on a trestle, and above them somebody has nailed up a rack of
+        eel-spears, tines pitted with rust.
+
+        There is one window, small and set high, and the marsh light coming through it is the
+        colour of weak tea. The fire is peat and gives more smoke than heat.
+        """,
+        Required: [],
+        Forbidden:
+        [
+            new("a description filed as a fact", d => d is FactEstablished),
+            new("the tavern re-introduced", d => d is LocationIntroduced),
+            new("a character introduced", d => d is CharacterIntroduced),
+        ]);
+
+    /// <summary>
+    /// <b>Diagnostic.</b> A completed physical action with no lasting consequence.
+    ///
+    /// The largest category outright: 12 of 53. Two of them recorded individual sword strikes
+    /// on a creature that died two turns later, and the model resolved its own id collision
+    /// with a <c>-2</c> suffix. The real state change was already carried by
+    /// <c>status_changed</c>, which fired correctly.
+    ///
+    /// An event is already recorded — history holds every turn — so the question is whether
+    /// canon needs it too. Under the knowledge-worthiness test it does not: nobody needs to
+    /// know a blow landed.
+    /// </summary>
+    private static EvalScenario EventNotFact => new(
+        "event-not-fact",
+        "*I sweep the empty mugs off the table and stack them by the counter, then sit back down.*",
+        """
+        You gather the mugs — four of them, one still with a finger of ale gone flat — and
+        carry them to the end of the counter, where you set them down in an uneven stack. One
+        tips against another with a dull knock and settles.
+
+        Hald watches you do it without comment. When you sit back down the bench takes your
+        weight with a complaint of old wood, and the room returns to the sound of the fire.
+        """,
+        Required: [],
+        Forbidden:
+        [
+            new("a completed action filed as a fact", d => d is FactEstablished),
+            new("anything introduced", d => d is CharacterIntroduced or LocationIntroduced),
+        ]);
+
+    /// <summary>
+    /// <b>Diagnostic.</b> A revelation, where the knowledge relationship is the interesting
+    /// part.
+    ///
+    /// Four audited facts assert who knows what — <c>hald-knows-player-has-medallion</c> and
+    /// friends — which is precisely what <see cref="Character.Knows"/> models, and in at least
+    /// one case the correct <c>fact_learned</c> had already fired on the same turn. The fact
+    /// was a duplicate of a delta that worked.
+    ///
+    /// The information itself *is* a fact and must still be established; what must not appear
+    /// is a second fact about somebody knowing it.
+    /// </summary>
+    private static EvalScenario KnowledgeNotFact => new(
+        "knowledge-not-fact",
+        "The well. Why is it boarded?",
+        """
+        Mabb's mug stops halfway to his mouth. He puts it down again without drinking.
+
+        "They pulled a body out of it," he says, to the table rather than to you. "Spring
+        before last. Weighted at the ankles, so it wasn't a fall." He glances at the counter,
+        where Hald has gone very still. "Nobody's drawn from it since."
+        """,
+        Required:
+        [
+            new("the body is established as a fact",
+                d => d is FactEstablished f
+                     && (f.Text.Contains("body", StringComparison.OrdinalIgnoreCase)
+                         || f.FactId.Contains("body", StringComparison.OrdinalIgnoreCase))),
+        ],
+        Forbidden:
+        [
+            new("a fact about who knows something",
+                d => d is FactEstablished f
+                     && (f.FactId.Contains("knows", StringComparison.OrdinalIgnoreCase)
+                         || f.Text.Contains(" knows ", StringComparison.OrdinalIgnoreCase)
+                         || f.Text.Contains(" heard ", StringComparison.OrdinalIgnoreCase))),
+        ]);
 
     /// <summary>
     /// <b>Diagnostic — the load-bearing question for the whole lore design.</b>

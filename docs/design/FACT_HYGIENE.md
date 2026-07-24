@@ -168,11 +168,32 @@ Each step is measurable against the audit's own categories, which is the point o
 the audit before writing any prompt text. Every prompt rule written this year without a
 control was wrong.
 
-## 7. Decisions needed
+## 7. Decisions — settled 2026-07-24
 
-1. **Is the §3 test right?** It is the load-bearing claim of this document. If a fact is *not*
-   "something one character can know and another not know", the rest needs rethinking.
-2. **`entity_described`: replace, append, or revise?** (§4.1)
-3. **Source on facts, or truth value, or both?** (§4.3 argues source only.)
-4. **One `entity_described` delta or two?** One is fewer schema branches; two matches the
-   existing `character_*` / `location_*` split.
+1. **The §3 knowledge-worthiness test is right**, and is added *alongside* the durability test
+   rather than replacing it. Durability is doing real work — no question, greeting or mood
+   appears anywhere in the 53 audited facts — and dropping it would reopen a closed category.
+2. **`character_described` and `location_described`**, two deltas, matching the existing
+   `character_*` / `location_*` split and letting the validator give a precise error.
+3. **Replace, for now.** The delta carries the full new text and overwrites. The model already
+   sees the current description in context, so it can rewrite rather than truncate.
+4. **Source only on facts.** Who asserted it, or null for narrated world truth.
+
+### 7.1 Replace, and the revision option left open
+
+Replacing is the cheap choice and it has a real failure mode: a careless model drops detail it
+should have kept, and nothing recovers it — the old text is gone.
+
+**Logged as a future option rather than a fix:** a revision pass that hands a model the old
+description alongside the new prose and asks for a merged one. Strictly better output for an
+extra call per description change, which is a trade worth *offering* rather than imposing —
+some worlds are description-heavy, and some players will not want to pay per turn for prose
+polish.
+
+It should therefore arrive as a setting (`story.describeMode: replace | revise`) rather than a
+migration. That is also the honest way to find out whether replacement loses anything: run both
+and compare descriptions after fifty turns.
+
+Two things make this cheap to defer. **The delta shape does not change** — a revision pass
+emits the same `*_described` delta, it just computes better text. And the failure is visible in
+canon rather than silent: if replacement is degrading descriptions, `/state` shows it.

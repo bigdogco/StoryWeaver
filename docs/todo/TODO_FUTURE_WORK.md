@@ -259,8 +259,23 @@ Small things the incumbents mostly don't do, cheap to add once the foundations e
       against. Not an extraction failure — a missing concept. Wants `Item`, ownership, and
       probably `ItemTransferred` / `ItemAcquired` deltas.
 
-      Deliberately deferred: adding it before the extraction quality question is settled
-      would mean tuning two things at once and knowing which caused what.
+      ~~Deliberately deferred: adding it before the extraction quality question is settled
+      would mean tuning two things at once.~~ **Promoted 2026-07-24.** The extraction question
+      is settled (100% across 9 scenarios) and this is now the best-evidenced gap in the
+      domain model:
+
+      - `object-described` reproduces **an item becoming a `character_introduced`, 7/7** — a
+        knife standing in the tavern with a name and a location, because that is the only
+        delta that can bring a thing into canon
+      - **8 of the 11 description-facts** in the 51-turn save describe something with no
+        entity: the altar, the medallion, an object hidden in someone's coat
+      - it retroactively explains the AtlasCloud "building as a character" failure, which was
+        the same pressure surfacing on a worse provider
+
+      Wants its own design pass. Open questions worth naming now: is an item an `Entity` with
+      an owner, or a property of a character? Do items in a room need to be distinct from
+      items held? Does an item need a description that can change, given that is the same gap
+      §9 found for characters?
 
 - [ ] **Buildings mentioned in prose are not locations.** A stranger kicked open the door
       of "one of the buildings" on the square; that building has no id and cannot be
