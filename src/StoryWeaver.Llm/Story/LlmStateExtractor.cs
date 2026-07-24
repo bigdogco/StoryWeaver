@@ -89,6 +89,12 @@ public sealed class LlmStateExtractor : IStateExtractor
           emit mood_changed to "wary" again. Report changes, not the current situation.
         - Emit mood_changed whenever the prose shows a shift in how a character feels, even
           a brief one. These are easy to miss and matter.
+        - Status is the body, mood is the feeling, and they are different deltas. Wounded,
+          bleeding, unconscious, bound, poisoned, drunk, dead — all status_changed. "Injured"
+          is not a mood. When someone is physically harmed, restrained, or incapacitated you
+          must emit status_changed; add mood_changed as well only if how they FEEL also
+          changed. A character beaten senseless whose status still reads "normal" is recorded
+          as unhurt, and everything downstream will treat them as unhurt.
         - If nothing changed, return an empty deltas list. That is a valid answer.
         """;
 

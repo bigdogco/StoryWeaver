@@ -56,8 +56,11 @@ largest category as claimed.
 
 ## Build — resequenced by evidence
 
-- [ ] **`status` vs `mood` in the extraction prompt.** 7/7 measured failure, prompt-fixable,
-      and `blow-landed` already exists to measure the fix
+- [x] **`status` vs `mood` in the extraction prompt** — **done 2026-07-24, 0/7 → 7/7.**
+      The cause was an asymmetry rather than a missing rule: the prompt mentioned mood three
+      times and status zero, and the mood schema branch actively recruits. Verified on the
+      baseline's own provider; full set 99%, no regression. See
+      [`2026-07-24_status-vs-mood.md`](../devlog/2026-07-24_status-vs-mood.md)
 - [ ] **`Item` as an entity type.** 7/7 measured failure. The answer to most description-facts
       and to items-as-characters. Wants its own design pass — see
       `TODO_FUTURE_WORK.md`, where it has been logged since a player bought a beer

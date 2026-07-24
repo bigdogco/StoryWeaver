@@ -432,7 +432,29 @@ reliable signal than an outright failure, precisely because it looks like succes
 
 ### Mood absorbs status
 
-**Severity: Medium.** Measured 2026-07-24 by the `blow-landed` scenario, 7/7.
+**Found and fixed 2026-07-24.** Kept here rather than moved to Resolved, because the *cause*
+generalises to every rule in the extraction prompt.
+
+**The cause was an asymmetry, not a missing rule.** The schema described `status_changed`
+perfectly well — "Physical or situational condition changed... **Not for emotions**" — but the
+system prompt mentioned mood three times and status **zero** times, and the mood schema branch
+actively recruits: "Emit this whenever the prose shows a shift in how a character feels,
+however brief."
+
+One field was defined; the other was campaigned for. The model reached for the one it had been
+told to reach for.
+
+The mood rule was itself added to fix a real problem — moods were being missed — and it created
+this one by being the only voice in the room. **A rule that fixes one field can bias every
+field it does not mention.** Worth checking the next time a prompt rule is added: what does it
+now outweigh?
+
+Fixed by giving status an equal voice, ending with the consequence in canon ("a character
+beaten senseless whose status still reads normal is recorded as unhurt"), which is the shape
+every durable rule in this prompt has. **0/7 → 7/7**, verified on the baseline's own provider,
+full set 99% with no regression.
+
+**The original measurement, for context.** Measured by `blow-landed`, 7/7 failure.
 
 `Status` and `Mood` are documented as distinct — physical or situational condition versus
 emotional register — and separated deliberately, because mood turns over constantly and status
@@ -453,9 +475,8 @@ Consequences: a wounded character reads as merely upset, `status` stays at whate
 seeded with, and anything that later keys off physical condition — dice checks, death, healing
 — has nothing to read.
 
-Prompt-fixable, and `blow-landed` exists to measure the fix. Worth noting the same scenario
-scored `forbidden` 0.00, so the fact-store theory this was found under was wrong about combat:
-the defect is the field, not the fact.
+Worth noting the same scenario scored `forbidden` 0.00, so the fact-store theory this was found
+under was wrong about combat: the defect is the field, not the fact.
 
 ---
 
