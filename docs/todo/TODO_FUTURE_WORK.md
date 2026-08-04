@@ -283,6 +283,22 @@ Small things the incumbents mostly don't do, cheap to add once the foundations e
       thing become a real entity", and answering it for buildings answers it for most
       scenery.
 
+      **The character version, seen in live play 2026-07-24 (fresh save, turn 7).** Hald
+      names "Reeve Silas at the hall on the high road" — a located, plot-bearing, absent
+      person. The extractor did *not* introduce him (correct under the measured mention≠presence
+      rule, 0/7), but then tried to record awareness of him with three `fact_learned reeve-silas`
+      against a fact that was never established. The validator rejected all three — no
+      corruption — but the reeve is now in the prose and absent from canon, so the narrator has
+      nothing if the player follows the lead.
+
+      This is the collision worth resolving: "don't invent entities for mentions" is right for
+      scenery and wrong for a named NPC the story is actively pointing the player toward. The
+      model clearly *wants* to record him and has no clean tool. `/character` is the manual
+      workaround today. The real answer is probably a notion of an **offstage-but-named**
+      entity — introduced without a location, which `Character.LocationId` already allows —
+      triggered by naming rather than presence, for the narrow case of a proper-named person or
+      place the prose commits to.
+
 - [x] ~~**A character cannot be renamed.**~~ **Done 2026-07-23.** `character_renamed` carries
       an optional revised description; `/rename` is the authoring path. Ids are permanently
       opaque and names mutable, so no reference ever needs rewriting. `name-reveal` scores

@@ -64,7 +64,12 @@ largest category as claimed.
 - [ ] **`Item` as an entity type.** 7/7 measured failure. The answer to most description-facts
       and to items-as-characters. Wants its own design pass — see
       `TODO_FUTURE_WORK.md`, where it has been logged since a player bought a beer
-- [ ] **`source` on `FactEstablished`.** Three independent sightings of the model asking for it
+- [ ] **`source` on `FactEstablished`.** Four independent sightings now, the fourth from live
+      play on the fresh save (turn 6): two characters gave contradictory answers in one turn
+      and both were stored as settled world truth. The knowledge graph was already perfect —
+      each character knows only their own claim — so `source` is the *only* missing piece.
+      Best-evidenced item on the list, and the one whose failure corrupts canon immediately
+      rather than slowly. See `FACT_HYGIENE.md` §4.3
 - [ ] **`character_described` / `location_described`.** Still worth having, correctly sized at
       3 of 11
 

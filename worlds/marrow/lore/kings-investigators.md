@@ -1,6 +1,7 @@
 ---
 keys: investigator, investigators, king's men, kings men, the order, crown
 priority: 10
+common: true
 ---
 
 # The King's Investigators

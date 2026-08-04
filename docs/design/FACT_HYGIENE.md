@@ -123,6 +123,38 @@ This also composes with per-character knowledge in a way a truth flag does not: 
 believing something false is a feature, and the interesting model is not "this fact is false"
 but "these three people believe it and this one knows better."
 
+**Fourth sighting, and the sharpest, from live play 2026-07-24 (fresh save, turn 6).** The
+player asks where the thing from the well was taken. Two characters answer differently in the
+same turn:
+
+```
+fact  blocks-taken-to-quarry: The heavy thing pulled from the well was taken to the old quarry.
+fact  blocks-taken-to-bog:    The heavy thing pulled from the well was taken to the deep bog.
+hald   learned quarry     (his own claim)
+mabb   learned bog        (his own claim)
+player learned both       (heard both)
+```
+
+**Canon now asserts both as settled world truth**, with no record that they are rival claims —
+Hald's cover story ("carted to the quarry, it's a death trap") and Mabb's drunk contradiction
+("ain't no quarry — gave it back to the water"). They cannot both be true and the flat fact
+model cannot say which, or that either is contested.
+
+Two things this establishes that the earlier sightings did not:
+
+- **The knowledge graph is already perfect.** Hald knows only his claim, Mabb only his, the
+  player both. Per-character knowledge did exactly the right thing with no help. So the missing
+  piece is *only* the source, not the belief tracking — a `source` field slots into a model
+  that is otherwise already correct here.
+- **Two contradictory claims in one turn cannot be represented without corrupting canon.** The
+  single-lie sightings degraded slowly; this one is immediate. With `source`, the turn is
+  clean and the contradiction becomes the *content*: quarry (says Hald), bog (says Mabb), truth
+  unresolved — which is precisely the mystery the scene is dangling.
+
+**Downstream consequence to watch for in this same session:** both facts replay to the narrator
+as true, so Hald or Mabb may later state the other's version as settled. If that happens it is
+the corruption made visible, not a new bug.
+
 ### 4.4 Who-knows-what (4) — prompt only
 
 `hald-knows-cult-of-the-blind` is a fact asserting a knowledge relationship that

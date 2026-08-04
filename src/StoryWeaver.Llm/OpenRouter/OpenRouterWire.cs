@@ -168,6 +168,24 @@ internal sealed class OpenRouterResponse
     ///
     /// The fallback only applies when there is nothing else — a provider that fills both is
     /// unaffected, so this cannot smuggle thinking into a normal response.
+    ///
+    /// <b>Except when generation was truncated.</b> Empty content plus reasoning has two very
+    /// different causes, and only one of them is safe to recover from:
+    ///
+    /// <list type="bullet">
+    /// <item>the provider <i>misreported</i> — it put the answer in the wrong field, and the
+    /// reasoning text is the payload we want;</item>
+    /// <item>the model <i>ran out of tokens while thinking</i> — the reasoning text is a
+    /// half-finished train of thought and there is no answer at all.</item>
+    /// </list>
+    ///
+    /// <c>finish_reason: "length"</c> separates them, and getting this wrong is not a subtle
+    /// failure. Live play produced a narration turn where qwen3.7-plus spent all 1200 of its
+    /// tokens reasoning (<c>reasoning_tokens: 1200</c>, <c>content: null</c>) and the fallback
+    /// printed 4,682 characters of "Thinking Process: 1. Analyze the Player's Input" into the
+    /// story. Extraction was then handed that as the narration and correctly found nothing in
+    /// it. A hard failure the turn loop already knows how to report is strictly better than
+    /// prose that is not prose.
     /// </summary>
     public string? Content
     {
@@ -178,7 +196,12 @@ internal sealed class OpenRouterResponse
                 return null;
             }
 
-            return string.IsNullOrWhiteSpace(message.Content) ? message.Reasoning : message.Content;
+            if (!string.IsNullOrWhiteSpace(message.Content))
+            {
+                return message.Content;
+            }
+
+            return WasTruncated ? null : message.Reasoning;
         }
     }
 
@@ -189,7 +212,15 @@ internal sealed class OpenRouterResponse
         Choices is { Count: > 0 }
         && Choices[0].Message is { } message
         && string.IsNullOrWhiteSpace(message.Content)
-        && !string.IsNullOrWhiteSpace(message.Reasoning);
+        && !string.IsNullOrWhiteSpace(message.Reasoning)
+        && !WasTruncated;
+
+    /// <summary>
+    /// Generation stopped because it hit the token ceiling, so whatever came back is a
+    /// fragment rather than an answer.
+    /// </summary>
+    public bool WasTruncated =>
+        string.Equals(FinishReason, "length", StringComparison.OrdinalIgnoreCase);
 
     /// <summary>Why generation stopped. <c>"length"</c> alongside empty content is the
     /// signature of a reasoning model that spent its whole budget thinking.</summary>

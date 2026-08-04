@@ -341,6 +341,39 @@ Standing is not, and extraction never will, because the evidence is not in the w
 
 **Severity:** High — no error, and the symptom points at the wrong cause.
 
+**Update 2026-08-04: it is worse than silent, and it happened in live play.** Turn 26 of a
+session printed **4,682 characters of the narrator's chain of thought into the story** —
+"Thinking Process: 1. Analyze the Player's Input..." — ending mid-sentence, followed by
+`applied: nothing`.
+
+```
+content: null           reasoning: 4682 chars
+completion_tokens: 1202 reasoning_tokens: 1200   finish_reason: "length"
+```
+
+Three faults compounded:
+
+1. **`OpenRouterResponse.Content` fell back to the reasoning field without asking why content
+   was missing.** The fallback is correct for a provider that misreports the payload and
+   catastrophic for a model truncated mid-thought. `FinishReason` distinguishes them, was
+   already parsed, and was already documented in that very file as "the signature of a
+   reasoning model that spent its whole budget thinking" — it simply was not consulted. Now the
+   fallback refuses when `finish_reason` is `length`.
+2. **The diagnostic written for exactly this case missed by two tokens.** `DescribeEmptyContent`
+   required `reasoning >= completion`; the live values were 1200 and 1202. Now proportional.
+   *An exact-equality guard on a number a provider controls will eventually be off by one.*
+3. **The narration budget was never survivable.** `maxTokens: 1200` with no reasoning
+   configuration — and startup validation only rejects a role that configures reasoning
+   *without* `requireParameters`, so a role configuring none passes. A healthy verification turn
+   then spent **1960 reasoning tokens**, so the old ceiling could not have completed whenever
+   the model chose to think hard. Raised to 4000; a ceiling costs nothing unless used.
+
+**The generalisable part: a failure mode logged as quiet deserves a second look at what happens
+when it meets a recovery path.** This entry predicted silence. Silence plus a fallback produced
+noise, in the story, in front of the player.
+
+Guarded by four `--selftest` checks in `ResponseSelfTest`.
+
 A reasoning model spends its thinking budget from the same `max_tokens` allowance as its
 answer. Set the budget to fit the expected *output* and the model can think until the
 budget is gone and return **empty content with no error** — HTTP 200, a bland

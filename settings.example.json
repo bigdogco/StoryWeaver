@@ -11,9 +11,10 @@
 
   "roles": {
     "narration": {
+      "_comment": "maxTokens must cover REASONING as well as prose. A turn of narration is about 500 tokens; the rest of this budget is headroom for a model that thinks first. Set too low, a reasoning model spends the whole budget thinking and returns nothing — measured at 1200, where qwen3.7-plus used 1200 reasoning tokens and produced no prose at all.",
       "model": "<openrouter/model-id>",
       "temperature": 0.9,
-      "maxTokens": 1200,
+      "maxTokens": 4000,
       "requireParameters": false,
       "responseFormat": "text"
     },

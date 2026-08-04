@@ -435,13 +435,18 @@ public sealed class OpenRouterClient : ILlmClient, IDisposable
         int reasoning = parsed.Usage?.CompletionDetails?.ReasoningTokens ?? 0;
         int completion = parsed.Usage?.CompletionTokens ?? 0;
 
-        if (parsed.FinishReason == "length" && reasoning > 0 && reasoning >= completion)
+        // Proportional, not >=. The first live sighting reported reasoning 1200 against
+        // completion 1202 — the model emitted two tokens of nothing before the ceiling — and
+        // an exact-or-greater test missed it by those two tokens, falling through to the bland
+        // message this branch exists to avoid.
+        if (parsed.FinishReason == "length" && reasoning > 0 && reasoning * 10 >= completion * 9)
         {
             return
-                $"Model produced no output: all {completion} completion tokens went to " +
-                "reasoning before max_tokens was reached. Raise the role's maxTokens — on a " +
-                "reasoning model the budget must cover thinking as well as the answer. " +
-                "This is not a schema or prompt rejection.";
+                $"Model produced no usable output: {reasoning} of {completion} completion " +
+                "tokens went to reasoning before max_tokens was reached. Raise the role's " +
+                "maxTokens, or set reasoning.exclude for it — on a reasoning model the budget " +
+                "must cover thinking as well as the answer. This is not a schema or prompt " +
+                "rejection.";
         }
 
         if (parsed.FinishReason == "length")
