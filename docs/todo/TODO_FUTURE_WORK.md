@@ -117,9 +117,24 @@ Options, roughly in order of appeal for this project:
 
 ## Reroll a turn
 
-- [ ] **Discard the last turn and narrate it again.** The feature every chat-RP site has, and
-      the one people actually reach for when the prose is fine but *wrong* — the narrator put
-      words in your mouth, misread the room, or produced something dull.
+**Partly built 2026-08-04: `/reroll` works on any turn that changed nothing** — about a quarter
+of turns in a real session, and *every* turn where narration failed outright, since prose that
+is not prose yields no deltas by definition. A turn that moved canon is refused with the reason
+stated, and that half still needs the snapshot below.
+
+The unlock was noticing the free subset: **a turn that applied no deltas needs no undo at all.**
+Only the last history line has to go, which `ReplaceLastTurnAsync` already did. That was worth
+more than it looked — it arrived the same day a narration failure printed a chain of thought
+into a live story, which is exactly the case it covers.
+
+Guarded by three self-tests: canon-moved is refused, the discarded prose is hidden from the
+narrator, and the turn is replaced without advancing the counter.
+
+- [ ] **Discard the last turn and narrate it again, on any turn.** The remaining half. Needs the
+      canon snapshot described below.
+
+- [x] ~~The feature every chat-RP site has, and the one people actually reach for when the prose
+      is fine but *wrong*~~ — available now within the no-canon-change limit.
 
       Distinct from `/retry`, which is already built and only re-runs *extraction* over prose
       the player has already read. Rerolling changes the story, so it has to undo one.
@@ -145,6 +160,10 @@ Options, roughly in order of appeal for this project:
       rerolling needs a **snapshot of canon taken before the turn is applied**, plus dropping
       the last line of `history.jsonl` (which `ReplaceLastTurnAsync` already shows is
       workable).
+
+      **This obstacle only applies to turns that changed something**, which is the observation
+      that got the feature half-shipped without it. Measured at 23% of turns applying no deltas
+      at all.
 
       Making deltas invertible instead — carrying the previous value on every delta — was
       considered and rejected: it doubles the schema surface the extraction model has to fill

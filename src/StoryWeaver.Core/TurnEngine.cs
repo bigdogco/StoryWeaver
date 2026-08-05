@@ -168,6 +168,88 @@ public sealed class TurnEngine
     }
 
     /// <summary>
+    /// Narrate the last turn again from the same player input, discarding the prose that was
+    /// produced the first time.
+    ///
+    /// <b>Only when the turn changed nothing.</b> Deltas are not invertible —
+    /// <c>MoodChanged(hald, "wary")</c> does not record what the mood was before — so there is
+    /// no way to compute an undo from the turn log, and rerolling a turn that moved canon needs
+    /// a snapshot taken before it was applied. That snapshot is designed and not built. A turn
+    /// that applied nothing needs no undo at all, which makes this the free subset: roughly a
+    /// quarter of turns in a real session, and <b>every</b> turn where narration failed
+    /// outright, since prose that is not prose yields no deltas by definition.
+    ///
+    /// The discarded narration is never shown to the narrator. The window is rebuilt from
+    /// history with the rerolled turn excluded, because a narrator handed the version being
+    /// rejected will anchor on it and produce a paraphrase.
+    ///
+    /// Distinct from <see cref="ReExtractAsync"/>, and the difference is temperature. Narration
+    /// runs hot, so this genuinely resamples and gives different prose. Extraction runs at
+    /// zero, so re-extracting mostly reproduces the same deltas unless it failed outright.
+    /// Neither command does the other's job.
+    /// </summary>
+    public async Task<RerollOutcome> RerollAsync(
+        string worldId,
+        WorldState world,
+        TurnRecord turn,
+        CancellationToken cancellationToken = default)
+    {
+        if (turn.Applied.Count > 0)
+        {
+            return RerollOutcome.Refused(
+                $"That turn changed canon ({turn.Applied.Count} delta(s) applied), and deltas " +
+                "cannot be undone without a snapshot of canon from before the turn. Rerolling " +
+                "is only available on a turn that changed nothing.");
+        }
+
+        // Rebuilt with the rerolled turn dropped, so the narrator never sees the prose being
+        // replaced.
+        IReadOnlyList<StoryBeat> recent =
+            await LoadRecentAsync(worldId, cancellationToken, skipLast: 1).ConfigureAwait(false);
+
+        string narrationContext = ContextAssembler.ForNarration(world, _lore);
+        string extractionContext = ContextAssembler.ForExtraction(world, _lore);
+
+        string narration = await _narrator
+            .NarrateAsync(narrationContext, recent, turn.PlayerInput, cancellationToken)
+            .ConfigureAwait(false);
+
+        ExtractionResult extraction;
+        string? extractionError = null;
+
+        try
+        {
+            extraction = await _extractor
+                .ExtractAsync(extractionContext, turn.PlayerInput, narration, cancellationToken)
+                .ConfigureAwait(false);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            extraction = ExtractionResult.Empty();
+            extractionError = ex.Message;
+        }
+
+        ValidationOutcome validation = DeltaValidator.Validate(world, extraction.Deltas, _lore);
+        DeltaApplier.Apply(world, validation.Accepted);
+
+        // The turn number does not advance and no record is appended. This is the same turn,
+        // told differently.
+        TurnRecord replacement = turn with
+        {
+            Narration = narration,
+            Applied = validation.Accepted,
+            NoOps = validation.NoOps,
+            Rejected = validation.Rejected,
+            RawExtraction = extraction.Raw,
+        };
+
+        await _repository.SaveAsync(worldId, world, cancellationToken).ConfigureAwait(false);
+        await _repository.ReplaceLastTurnAsync(worldId, replacement, cancellationToken).ConfigureAwait(false);
+
+        return RerollOutcome.Rerolled(new TurnOutcome(replacement, extractionError));
+    }
+
+    /// <summary>
     /// The last <see cref="_historyTurns"/> turns as prose, oldest first.
     ///
     /// Only narration gets this. Extraction deliberately does not: it scores 100% on the eval
@@ -178,9 +260,14 @@ public sealed class TurnEngine
     /// this phase plays at, and the repository interface already anticipates moving the turn
     /// log somewhere that can seek when it stops being acceptable.
     /// </summary>
+    /// <param name="skipLast">
+    /// Turns to drop from the end before taking the window. Used by
+    /// <see cref="RerollAsync"/> so the narrator is not shown the prose it is replacing.
+    /// </param>
     private async Task<IReadOnlyList<StoryBeat>> LoadRecentAsync(
         string worldId,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        int skipLast = 0)
     {
         if (_historyTurns == 0)
         {
@@ -191,10 +278,13 @@ public sealed class TurnEngine
             .LoadHistoryAsync(worldId, cancellationToken)
             .ConfigureAwait(false);
 
+        int available = Math.Max(0, history.Count - skipLast);
+
         return
         [
             .. history
-                .Skip(Math.Max(0, history.Count - _historyTurns))
+                .Take(available)
+                .Skip(Math.Max(0, available - _historyTurns))
                 .Select(t => new StoryBeat(t.PlayerInput, t.Narration)),
         ];
     }
@@ -223,4 +313,21 @@ public sealed class TurnEngine
 public sealed record TurnOutcome(TurnRecord Turn, string? ExtractionError)
 {
     public bool ExtractionFailed => ExtractionError is not null;
+}
+
+/// <summary>
+/// The result of a reroll attempt, which has an outcome the ordinary turn does not: it can be
+/// legitimately <b>refused</b>.
+///
+/// A refusal is not an error. It means the turn moved canon and the undo needed to take it back
+/// does not exist yet, which is a limit worth stating to the player in those terms rather than
+/// failing in a way that reads like a bug.
+/// </summary>
+public sealed record RerollOutcome(TurnOutcome? Outcome, string? RefusedBecause)
+{
+    public static RerollOutcome Rerolled(TurnOutcome outcome) => new(outcome, null);
+
+    public static RerollOutcome Refused(string reason) => new(null, reason);
+
+    public bool WasRefused => RefusedBecause is not null;
 }

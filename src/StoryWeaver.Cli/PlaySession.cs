@@ -114,6 +114,10 @@ internal static class PlaySession
                 {
                     await RetryExtractionAsync(engine, repository, world).ConfigureAwait(false);
                 }
+                else if (string.Equals(input, "/reroll", StringComparison.OrdinalIgnoreCase))
+                {
+                    await RerollAsync(engine, repository, world).ConfigureAwait(false);
+                }
                 else if (!await AuthoringCommands
                         .TryHandleAsync(input, SaveId, world, repository, pack.Lore)
                         .ConfigureAwait(false))
@@ -184,6 +188,53 @@ internal static class PlaySession
         }
     }
 
+    /// <summary>
+    /// Throw away the last turn's prose and narrate it again from the same input.
+    ///
+    /// The counterpart to <see cref="RetryExtractionAsync"/>, and the one to reach for when the
+    /// story is wrong rather than the bookkeeping — the narrator put words in your mouth,
+    /// misread the room, or returned something that was not prose at all.
+    ///
+    /// Only available on a turn that changed nothing, because undoing applied deltas needs a
+    /// canon snapshot that does not exist yet. That covers about a quarter of turns, and every
+    /// turn where narration failed outright.
+    /// </summary>
+    private static async Task RerollAsync(
+        TurnEngine engine,
+        IWorldRepository repository,
+        WorldState world)
+    {
+        IReadOnlyList<TurnRecord> history =
+            await repository.LoadHistoryAsync(SaveId).ConfigureAwait(false);
+
+        if (history.Count == 0)
+        {
+            Console.WriteLine("No turns to reroll yet.");
+            return;
+        }
+
+        Console.WriteLine("\n(narrating that turn again...)\n");
+
+        try
+        {
+            RerollOutcome reroll = await engine
+                .RerollAsync(SaveId, world, history[^1])
+                .ConfigureAwait(false);
+
+            if (reroll.WasRefused)
+            {
+                Console.WriteLine($"  Cannot reroll: {reroll.RefusedBecause}");
+                return;
+            }
+
+            PrintTurn(reroll.Outcome!);
+        }
+        catch (StoryWeaverException ex)
+        {
+            Console.WriteLine($"Reroll failed: {ex.Message}");
+        }
+    }
+
     private static void PrintTurn(TurnOutcome outcome)
     {
         Console.WriteLine(outcome.Turn.Narration);
@@ -195,7 +246,8 @@ internal static class PlaySession
             // but canon did not move, and a run of these means drift.
             Console.WriteLine($"  [!] Extraction failed: {outcome.ExtractionError}");
             Console.WriteLine("  [!] The story continued but canon did not. Use /retry to");
-            Console.WriteLine("  [!] extract this turn again without rewriting the prose.");
+            Console.WriteLine("  [!] extract this turn again without rewriting the prose,");
+            Console.WriteLine("  [!] or /reroll to narrate the turn again from scratch.");
             return;
         }
 
@@ -278,6 +330,7 @@ internal static class PlaySession
                 Console.WriteLine("  /lore   the pack's lore, and who has heard of what");
                 Console.WriteLine("  /raw    last raw extraction response");
                 Console.WriteLine("  /retry  extract the last turn again, same prose");
+                Console.WriteLine("  /reroll narrate the last turn again — new prose");
                 Console.WriteLine("  /quit   end the session");
                 Console.WriteLine();
                 Console.WriteLine("  Write to canon yourself — extraction only records what is");

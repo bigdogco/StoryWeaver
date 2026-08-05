@@ -29,7 +29,9 @@ internal static class Program
             int lore = LoreSelfTest.Run();
             Console.WriteLine();
             int wire = StoryWeaver.Llm.OpenRouter.ResponseSelfTest.Run();
-            return Math.Max(json, Math.Max(lore, wire));
+            Console.WriteLine();
+            int reroll = RerollSelfTest.Run();
+            return new[] { json, lore, wire, reroll }.Max();
         }
 
         // Writes the built-in seed out as a pack file. One-shot authoring aid: it guarantees
