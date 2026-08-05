@@ -146,6 +146,36 @@ internal static class WorldSeeds
     }
 
     /// <summary>
+    /// Marrow with a plan already in canon naming one of two objects.
+    ///
+    /// Written after <c>wrong-object-acted-on</c> failed to reproduce a real play failure. In
+    /// isolation the model records nothing about two objects and correctly declines to guess.
+    /// The false canon in play needed *accumulated context*: by turn 48 the world already held
+    /// "the weeping woman capstone must be ground to powder and packed into the mortar joints",
+    /// and when grinding actually happened the action was matched to that plan — which named
+    /// the wrong stone.
+    ///
+    /// A scenario without the canon that caused the failure cannot reproduce the failure. The
+    /// same lesson as the implicit-lore case, from a different direction.
+    /// </summary>
+    public static WorldState Marrow_WithGrindingPlan()
+    {
+        WorldState world = Marrow();
+
+        world.Facts["capstone-powder-mortar-salt"] = new Fact
+        {
+            Id = "capstone-powder-mortar-salt",
+            Text =
+                "The weeping woman capstone must be ground to powder and packed into the mortar " +
+                "joints around the base of the well with coarse salt.",
+            EstablishedTurn = 0,
+        };
+
+        world.Characters[Character.PlayerId].Knows.Add("capstone-powder-mortar-salt");
+        return world;
+    }
+
+    /// <summary>
     /// Marrow plus somebody nobody has named yet.
     ///
     /// The id and the name are deliberately *both* placeholders — <c>hooded-drinker</c>,

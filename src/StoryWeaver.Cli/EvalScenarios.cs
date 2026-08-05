@@ -128,7 +128,147 @@ internal static class EvalScenarios
         ObjectDescribed,
         BlowLanded,
         SubSpaceDescribed,
+        SceneryVsObject,
+        TwoObjects,
+        WrongObjectActedOn,
     ];
+
+    /// <summary>
+    /// <b>Diagnostic — the exact failure that produced false canon in play.</b>
+    ///
+    /// <see cref="TwoObjects"/> shows the model declining to record two objects at rest, which
+    /// is honest but is not the bug. The bug needs one of them *acted on*: in the 51-turn
+    /// session the player ground the pale chunks from Morwenna's oilcloth, and canon recorded
+    /// <c>capstone-ground-to-powder — "The weeping woman capstone was ground into a coarse,
+    /// glittering powder"</c>. The capstone was the other object. That false fact then fed the
+    /// narrator on every later turn.
+    ///
+    /// Both objects are present and only one goes into the mortar. Since events are what canon
+    /// can express today, the model will reach for a fact — and the question is purely whether
+    /// that fact names the right thing.
+    /// </summary>
+    private static EvalScenario WrongObjectActedOn => new(
+        "wrong-object-acted-on",
+        "*I leave the wet stone where it is and tip Morwenna's pale chunks into the mortar, then bring the pestle down hard.*",
+        """
+        The dark stone stays where you set it, water still creeping out of the carved hollows
+        of the weeping woman's eyes and pooling on the counter.
+
+        The pale chunks go into the bowl of the mortar. You bring the iron pestle down and they
+        shatter on the second strike, breaking into a coarse, glittering powder with a smell of
+        old copper that makes Hald turn his face away. You keep grinding until it is even.
+
+        The dark stone has not moved. It goes on weeping onto the wood.
+        """,
+        Required: [],
+        Forbidden:
+        [
+            new("the wrong object recorded as ground",
+                d => d is FactEstablished f
+                     && (f.Text.Contains("ground", StringComparison.OrdinalIgnoreCase)
+                         || f.Text.Contains("powder", StringComparison.OrdinalIgnoreCase)
+                         || f.FactId.Contains("ground", StringComparison.OrdinalIgnoreCase))
+                     && (f.Text.Contains("weeping woman", StringComparison.OrdinalIgnoreCase)
+                         || f.Text.Contains("capstone", StringComparison.OrdinalIgnoreCase)
+                         || f.Text.Contains("dark stone", StringComparison.OrdinalIgnoreCase))),
+        ],
+        // The plan is already canon and names the capstone, which is the condition the real
+        // failure needed. Without it the model records nothing at all and the scenario proves
+        // only that it does not guess.
+        Seed: WorldSeeds.Marrow_WithGrindingPlan);
+
+    /// <summary>
+    /// <b>Diagnostic — written to fail, before items are built.</b>
+    ///
+    /// The load-bearing question of the item design is *what counts as an item*. Prose is full
+    /// of objects: this taproom has mugs, barrels, a rag, a rack of eel-spears, a hearth iron.
+    /// If every noun becomes an entity, canon drowns and the context block with it. The
+    /// proposed line is <b>handled, not described</b> — the spears on the wall are scenery, the
+    /// thing somebody unwraps and puts in your hand is an item.
+    ///
+    /// This measures whether that line is even findable. One object is handled and given away;
+    /// everything else is furniture, described in the same register and at the same length.
+    ///
+    /// <b>Scored against today's delta set, where no item type exists.</b> The only honest
+    /// question right now is whether the model distinguishes the two categories *at all* — so
+    /// the forbidden rules target the scenery becoming entities or facts, which is what it
+    /// would have to do to get this wrong. If scenery reliably stays out of canon while the
+    /// knife reliably reaches it, the line is real and `item_introduced` can be built on it.
+    /// If not, the design needs a different shape before any code.
+    /// </summary>
+    private static EvalScenario SceneryVsObject => new(
+        "scenery-vs-object",
+        "*I sit down across from Mabb.* You said you had something for me.",
+        """
+        The taproom is all clutter and long use. Four barrels stand on a trestle along the far
+        wall, and above them a rack of eel-spears, tines pitted with rust. A hearth iron leans
+        where somebody left it. The tables are scarred, the rushes on the floor gone grey, and
+        every mug on every table is the same cheap fired clay.
+
+        Mabb pushes his own mug aside with the back of his hand. He looks at the door, then at
+        the shuttered window, and then he reaches into his coat and brings out something small
+        wrapped in oilcloth. He puts it on the table and slides it across to you.
+
+        "Don't open it here," he says.
+        """,
+        Required: [],
+        Forbidden:
+        [
+            new("scenery introduced as a character",
+                d => d is CharacterIntroduced),
+            new("scenery introduced as a location",
+                d => d is LocationIntroduced),
+            new("the room's furniture recorded as facts",
+                d => d is FactEstablished f
+                     && (f.Text.Contains("barrel", StringComparison.OrdinalIgnoreCase)
+                         || f.Text.Contains("eel-spear", StringComparison.OrdinalIgnoreCase)
+                         || f.Text.Contains("hearth iron", StringComparison.OrdinalIgnoreCase)
+                         || f.Text.Contains("mug", StringComparison.OrdinalIgnoreCase)
+                         || f.Text.Contains("rushes", StringComparison.OrdinalIgnoreCase))),
+        ]);
+
+    /// <summary>
+    /// <b>Diagnostic — reproduces the worst item failure found in play.</b>
+    ///
+    /// Two physically distinct objects, described differently, with different origins. In the
+    /// 51-turn session this shape produced <b>false canon</b>: a dark, black-weeping capstone
+    /// hauled from a pool and a bundle of pale, salt-crusted chunks handed over by the witch
+    /// were merged, and canon recorded "the weeping woman capstone was ground into powder"
+    /// when the thing ground came out of the oilcloth. The player noticed as confusion long
+    /// before the save was audited.
+    ///
+    /// That is the strongest argument for the item type: with no entity to hang identity on,
+    /// two objects with different appearances and different fates became one, and the false
+    /// fact then fed back to the narrator on every later turn.
+    ///
+    /// Scored on facts, since that is all today's schema can express: the failure is a single
+    /// fact conflating both, or a fact attributing one object's fate to the other.
+    /// </summary>
+    private static EvalScenario TwoObjects => new(
+        "two-objects",
+        "*I set the wrapped stone from the pool down on the counter, and unwrap the bundle Morwenna gave me beside it.*",
+        """
+        The two of them sit side by side on the scarred wood. The stone from the pool is dark
+        and slick, water still beading and running from it in slow black threads, and the
+        weeping woman carved into its face has hollows where her eyes should be.
+
+        Beside it, what came out of Morwenna's oilcloth is nothing like it: three pale chunks,
+        dry and crusted with something white, giving off a thin metallic smell like old copper.
+        They look like they came out of a different world entirely.
+
+        Hald has backed against the shelves and is looking at both of them.
+        """,
+        Required: [],
+        Forbidden:
+        [
+            new("the two objects conflated in one fact",
+                d => d is FactEstablished f
+                     && f.Text.Contains("pale", StringComparison.OrdinalIgnoreCase)
+                     && (f.Text.Contains("weeping woman", StringComparison.OrdinalIgnoreCase)
+                         || f.Text.Contains("capstone", StringComparison.OrdinalIgnoreCase))),
+            new("either object introduced as a character",
+                d => d is CharacterIntroduced),
+        ]);
 
     /// <summary>
     /// <b>Diagnostic — reproduces a real failure.</b> An object is produced and described in
