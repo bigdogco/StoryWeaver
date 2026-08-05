@@ -75,6 +75,21 @@ Devlog: [`docs/devlog/2026-07-24_lore-entries.md`](../devlog/2026-07-24_lore-ent
   gone entirely to Baidu, and a provider new to the mix was the whole difference. **No single
   routed sweep is evidence about a change unless the provider mix is held fixed.**
 
+## Fixed after the second play session
+
+- [x] **Lore was never learned in play, despite scoring 14/14.** A 51-turn session about the
+      Cult of the Blind taught it to nobody. `lore-learned` had a character *name* the topic
+      and teach it; play speaks of the Drowned Father, the weeping woman and the tithe, and
+      never says the label, because everyone present already knows what they are discussing.
+
+      Two halves, neither sufficient alone: **keys in the extraction context** (0/14 → 8/14 —
+      the extractor saw only the id and title, so "the Drowned Father" was an unrelated string)
+      and **a prompt rule** naming the unnamed-topic situation (8/14 → 14/14). Verified on a
+      second provider. See
+      [`2026-08-04_implicit-lore.md`](../devlog/2026-08-04_implicit-lore.md).
+
+- [x] `lore-learned-implicit` added as a diagnostic, in the shape play actually produces
+
 ## Still open
 
 - [ ] **Redundant facts alongside the correct `fact_learned`.** The model still establishes

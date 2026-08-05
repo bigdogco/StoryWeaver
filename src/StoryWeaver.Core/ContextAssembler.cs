@@ -221,10 +221,27 @@ public static class ContextAssembler
                 "way they learn a fact. You may never establish one — they are authored, not " +
                 "discovered.");
             builder.AppendLine();
+            builder.AppendLine(
+                "The words after each topic are what it is called and what it is known by. A " +
+                "scene can be about a topic without ever naming it: people speak of the thing " +
+                "itself rather than its label. Match on the subject, not the title.");
+            builder.AppendLine();
 
             foreach (LoreEntry entry in selected)
             {
-                builder.AppendLine($"  - ({entry.Id}) {entry.Title}");
+                // Keys, not the body. They are short authored strings — exactly the "what does
+                // this topic sound like" signal — where a body is several paragraphs of prose
+                // that would invite the invention the extraction prompt spends its length
+                // suppressing.
+                //
+                // Without them the extractor sees "(cult-of-the-blind) The Cult of the Blind"
+                // and nothing else, so "the Drowned Father took his tithe" is an unrelated
+                // string. Measured: a 51-turn session about that cult taught it to nobody.
+                string aka = entry.Keys.Count > 0
+                    ? $" — also: {string.Join(", ", entry.Keys)}"
+                    : string.Empty;
+
+                builder.AppendLine($"  - ({entry.Id}) {entry.Title}{aka}");
             }
 
             builder.AppendLine();

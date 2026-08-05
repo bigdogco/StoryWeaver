@@ -85,6 +85,12 @@ public sealed class LlmStateExtractor : IStateExtractor
           listener against THAT topic's id. Do not establish new facts restating what the
           topic already covers, and never establish the topic itself. Only add a fact for
           something specific the lore does not already say.
+        - A scene is usually about a topic without ever naming it. People speak of the thing
+          itself — its god, its sign, its practices, what it is owed — and almost never say
+          its title out loud, because everyone present already knows what they are discussing.
+          Read the words listed after each topic and ask what the speech is ABOUT. If someone
+          is being told the substance of a listed topic, they have learned that topic, whether
+          or not its name was spoken.
         - Do not restate what is already true. If the state says a mood is "wary", do not
           emit mood_changed to "wary" again. Report changes, not the current situation.
         - Emit mood_changed whenever the prose shows a shift in how a character feels, even

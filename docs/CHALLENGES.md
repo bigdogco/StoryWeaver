@@ -465,6 +465,23 @@ reliable signal than an outright failure, precisely because it looks like succes
 
 ### The lore eval measures a shape that play does not produce
 
+**Fixed 2026-08-04, same day.** Kept in Open rather than Resolved because the *lesson* is about
+how scenarios are written, and applies to every one of them.
+
+`lore-learned-implicit` now reproduces the play shape and scores **14/14** (12/12 on a second
+provider), up from 0/14. Two halves were needed and neither worked alone:
+
+- **Keys in the extraction context.** The extractor saw `(cult-of-the-blind) The Cult of the
+  Blind` and nothing else, so "the Drowned Father took his tithe" was an unrelated string. It
+  was not failing to make the connection — it had no evidence one existed. Keys are short
+  authored strings, unlike bodies, which are withheld deliberately. **0/14 → 8/14.**
+- **A prompt rule naming the situation**: a scene is usually about a topic without naming it,
+  because everyone present already knows what they are discussing. **8/14 → 14/14.**
+
+The original finding follows, because the reason it happened is worth more than the fix.
+
+---
+
 **Severity: High** — not because the code is wrong, but because the measurement says it is
 right. Found by auditing a 51-turn session, 2026-08-04.
 
@@ -484,8 +501,17 @@ way the eval could not see.
 **The generalisable part: a scenario written to provoke a behaviour will provoke it, and that
 says nothing about whether the behaviour occurs.** Every scored scenario here is hand-written
 prose aimed at a delta. This is the first case where a 14/14 was measuring a shape real play
-never takes, and it will not be the last — the fix is a scenario in the *implicit* shape, and
-the habit of asking "does play actually look like this?" of any scenario that scores full marks.
+never takes, and it will not be the last.
+
+Two things worth carrying to every future scenario:
+
+- **The eval inherited the feature's blind spot**, because the same person wrote both from the
+  same intuition: that lore gets taught by being named. That is how you would explain a topic
+  to somebody who had never heard of it — and exactly what characters inside the world never
+  need to do. Play is the only thing that does not share the author's assumptions.
+- **Withholding information has a cost invisible from inside.** Keys were never deliberately
+  excluded from the extractor; *bodies* were, for good reasons, and keys were simply never
+  considered separately. The reasoning was sound and its scope was never re-checked.
 
 ---
 

@@ -118,6 +118,7 @@ internal static class EvalScenarios
         TwoStageEntryLarge,
         NameRevealLarge,
         LoreLearned,
+        LoreLearnedImplicit,
         LoreNotEstablished,
         DescriptionNotFact,
         EventNotFact,
@@ -394,6 +395,59 @@ internal static class EvalScenarios
         marsh keeps what it takes. Drown in the deep bog and you don't go into the dark, you
         wake up in it. Walk the reeds. Keep secrets in the mud. Forever." He puts the cloth
         down. "That's all I'll say on it."
+        """,
+        Required:
+        [
+            new("the player has heard of the cult",
+                d => d is FactLearned { CharacterId: Character.PlayerId, FactId: "cult-of-the-blind" }),
+        ],
+        Forbidden:
+        [
+            new("the cult established as a fact",
+                d => d is FactEstablished { FactId: "cult-of-the-blind" }),
+        ],
+        Seed: WorldSeeds.Marrow_WithLore,
+        Expected:
+        [
+            new("the player now knows the cult entry",
+                w => w.Player?.Knows.Contains("cult-of-the-blind") == true),
+        ],
+        Lore: WorldSeeds.MarrowLore);
+
+    /// <summary>
+    /// <b>Diagnostic — the shape play actually produces.</b>
+    ///
+    /// <see cref="LoreLearned"/> scores 14/14 by having a character name the topic and teach
+    /// it: "there's an old faith out in the fen — the Blind, folk call them." A 51-turn session
+    /// in which that cult was the entire plot produced **zero** characters who had learned it,
+    /// because nobody ever named it. They spoke of the Drowned Father, the weeping woman, the
+    /// capstone and a century of drowned men — every recognisable feature of the topic, and
+    /// never its label.
+    ///
+    /// This scenario is that: the entry's subject matter discussed in detail, and the words
+    /// "cult" and "the Blind" appearing nowhere. If extraction can only recognise a topic when
+    /// handed its title, the passing score on the explicit case is measuring a behaviour real
+    /// play does not exhibit.
+    ///
+    /// Note the extractor is shown lore as <c>(cult-of-the-blind) The Cult of the Blind</c> and
+    /// nothing else — no keys, no body — so on the evidence available to it, "the Drowned
+    /// Father" and that entry are unrelated strings.
+    /// </summary>
+    private static EvalScenario LoreLearnedImplicit => new(
+        "lore-learned-implicit",
+        "That thing they pulled out of the well. What was it, really?",
+        """
+        Hald is quiet for long enough that you think he will not answer. When he does, he does
+        not look up from the counter.
+
+        "A capstone. Carved with a weeping woman, eyes gouged out." His rag has stopped moving.
+        "My grandfather's grandfather put it down there, and every man in this village has known
+        since he was old enough to be told, and not one of us says it out loud." He finally
+        raises his head. "The water under this square is owed. A hundred years we paid the
+        Drowned Father his tithe — men who went into the fen and didn't come back, and we called
+        it drowning and we knew what it was. That stone was the lid."
+
+        In the corner Mabb has stopped drinking entirely, both hands flat on the table.
         """,
         Required:
         [
