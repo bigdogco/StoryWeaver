@@ -179,7 +179,10 @@ public static class DeltaValidator
         StatusChanged d => $"status:{d.CharacterId}:{d.Status}",
         MoodChanged d => $"mood:{d.CharacterId}:{d.Mood}",
         RelationshipChanged d => $"rel:{d.CharacterId}:{d.Standing}:{d.Summary}",
-        FactEstablished d => $"fact:{d.FactId}",
+        // Includes the speaker: two characters asserting the same thing are two claims, not a
+        // duplicate. Keying on the id alone would silently drop the second half of a
+        // disagreement, which is the case this field exists for.
+        FactEstablished d => $"fact:{d.FactId}:{d.SourceId}",
         FactLearned d => $"learned:{d.CharacterId}:{d.FactId}",
         CharacterIntroduced d => $"new-char:{d.CharacterId}",
         ItemIntroduced d => $"new-item:{d.ItemId}",
@@ -370,6 +373,10 @@ public static class DeltaValidator
                       "play — a character can learn it, but it cannot be created here."
                 : Taken(d.FactId, characters, locations, items)
                     ? $"id '{d.FactId}' is already in use by a character, location or item."
+                // A source naming nobody would be worse than no source: it reads as
+                // attributed while pointing at a character who does not exist.
+                : d.SourceId is { } speaker && !Blank(speaker) && !characters.Contains(speaker)
+                    ? $"source '{speaker}' is not a character in this world."
                     // Lore is checked above with a more specific message, so it is
                     // deliberately absent from this Taken call.
                 : null,

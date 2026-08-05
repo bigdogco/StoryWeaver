@@ -91,6 +91,15 @@ public sealed class LlmStateExtractor : IStateExtractor
           them its own fact_learned for the speaker and for everyone else who now knows it.
         - fact_learned is only for real information. A character who was merely asked a
           question has learned nothing.
+        - When a character asserts something, set sourceId to that character and write the
+          claim plainly — "the stone went to the quarry", not "Hald claims the stone went to
+          the quarry". The source field is what records who said it, and putting it in the
+          text as well says it twice. Leave sourceId null only when the narration states
+          something as plain truth rather than somebody saying it.
+        - Two characters may contradict each other. Record BOTH claims with their own sources.
+          Do not choose between them, do not merge them, and do not drop the second one — who
+          disagrees with whom is exactly what the story is made of, and canon that asserts
+          both as unattributed truth is simply wrong.
         - The world lore list holds authored topics. When someone is told about a topic that
           is already listed there — the order, the cult, the war — emit fact_learned for the
           listener against THAT topic's id. Do not establish new facts restating what the

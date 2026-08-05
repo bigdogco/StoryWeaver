@@ -131,7 +131,58 @@ internal static class EvalScenarios
         SceneryVsObject,
         TwoObjects,
         WrongObjectActedOn,
+        ContradictoryClaims,
     ];
+
+    /// <summary>
+    /// <b>Diagnostic — reproduces a real failure, turn 5 of a live session.</b>
+    ///
+    /// Two characters answer the same question differently in one turn. Canon recorded both as
+    /// settled world truth:
+    ///
+    /// <code>
+    /// fact  blocks-taken-to-quarry: The heavy thing pulled from the well was taken to the quarry.
+    /// fact  blocks-taken-to-bog:    The heavy thing pulled from the well was taken to the deep bog.
+    /// </code>
+    ///
+    /// They cannot both be true, and the flat fact model cannot say which — or that either is
+    /// contested. Hald is covering; Mabb is drunk and contradicting him.
+    ///
+    /// <b>The knowledge graph already handles this perfectly</b>: each character learned only
+    /// their own claim, and the player learned both. So the missing piece is attribution alone,
+    /// which is what makes <c>source</c> a small change rather than a redesign.
+    ///
+    /// Scored on the source being recorded, not on the facts being suppressed — both claims
+    /// *should* enter canon. The failure is storing them as if nobody said them.
+    /// </summary>
+    private static EvalScenario ContradictoryClaims => new(
+        "contradictory-claims",
+        "The stone you pulled out of the well. Where did it go?",
+        """
+        Hald does not look up from the counter. "Carted to the old quarry at the edge of the
+        fen," he says, flat as a shut door. "Because a collapsed well in the middle of the
+        square is a death trap, not because we're hoarding rocks."
+
+        From the corner Mabb lets out a wet, breathy snort. "Ain't no quarry," the old man
+        slurs, to the spilled drops on his table rather than to anyone. "Took it to the deep
+        bog. Give it back to the water. What's owed is always collected."
+
+        Hald's head snaps round. "Shut your mouth, Mabb."
+        """,
+        Required:
+        [
+            new("Hald's claim is attributed to him",
+                d => d is FactEstablished { SourceId: Hald }),
+            new("Mabb's claim is attributed to him",
+                d => d is FactEstablished { SourceId: "drinker-mabb" }),
+        ],
+        Forbidden:
+        [
+            new("a claim recorded with no speaker",
+                d => d is FactEstablished { SourceId: null } f
+                     && (f.Text.Contains("quarry", StringComparison.OrdinalIgnoreCase)
+                         || f.Text.Contains("bog", StringComparison.OrdinalIgnoreCase))),
+        ]);
 
     /// <summary>
     /// <b>Diagnostic — the exact failure that produced false canon in play.</b>
@@ -1033,11 +1084,20 @@ internal static class EvalScenarios
         [
             new("a fact is established", d => d is FactEstablished),
             new("the player learns it", d => d is FactLearned { CharacterId: Character.PlayerId }),
-            new("Hald is recorded as knowing it", d => d is FactLearned { CharacterId: Hald }),
         ],
         Forbidden:
         [
             new("Hald re-introduced", d => d is CharacterIntroduced { CharacterId: Hald }),
+        ],
+        // "Hald is recorded as knowing it" moved from a delta rule to an outcome rule when
+        // attribution arrived. He can now end the turn knowing it two ways — an explicit
+        // fact_learned, or being named as the fact's source, which the applier derives from —
+        // and demanding the delta failed a turn that reached the right world by the better
+        // route. The third repetition of the same scoring mistake this week.
+        Expected:
+        [
+            new("Hald knows what he just said",
+                w => w.FindCharacter(Hald)?.Knows.Count > 1),
         ]);
 
     /// <summary>Movement to a location already in canon. Targets the observed failure of

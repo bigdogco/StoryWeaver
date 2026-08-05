@@ -16,13 +16,14 @@ Design: [`docs/design/FACT_HYGIENE.md`](../design/FACT_HYGIENE.md).
 **Result: fewer than one fact in five is a fact.** 12 momentary events, 11 descriptions,
 10 correct, 7 lore, 5 claims, 4 who-knows-what, 2 names, 2 agreements.
 
-## Decisions needed before code
+## Decisions — settled 2026-07-24
 
-- [ ] Is "a fact is something one character can know and another not know" the right test?
-      Load-bearing for everything else
-- [ ] `entity_described`: replace, append, or revise the existing text?
-- [ ] Source on facts, truth value, or both? (design argues source only)
-- [ ] One `entity_described` delta or two?
+- [x] Is "a fact is something one character can know and another not know" the right test? —
+      yes, alongside the durability test rather than replacing it
+- [x] `entity_described`: **replace**, with a revision mode logged as a future option
+- [x] Source on facts, truth value, or both? — **source only**, and now built
+- [x] One `entity_described` delta or two? — **two**, matching the `character_*` / `location_*`
+      split
 
 ## Measurement — done first, and it changed the plan
 
@@ -61,15 +62,16 @@ largest category as claimed.
       times and status zero, and the mood schema branch actively recruits. Verified on the
       baseline's own provider; full set 99%, no regression. See
       [`2026-07-24_status-vs-mood.md`](../devlog/2026-07-24_status-vs-mood.md)
-- [ ] **`Item` as an entity type.** 7/7 measured failure. The answer to most description-facts
-      and to items-as-characters. Wants its own design pass — see
-      `TODO_FUTURE_WORK.md`, where it has been logged since a player bought a beer
-- [ ] **`source` on `FactEstablished`.** Four independent sightings now, the fourth from live
-      play on the fresh save (turn 6): two characters gave contradictory answers in one turn
-      and both were stored as settled world truth. The knowledge graph was already perfect —
-      each character knows only their own claim — so `source` is the *only* missing piece.
-      Best-evidenced item on the list, and the one whose failure corrupts canon immediately
-      rather than slowly. See `FACT_HYGIENE.md` §4.3
+- [x] **`Item` as an entity type** — **done 2026-08-04.** Items-as-characters eliminated, and
+      the false-canon merge fixed at 14/14. See `TODO_ITEMS.md`
+- [x] **`source` on `FactEstablished`** — **done 2026-08-04, 14/14 first measurement.**
+      Attribution rather than a truth value: a speaker is observable, honesty is not. Rival
+      claims are kept apart by a duplicate key of `fact:{id}:{source}`.
+
+      Unplanned bonus: the applier now derives that a fact's source knows it, which removed the
+      intermittent speaker-learns miss that had scored 0–2/7 on every sweep since it was found.
+      A prompt rule carrying a known weakness for weeks became unnecessary. See
+      [`2026-08-04_fact-source.md`](../devlog/2026-08-04_fact-source.md)
 - [ ] **`character_described` / `location_described`.** Still worth having, correctly sized at
       3 of 11
 

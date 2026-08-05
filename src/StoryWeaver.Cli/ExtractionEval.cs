@@ -134,7 +134,7 @@ internal static class ExtractionEval
         StatusChanged d => $"status_changed      {d.CharacterId} = {d.Status}",
         MoodChanged d => $"mood_changed        {d.CharacterId} = {d.Mood}",
         RelationshipChanged d => $"relationship_changed {d.CharacterId} = {d.Standing} ({d.Summary})",
-        FactEstablished d => $"fact_established    {d.FactId}: {d.Text}",
+        FactEstablished d => $"fact_established    {d.FactId}: {d.Text}" + (d.SourceId is null ? "" : $"  [said by {d.SourceId}]"),
         FactLearned d => $"fact_learned        {d.CharacterId} <- {d.FactId}",
         CharacterIntroduced d => $"character_introduced {d.CharacterId} ({d.Name}) @ {d.LocationId}",
         CharacterRenamed d => $"character_renamed   {d.CharacterId} -> {d.Name}",

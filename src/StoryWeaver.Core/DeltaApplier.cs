@@ -154,8 +154,23 @@ public static class DeltaApplier
                 {
                     Id = d.FactId,
                     Text = d.Text,
+                    SourceId = d.SourceId,
                     EstablishedTurn = world.TurnNumber,
                 };
+
+                // A character who asserted something knows it. That is entailment rather than
+                // judgement, so it is derived here instead of being asked of the model —
+                // bookkeeping the extractor should not have to do, like presence.
+                //
+                // This replaces a prompt rule that had worked for weeks and started failing
+                // the moment sourceId existed: naming the speaker in one field made emitting
+                // fact_learned for them feel redundant, and the model began dropping it about
+                // half the time. Deriving it removes the ambiguity rather than arguing with it.
+                if (d.SourceId is { } speaker)
+                {
+                    world.FindCharacter(speaker)?.Knows.Add(d.FactId);
+                }
+
                 break;
 
             case FactLearned d:

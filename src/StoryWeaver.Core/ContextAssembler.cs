@@ -232,7 +232,11 @@ public static class ContextAssembler
 
             foreach (Fact fact in known)
             {
-                builder.AppendLine(withIds ? $"  - ({fact.Id}) {fact.Text}" : $"  - {fact.Text}");
+                // Attribution matters more to the narrator than to the extractor: a character
+                // who cannot tell "the stone went to the bog" from "Mabb said the stone went
+                // to the bog" will state a drunk's contradiction as settled truth.
+                string said = Attribution(world, fact, withIds);
+                builder.AppendLine(withIds ? $"  - ({fact.Id}) {fact.Text}{said}" : $"  - {fact.Text}{said}");
             }
         }
 
@@ -341,6 +345,26 @@ public static class ContextAssembler
         {
             builder.AppendLine($"Lore:       {Join(lore.Ids)}");
         }
+    }
+
+    /// <summary>
+    /// " — said by Hald", or nothing when the fact is plain world truth.
+    ///
+    /// Rendered as a suffix rather than folded into the text so the claim itself stays one
+    /// clean sentence, which is what the extraction prompt asks the model to write.
+    /// </summary>
+    private static string Attribution(WorldState world, Fact fact, bool withIds)
+    {
+        if (fact.SourceId is not { } sourceId)
+        {
+            return string.Empty;
+        }
+
+        // An unresolvable source is dropped rather than printed as a raw id — the same rule
+        // that stopped location ids leaking into prose.
+        return world.FindCharacter(sourceId) is { } speaker
+            ? $" — said by {Label(speaker.Name, speaker.Id, withIds)}"
+            : string.Empty;
     }
 
     private static string Label(string name, string id, bool withIds) =>

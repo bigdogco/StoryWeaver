@@ -95,10 +95,11 @@ public static class DeltaSchema
                 "properties": {
                   "kind": { "type": "string", "enum": ["fact_established"] },
                   "factId": { "type": "string", "description": "A new slug id, e.g. 'cellar-poisoning'." },
-                  "text": { "type": "string", "description": "The claim as one sentence." },
+                  "text": { "type": "string", "description": "The claim as one sentence. State it plainly - do not write 'X claims that...', that is what sourceId is for." },
+                  "sourceId": { "type": ["string", "null"], "description": "The id of the character who asserted this, if a character did. Null when the narration states it as plain truth rather than somebody saying it. Two characters can contradict each other and both claims are recorded - the source is what keeps them apart." },
                   "evidence": { "type": "string" }
                 },
-                "required": ["kind", "factId", "text", "evidence"],
+                "required": ["kind", "factId", "text", "sourceId", "evidence"],
                 "additionalProperties": false
               },
               {

@@ -104,6 +104,8 @@ internal static class LoreSelfTest
             """,
             e => e.Common && !e.Always);
 
+        failures += CheckFactSourceMustExist();
+        failures += CheckRivalClaimsAreNotDuplicates();
         failures += CheckItemMustBeSomewhere();
         failures += CheckItemCannotBeBoth();
         failures += CheckItemMoveSwapsPlacement();
@@ -178,6 +180,61 @@ internal static class LoreSelfTest
 
         Console.WriteLine("  FAIL  learning a lore entry did not reach the character.");
         return 1;
+    }
+
+    /// <summary>
+    /// A source naming nobody is worse than no source: it reads as attributed while pointing
+    /// at a character who does not exist.
+    /// </summary>
+    private static int CheckFactSourceMustExist()
+    {
+        ValidationOutcome outcome = DeltaValidator.Validate(
+            WorldSeeds.Marrow(),
+            [new FactEstablished("rumour", "The bridge is out.", "nobody-at-all")]);
+
+        if (outcome.Rejected.Count != 1)
+        {
+            Console.WriteLine("  FAIL  a fact was attributed to a character who does not exist.");
+            return 1;
+        }
+
+        Console.WriteLine("  ok    a fact's source must be a real character");
+        return 0;
+    }
+
+    /// <summary>
+    /// Two characters asserting the same thing are two claims, not a duplicate. Keying
+    /// duplicate detection on the fact id alone would silently drop the second half of a
+    /// disagreement — which is the case attribution exists for.
+    /// </summary>
+    private static int CheckRivalClaimsAreNotDuplicates()
+    {
+        WorldState world = WorldSeeds.Marrow();
+
+        ValidationOutcome outcome = DeltaValidator.Validate(
+            world,
+            [
+                new FactEstablished("stone-quarry", "The stone went to the quarry.", "innkeeper-hald"),
+                new FactEstablished("stone-bog", "The stone went to the deep bog.", "drinker-mabb"),
+            ]);
+
+        if (outcome.Accepted.Count != 2)
+        {
+            Console.WriteLine($"  FAIL  rival claims collapsed to {outcome.Accepted.Count} accepted delta(s).");
+            return 1;
+        }
+
+        DeltaApplier.Apply(world, outcome.Accepted);
+
+        if (world.FindFact("stone-quarry")?.SourceId != "innkeeper-hald"
+            || world.FindFact("stone-bog")?.SourceId != "drinker-mabb")
+        {
+            Console.WriteLine("  FAIL  attribution did not survive being applied.");
+            return 1;
+        }
+
+        Console.WriteLine("  ok    contradictory claims are kept apart by their speakers");
+        return 0;
     }
 
     /// <summary>

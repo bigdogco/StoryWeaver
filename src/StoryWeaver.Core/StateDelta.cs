@@ -79,9 +79,22 @@ public sealed record CharacterRenamed(
     string Name,
     string? Description) : StateDelta;
 
-/// <summary>A new piece of world truth entered canon. Establishing a fact says nothing
-/// about who knows it — that is <see cref="FactLearned"/>.</summary>
-public sealed record FactEstablished(string FactId, string Text) : StateDelta;
+/// <summary>
+/// A new piece of world truth entered canon. Establishing a fact says nothing about who knows
+/// it — that is <see cref="FactLearned"/>.
+///
+/// <paramref name="SourceId"/> is who asserted it, or null when the narration states it as
+/// plain truth. **Not a truth value.** A boolean would ask the extractor to adjudicate
+/// honesty, which it cannot do from one turn; a speaker is an observable — "Hald said X" is
+/// checkable from the prose, and whether X is true is a thing the story resolves later.
+///
+/// Added after a turn in which two characters answered the same question differently and both
+/// answers were stored as settled fact. They cannot both be true, and without a speaker canon
+/// could not say which was contested. The model had been improvising around the gap for weeks,
+/// writing "claims" into fact text unprompted.
+/// </summary>
+public sealed record FactEstablished(string FactId, string Text, string? SourceId = null)
+    : StateDelta;
 
 /// <summary>A character came to know an already-established fact.</summary>
 public sealed record FactLearned(string CharacterId, string FactId) : StateDelta;

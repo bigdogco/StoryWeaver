@@ -289,7 +289,7 @@ internal static class PlaySession
         StatusChanged d => $"{d.CharacterId} status = {d.Status}",
         MoodChanged d => $"{d.CharacterId} mood = {d.Mood}",
         RelationshipChanged d => $"{d.CharacterId} standing = {d.Standing} ({d.Summary})",
-        FactEstablished d => $"fact {d.FactId}: {d.Text}",
+        FactEstablished d => $"fact {d.FactId}: {d.Text}" + (d.SourceId is null ? "" : $" (said by {d.SourceId})"),
         FactLearned d => $"{d.CharacterId} learned {d.FactId}",
         CharacterIntroduced d => $"new character {d.CharacterId} ({d.Name})",
         CharacterRenamed d => $"{d.CharacterId} is now called {d.Name}",
