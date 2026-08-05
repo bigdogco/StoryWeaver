@@ -1,0 +1,268 @@
+# Design — character sheets
+
+**Status:** design, no code. Written 2026-08-04.
+
+Authored identity for characters: who someone is, how they present, what they want, and how
+they feel about the groups in the world. The equivalent of a SillyTavern character card, fitted
+to an architecture that also has *played* state.
+
+Supersedes the open questions in [`TODO_PLAYER_SHEET.md`](../todo/TODO_PLAYER_SHEET.md) — the
+player sheet is this, with one half omitted.
+
+---
+
+## 1. The split that makes it fit
+
+A character card is entirely static; everything on it was written by an author. This project
+also has state the story changes every turn. A sheet is only the first kind:
+
+| | authored — the sheet | played — canon |
+|---|---|---|
+| name, appearance, manner, wants | ✅ | |
+| attitudes toward groups | ✅ | |
+| mood, status, where they are | | ✅ |
+| standing toward the player | | ✅ |
+| what they know | | ✅ |
+
+**Sheets are pack content and live beside `lore/`.** Same rule that makes lore shippable: a
+world can be shared, edited between sessions, and version-controlled without carrying somebody's
+playthrough inside it. And the same rule the player-rename bug established — *the story may
+wound you, not redefine you*.
+
+## 2. Prose, not fields
+
+Decided. The model consumes prose either way — structured fields are flattened into text before
+they reach it, so fields buy nothing for comprehension. What they cost is expressiveness:
+`build: heavyset` loses "wipes the same patch of counter when he is thinking", which is the
+detail that actually makes Hald land in the narration.
+
+Fields are worth having only where *code* needs to read something. That is the split the lore
+format already draws, and sheets should reuse it exactly:
+
+```markdown
+---
+attitudes:
+  kings-investigators: fears them, will not say the name aloud
+  cult-of-the-blind: quietly devout, and ashamed of it
+---
+
+# Hald
+
+Heavyset and watchful, with forearms like ham hocks and a publican's memory for faces. He
+wipes the same patch of counter when he is thinking, and does not notice he is doing it.
+
+## Manner
+
+Speaks flatly and briefly. Answers a question he dislikes by changing the subject to your
+drink. Loud only when frightened.
+
+## Wants
+
+For the well to stay shut and the village to stay ordinary. Will lie a long way to get it,
+and is not good at lying.
+```
+
+Filename is the id, `#` heading is the name, body is what the narrator reads. Headings inside
+the body are suggested rather than enforced — they give a future editor something to render
+without forcing anyone to fill in boxes.
+
+**Decided: extend the parser by exactly one nesting level.** `MarkdownLoreReader` is strict and
+flat by design — three scalars and one list, no YAML dependency, unknown keys refused. Sheets
+need `attitudes` as a map.
+
+The alternative was flattening to `dislikes: kings-investigators, orcs`, which parses today and
+loses the phrase. That phrase is the whole value: "fears them, will not say the name aloud" is
+what the narrator would actually have used, and "dislikes" is not.
+
+One level, and the same strictness — an unknown key is still an error, the reader still refuses
+what it does not understand. **Not a step toward YAML**, and the next request for nesting should
+be argued on its own merits rather than waved through as precedent.
+
+## 3. Attitudes: toward groups, and toward anyone with a sheet
+
+From the vision: *"NPC does not like King's Investigators, NPC does not like Orcs."*
+
+Both are groups, and groups are lore entries with ids. So attitudes are uniform —
+`character → lore id → a phrase` — reusing the namespace `Character.Knows` already holds. Orcs
+become a lore entry the same way the Investigators are one.
+
+**Attitudes toward individuals are included too**, pointing at the player or at any character
+who has a sheet:
+
+```markdown
+---
+attitudes:
+  kings-investigators: fears them, will not say the name aloud
+  player: dislikes him — he stole his sword, years ago now
+  hedge-witch-morwenna: drinking companions their whole lives
+---
+```
+
+An earlier draft excluded these, worrying about an N×N field mostly empty. **That concern was
+wrong**, and worth recording as an error rather than quietly dropping: an N×N problem belongs
+to *derived* data. Authored content is sparse by nature — nobody fills in a matrix, they write
+the two or three relationships that matter, and only for a cast that already has sheets.
+
+### The sheet holds the why; canon holds the standing
+
+The examples above are not standing values. *"He stole his sword, years ago now"* is **history**
+— a story hook the narrator can use, permanently true regardless of how the relationship
+develops. `RelationshipToPlayer` is a number that moves every time the story turns.
+
+| | where | changes? |
+|---|---|---|
+| "dislikes him — he stole his sword" | the sheet | never; it happened |
+| `standing: -20, "wary of strangers"` | `seed.json`, then canon | every turn it should |
+
+He may stop disliking you. He will always be the man whose sword you stole. Following decision
+1, the *why* is authored identity and the *number* is starting state, so they sit in different
+files without duplicating anything.
+
+### What stays out: extracted relationship change
+
+`relationship_changed` has fired **zero times across 102 turns and two sessions**, through a lie
+exposed, open contempt for the crown, and a man terrified into cooperation. Extraction cannot
+track standing — it accumulates across scenes and a per-turn extractor sees one turn.
+
+So sheets take the half that works, which is authoring. Making standing *move* correctly is the
+reconciliation-pass problem, and stays out of this design entirely.
+
+## 4. The player is a sheet with the second half missing
+
+Consistent with the player being an ordinary `Character`, which has paid off repeatedly.
+
+The player gets a sheet — name, appearance, manner, whatever the player wants the narrator to
+know. They do **not** get authored attitudes toward groups, because that is what playing the
+game decides. And their sheet is **always loaded**, where an NPC's is loaded when they are
+present.
+
+This also finishes the protection work: `/rename` already lets the player set name and
+description while the story cannot. A sheet is the richer version of the same thing.
+
+## 5. Loading
+
+Partly solved already: only characters in the room reach the context, so presence is doing the
+filtering that "load when required" describes.
+
+The open question is size. A full sheet is several paragraphs; a crowded room with five NPCs is
+five sheets in every prompt, every turn — on top of lore, which has the same problem deferred,
+and loose items, which added a second contributor.
+
+**Proposal: send the whole sheet for present characters and measure.** Budgeting introduces a
+way to *silently* omit something, which is the single biggest source of "why did the AI forget
+the Duke existed" in existing tools, and it is not worth building before there is a measurement
+saying it is needed.
+
+## 6. Sheet and seed — settled
+
+**The sheet defines the character. `seed.json` holds only their starting state.**
+
+```
+worlds/marrow/characters/innkeeper-hald.md     who he is      (id, name, description, attitudes)
+worlds/marrow/seed.json                        where he starts (location, mood, status, knows, standing)
+```
+
+`seed.json` drops `name` and `description` for any character with a sheet. Nothing is written
+twice, so nothing can disagree — which is the failure the other options all shared, in different
+disguises.
+
+This is the pack/save split applied one level deeper: **identity is content, condition is
+state.** A character's name is not a thing the world does to them, and their mood is not part
+of who they are.
+
+**The cost, stated honestly:** one character now spans two files, and adding a character means
+touching both. That is the price of not having two places able to claim the same field, and it
+is the cheaper mistake — a file split is visible, a silent disagreement is not.
+
+The load path merges them: sheet first for identity, then the seed entry for state. A seeded
+character with no sheet keeps working exactly as today, so no existing pack breaks.
+
+## 6.1 Referring to other entities: `{{ }}`
+
+Authored content has to name entities it does not own — Hald's sheet mentions Morwenna, the
+Investigators' entry mentions the player.
+
+**The justification is narrower than it first appears, and worth stating accurately.** An
+earlier draft argued from "names are mutable and ids are not", the principle behind
+`character_renamed`. That barely applies: characters *with sheets* have names their author
+fixed, and `character_renamed` exists for characters discovered in play — "Shivering figure"
+becoming Nessa — who have no sheet, because nobody can write a sheet for someone who does not
+exist yet.
+
+The real reason is the one SillyTavern has: **a pack author cannot know the player's name.**
+That is `{{player}}`, and it stands alone.
+
+`{{<entity-id>}}` survives for one genuine case — a pack shipping a deliberately anonymous
+character ("The Hooded Stranger") whom the story later reveals, where other sheets referring to
+them should follow. Real, rare, and cheap correctness rather than the main event.
+
+So sheets and lore bodies may contain:
+
+| form | resolves to |
+|---|---|
+| `{{player}}` | the player character's current name |
+| `{{<entity-id>}}` | that entity's current name |
+
+Three rules, each earned:
+
+- **Resolved at context assembly, not at load.** Resolving once when the file is read would
+  freeze the name and lose the entire point. Per-turn resolution means a rename flows through
+  every sheet that mentions them.
+- **Validated at load, loudly.** An unresolvable `{{id}}` fails the pack load naming the file
+  and the id. It must never reach a prompt — an id in prose is the bug that forced the
+  `ForNarration` / `ForExtraction` split ("the heavy oak door of the marrow-tavern flies
+  outward"), and it has been paid for once already.
+- **A closed set, not a template language.** Exactly these two forms; anything else is a load
+  error. SillyTavern's macros grew conditionals, randomness and state lookups. Adding a third
+  form should be a decision, not a discovery.
+
+**`{{player}}` resolves to the name, not to "you".** A sheet is a description of Hald, not
+narration: "wary of Pavel" is a fact about Hald that holds regardless of who reads it, while
+"wary of you" makes the sheet's meaning depend on its reader. It also helps extraction, which
+already holds `Pavel (id: player)` in its roster — "you" would make it infer the referent first,
+and inferring is where deltas get lost.
+
+### The consequence: character creation becomes a step
+
+The seed currently ships `"name": "You"` for the player, so `{{player}}` would render *"Hald is
+wary of You"* — exactly the confusion this decision avoids.
+
+The fix is not a better default. **Names are fixed, for the player as much as for any authored
+character**, so the player should write theirs before turn 1 — the same act the pack author
+performed for Hald. Character creation is a step, not a fallback.
+
+That default was harmless while the player's name appeared nowhere but their own record; sheets
+are the first feature that shows it to somebody else. It also fixes something separate that was
+never really defended: a new world currently opens with a character called "You" whose one-line
+description nobody chose.
+
+**Naming should be required rather than skippable.** Every alternative reintroduces the pronoun
+problem, and it is one prompt at the start of a world.
+
+## 7. What this does not include
+
+- **Stats and abilities as numbers.** "Quick with a knife" belongs in prose; anything the
+  *engine* reasons about is the dice-resolved-checks design, and answering it here would
+  pre-empt that.
+- **`character_described` interaction.** If a sheet is authored and the story can also revise a
+  description, they will fight. Probably the story revises canon's `Description` and never the
+  sheet — but that needs settling when `character_described` is built.
+
+## 8. Decisions — all settled 2026-08-04
+
+1. **Sheet vs seed** — the sheet defines the character, `seed.json` holds starting state only.
+   Nothing written twice. §6.
+2. **Parser nesting** — extend by exactly one level for `attitudes`, keeping the same
+   strictness. The phrase is the value. §2.
+3. **NPC-to-NPC attitudes** — yes, toward the player and toward anyone with a sheet. The N×N
+   concern was wrong: it applies to derived data, not authored. §3.
+4. **A sheet without a seed entry** — defines the character as offstage, which
+   `Character.LocationId` already supports and `/character` already does. Lets an author write a
+   cast before placing them.
+5. **`{{player}}` resolves to the name**, not "you". A sheet describes a character rather than
+   narrating to a reader. §6.1.
+6. **Character creation is a required step at world start** — the player names and describes
+   themselves before turn 1, exactly as the author did for Hald. Replaces the unchosen "You".
+
+Ready to build. The one item larger than it looks is 6: it is the first thing a new world does
+and needs a place in the harness that does not exist yet.
