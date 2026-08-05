@@ -171,7 +171,7 @@ public static class DeltaSchema
               },
               {
                 "type": "object",
-                "description": "An item turned out to be something other than it was taken for - 'old foundation blocks' revealed as a carved capstone. Use its EXISTING id; the id never changes.",
+                "description": "What an item IS was revised - either it turned out to be something else ('old foundation blocks' revealed as a carved capstone), or a closer look revealed something permanent about it that was always true. Use this whenever examining an object reveals a lasting property: a maker's mark, a carving, an inscription, what it is made of. The name may stay exactly the same and only the description change - that is a normal and expected use. Use its EXISTING id; the id never changes.",
                 "properties": {
                   "kind": { "type": "string", "enum": ["item_renamed"] },
                   "itemId": { "type": "string", "description": "The item's EXISTING id. Do not invent a new one." },

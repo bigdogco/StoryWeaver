@@ -79,6 +79,16 @@ public sealed class LlmStateExtractor : IStateExtractor
           when they are similar and in the same scene, and an action on one says nothing about
           the other. Recording that the wrong thing was ground, burned or given away is a
           mistake nothing downstream can detect.
+        - An item's status is its condition — intact, broken, burned, wet, ground to powder.
+          Its description is what it IS. A carving found under the rust, a maker's mark, an
+          inscription: those were always there and are what the thing is, so revise the
+          DESCRIPTION with item_renamed, keeping the same name. Never write a discovered
+          property into status. A ring whose status reads "carved with a weeping woman" is
+          recorded as having been damaged into that shape, and its real description still says
+          nothing about the carving.
+        - Looking closely at something and finding out what it is IS a change worth recording.
+          Do not stay silent because the object did not move and nothing happened to it — what
+          the world knows about it changed.
         - A description field describes what something IS, permanently. Never put an event
           in a description.
         - Establishing a fact and someone knowing it are separate. When new information is

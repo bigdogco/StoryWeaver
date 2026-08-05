@@ -201,6 +201,27 @@ internal static class WorldSeeds
     }
 
     /// <summary>
+    /// Marrow with one plain object in the room, waiting to be looked at closely.
+    ///
+    /// Deliberately dull: a ring described only by its condition, so anything the prose reveals
+    /// about it is new information about *what it is* rather than a restatement.
+    /// </summary>
+    public static WorldState Marrow_WithRing()
+    {
+        WorldState world = Marrow();
+
+        world.Items["mooring-ring"] = new Item
+        {
+            Id = "mooring-ring",
+            Name = "Rusted mooring ring",
+            Description = "A heavy iron ring set into the stone, thick with rust.",
+            LocationId = "marrow-tavern",
+        };
+
+        return world;
+    }
+
+    /// <summary>
     /// Marrow plus somebody nobody has named yet.
     ///
     /// The id and the name are deliberately *both* placeholders — <c>hooded-drinker</c>,

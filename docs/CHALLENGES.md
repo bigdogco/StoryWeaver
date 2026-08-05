@@ -545,7 +545,8 @@ character-sheet feature, and a separate piece of work.
 
 ### Item status absorbs description — and it is the third instance of one pattern
 
-**Severity: Medium.** Found 2026-08-04, in the first session played with items.
+**Found and fixed 2026-08-04**, in the first session played with items. Kept here because the
+*pattern* is what matters and it will recur on the next entity type.
 
 A rusted mooring ring is examined and turns out to be carved with the weeping woman. Extraction
 emitted:
@@ -579,8 +580,20 @@ equivalent sentence exists for items: the prompt tells the model what an item *i
 introduce one, and never distinguishes its status from its description. One field was explained
 and the other was not.
 
-Fixable the same way, and `item_status_changed` vs `item_renamed` needs a scenario before the
-rule, per the pattern that has worked all week.
+**The scenario found something better than the theory.** `object-examined` scored 7/14, and the
+dominant failure was not status-absorption at all — that happened once in seven. Seven times in
+seven the model recorded **nothing**, because `item_renamed` reads as "the name changes" and
+here the name does not.
+
+So the fix was not only the missing symmetry sentence. It was telling the schema and the prompt
+that revising a description while the name stays identical is a normal, expected use of that
+delta — plus the direct rule that status is condition and a discovered property is description.
+**7/14 → 14/14, forbidden 0.00**, full set 50/50 clean pinned.
+
+Worth carrying: **a delta named for its most obvious use will not be reached for in its less
+obvious one.** `item_renamed` handles two things and is named after one of them. The same is
+true of `character_renamed`, and nobody has checked whether it is silently under-used for
+description revisions.
 
 ---
 

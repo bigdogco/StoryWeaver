@@ -55,7 +55,7 @@ See [`2026-08-04_items.md`](../devlog/2026-08-04_items.md).
 
 ## Found in play, 2026-08-04
 
-- [ ] **`item_status_changed` is absorbing descriptions.** A mooring ring examined and found to
+- [x] **`item_status_changed` was absorbing descriptions** — **fixed 2026-08-04, 7/14 → 14/14.** A mooring ring examined and found to
       be carved with the weeping woman produced
       `item_status_changed = "carved with a weeping woman symbol, groove coated in black
       residue and old blood"`. That is a permanent property discovered, which is what
@@ -70,9 +70,12 @@ See [`2026-08-04_items.md`](../devlog/2026-08-04_items.md).
       equal voice ("Status is the body, mood is the feeling"); no equivalent sentence exists
       for items, so one field is explained and the other is not.
 
-      **Wants a scenario before the rule**, per the pattern that has worked all week: examine
-      an object and discover something permanent about it, and check whether the revision lands
-      in `description` or `status`.
+      `object-examined` reproduced it and found something better than expected: the dominant
+      failure was **recording nothing at all** (7/7), not status-absorption (1/7). `item_renamed`
+      reads as "the name changes", so the model would not reach for it when only a description
+      should be revised. Fixed by saying so in the schema and prompt — the name staying the
+      same is a normal use — plus a rule that status is condition and a discovered property is
+      description. Full set 50/50 clean, pinned.
 
 ## Deliberately out of v1
 

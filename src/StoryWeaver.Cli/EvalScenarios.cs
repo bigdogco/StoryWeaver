@@ -132,7 +132,66 @@ internal static class EvalScenarios
         TwoObjects,
         WrongObjectActedOn,
         ContradictoryClaims,
+        ObjectExamined,
     ];
+
+    /// <summary>
+    /// <b>Diagnostic — reproduces a failure from play.</b> A permanent property of an object is
+    /// discovered by looking closely.
+    ///
+    /// A model-played session examined a rusted mooring ring and found a weeping woman carved
+    /// into it. Extraction wrote that into the item's <b>status</b>:
+    ///
+    /// <code>
+    /// item_status_changed  mooring-ring = "carved with a weeping woman symbol, groove coated
+    ///                                      in black residue and old blood"
+    /// </code>
+    ///
+    /// Status is condition — intact, broken, burned, ground to powder. A carving that was
+    /// always there is what the thing *is*, and belongs in the description, which
+    /// <see cref="ItemRenamed"/> carries optionally for exactly this: the object equivalent of
+    /// "Shivering figure" becoming Nessa.
+    ///
+    /// Third instance of one pattern, after mood absorbing status and facts absorbing
+    /// descriptions. Each is *what happened to a thing* colliding with *what a thing is*.
+    ///
+    /// Scored on the outcome, not the delta kind — the description must end up carrying the
+    /// carving and the status must not, whichever route the model takes there.
+    /// </summary>
+    private static EvalScenario ObjectExamined => new(
+        "object-examined",
+        "*I crouch and go over the ring with my thumb, scraping at the rust.*",
+        """
+        The rust comes away in flakes under your thumbnail. Beneath it the iron is pitted but
+        sound, and near the shank there is something that is not corrosion: a stamped
+        impression, worn shallow but unmistakable once you have seen it. A woman's face, head
+        bowed, with two smooth hollows where the eyes should be.
+
+        The groove of it is packed with something dark that is not rust.
+        """,
+        Required: [],
+        Forbidden:
+        [
+            new("a discovered property written into status",
+                d => d is ItemStatusChanged s
+                     && (s.Status.Contains("carv", StringComparison.OrdinalIgnoreCase)
+                         || s.Status.Contains("weeping", StringComparison.OrdinalIgnoreCase)
+                         || s.Status.Contains("woman", StringComparison.OrdinalIgnoreCase)
+                         || s.Status.Contains("symbol", StringComparison.OrdinalIgnoreCase)
+                         || s.Status.Contains("stamp", StringComparison.OrdinalIgnoreCase))),
+        ],
+        Seed: WorldSeeds.Marrow_WithRing,
+        Expected:
+        [
+            new("the ring's description carries the carving",
+                w => w.FindItem("mooring-ring") is { } ring
+                     && (ring.Description.Contains("weeping", StringComparison.OrdinalIgnoreCase)
+                         || ring.Description.Contains("woman", StringComparison.OrdinalIgnoreCase)
+                         || ring.Description.Contains("carv", StringComparison.OrdinalIgnoreCase))),
+            new("the ring's status is still a condition",
+                w => w.FindItem("mooring-ring") is { } ring
+                     && !ring.Status.Contains("weeping", StringComparison.OrdinalIgnoreCase)),
+        ]);
 
     /// <summary>
     /// <b>Diagnostic — reproduces a real failure, turn 5 of a live session.</b>
