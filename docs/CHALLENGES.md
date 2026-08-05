@@ -463,6 +463,60 @@ reliable signal than an outright failure, precisely because it looks like succes
 
 ---
 
+### The lore eval measures a shape that play does not produce
+
+**Severity: High** — not because the code is wrong, but because the measurement says it is
+right. Found by auditing a 51-turn session, 2026-08-04.
+
+`lore-learned` scores **14/14**. Across a full session in which the Cult of the Blind was the
+entire plot, **not one character learned it.**
+
+The eval has Hald say *"There's an old faith out in the fen — the Blind, folk call them"* — a
+topic named and taught. Play never does that. Characters spoke of the Drowned Father, the
+weeping woman, the capstone and the century of drowned men; nobody named the cult as a subject
+somebody could be told about. Extraction recognises learning only when the prose hands it a
+labelled topic.
+
+The lore was not ignored — the narrator used it throughout, and it leaked back into canon as
+three facts paraphrasing what the entry already said. So the feature half-worked in exactly the
+way the eval could not see.
+
+**The generalisable part: a scenario written to provoke a behaviour will provoke it, and that
+says nothing about whether the behaviour occurs.** Every scored scenario here is hand-written
+prose aimed at a delta. This is the first case where a 14/14 was measuring a shape real play
+never takes, and it will not be the last — the fix is a scenario in the *implicit* shape, and
+the habit of asking "does play actually look like this?" of any scenario that scores full marks.
+
+---
+
+### The story could overwrite the player's identity
+
+**Found and fixed 2026-08-04**, from live play.
+
+Turn 38 emitted `character_renamed` on the player, replacing the name `"You"` with the literal
+id string `"player"` and the description *"A traveller, recently arrived in Marrow"* with
+*"burned, with blistered and stained hand from contact with the black water"*.
+
+Both halves destructive, neither recoverable. And the injury was **already correctly recorded
+on `status`** by the mood/status fix shipped the day before — so one event was written twice,
+once into the field built for it and once over the player's identity.
+
+Three rules, six self-tests: the story cannot rename the player; the player still can via
+`/rename`; a name equal to the id is refused, since that is the model echoing the key back
+rather than writing a name.
+
+**The design decision worth keeping.** `/rename` routes through the same validator, so
+protecting the player from the story would have blocked the player from themselves. Routing
+authoring around the validator was rejected — a second way for the world to change is how two
+paths start disagreeing about ids and collisions — so `Validate` gained an `authored` flag.
+*One gate, and it knows who is knocking.*
+
+**What it exposes beyond the bug:** the player's identity was a mutable field with no owner.
+Any turn could overwrite it and one did. Protection is now in place; giving it structure is the
+character-sheet feature, and a separate piece of work.
+
+---
+
 ### Mood absorbs status
 
 **Found and fixed 2026-07-24.** Kept here rather than moved to Resolved, because the *cause*

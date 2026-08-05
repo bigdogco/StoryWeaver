@@ -252,7 +252,7 @@ internal static class AuthoringCommands
         IWorldRepository repository,
         LoreBook lore)
     {
-        ValidationOutcome validation = DeltaValidator.Validate(world, deltas, lore);
+        ValidationOutcome validation = DeltaValidator.Validate(world, deltas, lore, authored: true);
 
         foreach (RejectedDelta rejected in validation.Rejected)
         {

@@ -359,6 +359,13 @@ Small things the incumbents mostly don't do, cheap to add once the foundations e
       N turns) rather than more prompt work. `mood_changed` fired 46 times in the same session,
       which is the control: per-turn observables extract fine.
 
+      **Confirmed 2026-08-04: still zero across a second 51-turn session** — 102 turns, two
+      builds, two stories, not one `relationship_changed`. This is no longer a suspicion about
+      a per-turn extractor; it is measured. Note the same session is *not* short of
+      relationship material: Hald lies and is caught in it, Morwenna despises the King's seal,
+      Silas is terrified into cooperation. All of it landed as facts and moods, none as
+      standing.
+
 ---
 
 ## Dice-resolved checks — combat and everything else uncertain

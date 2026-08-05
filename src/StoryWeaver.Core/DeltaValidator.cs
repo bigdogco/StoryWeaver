@@ -45,10 +45,22 @@ namespace StoryWeaver.Core;
 /// </summary>
 public static class DeltaValidator
 {
+    /// <param name="authored">
+    /// True when these deltas came from the player through an authoring command rather than
+    /// from extraction.
+    ///
+    /// <b>One gate, and it knows who is knocking.</b> A handful of rules exist to stop the
+    /// *story* overreaching, and applying them to the player's own authoring would block the
+    /// thing they are there to protect — the player must be able to set their own name, which
+    /// extraction must never do. Routing authoring around the validator instead would give the
+    /// world a second way to change, which is how two paths start disagreeing about ids and
+    /// collisions.
+    /// </param>
     public static ValidationOutcome Validate(
         WorldState world,
         IReadOnlyList<StateDelta> deltas,
-        LoreBook? lore = null)
+        LoreBook? lore = null,
+        bool authored = false)
     {
         LoreBook book = lore ?? LoreBook.Empty;
 
@@ -80,7 +92,7 @@ public static class DeltaValidator
                 continue;
             }
 
-            string? problem = Check(delta, characters, locations, facts, loreIds);
+            string? problem = Check(delta, characters, locations, facts, loreIds, authored);
 
             if (problem is not null)
             {
@@ -201,7 +213,8 @@ public static class DeltaValidator
         HashSet<string> characters,
         HashSet<string> locations,
         HashSet<string> facts,
-        HashSet<string> lore)
+        HashSet<string> lore,
+        bool authored)
     {
         return delta switch
         {
@@ -231,9 +244,26 @@ public static class DeltaValidator
             // lives in the id regardless. The only thing that must hold is that the character
             // exists — renaming a stranger the batch never introduced is the failure worth
             // catching, since it would otherwise silently do nothing.
+            // The player is not renameable. Found in play: turn 38 of a session emitted
+            // character_renamed on the player, replacing the name "You" with the literal id
+            // string and wiping "A traveller, recently arrived in Marrow" with a passing
+            // injury. Both halves were destructive and neither was recoverable.
+            //
+            // Who the player is belongs to the player, not to a turn of prose. The story may
+            // wound them (status_changed), move them, and teach them things; it may not decide
+            // who they are.
             CharacterRenamed d =>
                 !characters.Contains(d.CharacterId) ? $"character '{d.CharacterId}' does not exist."
                 : Blank(d.Name) ? "name is empty."
+                : !authored
+                  && string.Equals(d.CharacterId, Character.PlayerId, StringComparison.OrdinalIgnoreCase)
+                    ? "the player cannot be renamed by the story. Their name and description " +
+                      "are the player's own — use /rename."
+                // A name equal to the id is the model echoing the key back instead of writing
+                // a name, which reads as a rename that "worked" and leaves a character called
+                // "innkeeper-hald" in the prose.
+                : string.Equals(d.Name, d.CharacterId, StringComparison.OrdinalIgnoreCase)
+                    ? $"name '{d.Name}' is the character's id, not a name."
                 : null,
 
             CharacterMoved d =>

@@ -3,7 +3,8 @@ using StoryWeaver.Core;
 namespace StoryWeaver.Cli;
 
 /// <summary>
-/// Offline checks on reroll, using fake ports so no model is called.
+/// Offline checks on reroll and on the rules protecting a character's identity, using fake
+/// ports so no model is called.
 ///
 /// Two properties are worth holding. **A turn that moved canon must be refused**, because the
 /// undo it would need does not exist — deltas carry no previous value, so applying them is
@@ -21,16 +22,97 @@ internal static class RerollSelfTest
     {
         int failures = 0;
 
+        failures += CheckStoryCannotRenameThePlayer();
+        failures += CheckPlayerCanRenameThemselves();
+        failures += CheckNameCannotBeTheId();
         failures += CheckRefusesWhenCanonMoved();
         failures += CheckDiscardedProseIsHidden();
         failures += CheckReplacesRatherThanAppends();
 
         Console.WriteLine();
         Console.WriteLine(failures == 0
-            ? "All reroll checks passed."
-            : $"{failures} reroll check(s) FAILED.");
+            ? "All reroll and identity checks passed."
+            : $"{failures} reroll/identity check(s) FAILED.");
 
         return failures == 0 ? 0 : 1;
+    }
+
+    /// <summary>
+    /// The bug this guards, from live play: turn 38 emitted <c>character_renamed</c> on the
+    /// player, replacing the name "You" with the literal id string and wiping "A traveller,
+    /// recently arrived in Marrow" with a passing injury. Both halves were destructive and
+    /// neither was recoverable.
+    /// </summary>
+    private static int CheckStoryCannotRenameThePlayer()
+    {
+        WorldState world = WorldSeeds.Marrow();
+
+        ValidationOutcome outcome = DeltaValidator.Validate(
+            world,
+            [new CharacterRenamed(Character.PlayerId, "player", "burned, with a blistered hand")]);
+
+        if (outcome.Rejected.Count != 1 || outcome.Accepted.Count != 0)
+        {
+            Console.WriteLine("  FAIL  the story was allowed to rename the player.");
+            return 1;
+        }
+
+        Console.WriteLine("  ok    the story cannot rename the player");
+        return 0;
+    }
+
+    /// <summary>
+    /// The other half. The rule protects the player from the *story*, and must not stop the
+    /// player describing their own character — which is the thing it exists to protect.
+    /// </summary>
+    private static int CheckPlayerCanRenameThemselves()
+    {
+        WorldState world = WorldSeeds.Marrow();
+
+        ValidationOutcome outcome = DeltaValidator.Validate(
+            world,
+            [new CharacterRenamed(Character.PlayerId, "Pavel", "A King's Investigator, travel-stained.")],
+            lore: null,
+            authored: true);
+
+        if (outcome.Accepted.Count != 1)
+        {
+            Console.WriteLine("  FAIL  the player could not rename their own character.");
+            return 1;
+        }
+
+        DeltaApplier.Apply(world, outcome.Accepted);
+
+        if (world.Player?.Name != "Pavel")
+        {
+            Console.WriteLine("  FAIL  an authored player rename did not apply.");
+            return 1;
+        }
+
+        Console.WriteLine("  ok    the player can rename their own character");
+        return 0;
+    }
+
+    /// <summary>
+    /// A name equal to the id is the model echoing the key back rather than writing a name. It
+    /// reads as a rename that worked and leaves "innkeeper-hald" in the prose.
+    /// </summary>
+    private static int CheckNameCannotBeTheId()
+    {
+        WorldState world = WorldSeeds.Marrow();
+
+        ValidationOutcome outcome = DeltaValidator.Validate(
+            world,
+            [new CharacterRenamed("innkeeper-hald", "innkeeper-hald", null)]);
+
+        if (outcome.Rejected.Count != 1)
+        {
+            Console.WriteLine("  FAIL  a character was renamed to its own id.");
+            return 1;
+        }
+
+        Console.WriteLine("  ok    a character cannot be renamed to its own id");
+        return 0;
     }
 
     private static int CheckRefusesWhenCanonMoved()
