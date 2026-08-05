@@ -160,17 +160,32 @@ internal static class EvalScenarios
 
         The dark stone has not moved. It goes on weeping onto the wood.
         """,
-        Required: [],
+        // Scored on the outcome rather than the delta kind. The model answers with either
+        // item_status_changed ("ground to powder") or item_renamed ("coarse glittering
+        // powder"), and both are defensible — the chunks genuinely became something else.
+        // Demanding one was the two-stage-entry scoring bug for the third time: a rule must
+        // target the world the turn produces, not the route taken to it.
+        Required:
+        [
+            new("the pale chunks are the thing changed",
+                d => d is ItemStatusChanged { ItemId: "pale-chunks" }
+                     or ItemRenamed { ItemId: "pale-chunks" }),
+        ],
         Forbidden:
         [
-            new("the wrong object recorded as ground",
+            new("the capstone recorded as ground",
+                d => d is ItemStatusChanged { ItemId: "weeping-woman-capstone" }),
+            new("the wrong object recorded as ground in a fact",
                 d => d is FactEstablished f
                      && (f.Text.Contains("ground", StringComparison.OrdinalIgnoreCase)
-                         || f.Text.Contains("powder", StringComparison.OrdinalIgnoreCase)
-                         || f.FactId.Contains("ground", StringComparison.OrdinalIgnoreCase))
+                         || f.Text.Contains("powder", StringComparison.OrdinalIgnoreCase))
                      && (f.Text.Contains("weeping woman", StringComparison.OrdinalIgnoreCase)
-                         || f.Text.Contains("capstone", StringComparison.OrdinalIgnoreCase)
-                         || f.Text.Contains("dark stone", StringComparison.OrdinalIgnoreCase))),
+                         || f.Text.Contains("capstone", StringComparison.OrdinalIgnoreCase))),
+        ],
+        Expected:
+        [
+            new("the capstone is untouched",
+                w => w.FindItem("weeping-woman-capstone")?.Status == "intact"),
         ],
         // The plan is already canon and names the capstone, which is the condition the real
         // failure needed. Without it the model records nothing at all and the scenario proves

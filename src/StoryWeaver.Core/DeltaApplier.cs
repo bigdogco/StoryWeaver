@@ -37,6 +37,51 @@ public static class DeltaApplier
                 };
                 break;
 
+            case ItemIntroduced d:
+                world.Items[d.ItemId] = new Item
+                {
+                    Id = d.ItemId,
+                    Name = d.Name,
+                    Description = d.Description,
+                    LocationId = d.LocationId,
+                    HolderId = d.HolderId,
+                };
+                break;
+
+            // Assigning both targets from the delta is what keeps the two fields exclusive:
+            // moving into a holder clears the location and vice versa, so an item cannot end
+            // up recorded as being in two places. The validator has already checked that
+            // exactly one of them is set.
+            case ItemMoved d:
+                if (world.FindItem(d.ItemId) is { } movedItem)
+                {
+                    movedItem.LocationId = d.ToLocationId;
+                    movedItem.HolderId = d.ToHolderId;
+                }
+
+                break;
+
+            case ItemRenamed d:
+                if (world.FindItem(d.ItemId) is { } renamedItem)
+                {
+                    renamedItem.Name = d.Name;
+
+                    if (!string.IsNullOrWhiteSpace(d.Description))
+                    {
+                        renamedItem.Description = d.Description;
+                    }
+                }
+
+                break;
+
+            case ItemStatusChanged d:
+                if (world.FindItem(d.ItemId) is { } statusItem)
+                {
+                    statusItem.Status = d.Status;
+                }
+
+                break;
+
             case LocationIntroduced d:
                 world.Locations[d.LocationId] = new Location
                 {

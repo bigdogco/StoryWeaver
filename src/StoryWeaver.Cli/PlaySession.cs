@@ -294,6 +294,10 @@ internal static class PlaySession
         CharacterIntroduced d => $"new character {d.CharacterId} ({d.Name})",
         CharacterRenamed d => $"{d.CharacterId} is now called {d.Name}",
         LocationIntroduced d => $"new location {d.LocationId} ({d.Name})",
+        ItemIntroduced d => $"new item {d.ItemId} ({d.Name})" + (d.HolderId is null ? $" @ {d.LocationId}" : $" held by {d.HolderId}"),
+        ItemMoved d => $"{d.ItemId} -> {d.ToLocationId ?? d.ToHolderId}",
+        ItemRenamed d => $"{d.ItemId} is now {d.Name}",
+        ItemStatusChanged d => $"{d.ItemId} is {d.Status}",
         _ => delta.GetType().Name,
     };
 

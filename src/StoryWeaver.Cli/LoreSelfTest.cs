@@ -104,6 +104,10 @@ internal static class LoreSelfTest
             """,
             e => e.Common && !e.Always);
 
+        failures += CheckItemMustBeSomewhere();
+        failures += CheckItemCannotBeBoth();
+        failures += CheckItemMoveSwapsPlacement();
+        failures += CheckItemIdIsUniqueAcrossNamespaces();
         failures += CheckSeedRoundTrip();
         failures += CheckSeedForcesTurnZero();
         failures += CheckMissingPackIsEmpty();
@@ -174,6 +178,114 @@ internal static class LoreSelfTest
 
         Console.WriteLine("  FAIL  learning a lore entry did not reach the character.");
         return 1;
+    }
+
+    /// <summary>
+    /// An item that is neither placed nor held has silently stopped existing while still being
+    /// in canon — the quietest way for an object to vanish.
+    /// </summary>
+    private static int CheckItemMustBeSomewhere()
+    {
+        ValidationOutcome outcome = DeltaValidator.Validate(
+            WorldSeeds.Marrow(),
+            [new ItemIntroduced("silver-pendant", "A silver pendant", "Tarnished.", null, null)]);
+
+        if (outcome.Rejected.Count != 1)
+        {
+            Console.WriteLine("  FAIL  an item with no location and no holder was accepted.");
+            return 1;
+        }
+
+        Console.WriteLine("  ok    an item must be placed or held");
+        return 0;
+    }
+
+    /// <summary>
+    /// Both fields set is how one object ends up recorded in two places, which is the shape of
+    /// the merge that produced false canon in play.
+    /// </summary>
+    private static int CheckItemCannotBeBoth()
+    {
+        ValidationOutcome outcome = DeltaValidator.Validate(
+            WorldSeeds.Marrow(),
+            [new ItemIntroduced("silver-pendant", "A silver pendant", "Tarnished.", "marrow-tavern", "innkeeper-hald")]);
+
+        if (outcome.Rejected.Count != 1)
+        {
+            Console.WriteLine("  FAIL  an item was accepted as both placed and held.");
+            return 1;
+        }
+
+        Console.WriteLine("  ok    an item cannot be both placed and held");
+        return 0;
+    }
+
+    /// <summary>
+    /// Picking something up must clear where it was. Assigning only the new field would leave
+    /// the old one set and the item in two places at once.
+    /// </summary>
+    private static int CheckItemMoveSwapsPlacement()
+    {
+        WorldState world = WorldSeeds.Marrow();
+
+        ValidationOutcome introduced = DeltaValidator.Validate(
+            world,
+            [new ItemIntroduced("silver-pendant", "A silver pendant", "Tarnished.", "marrow-tavern", null)]);
+        DeltaApplier.Apply(world, introduced.Accepted);
+
+        ValidationOutcome moved = DeltaValidator.Validate(
+            world,
+            [new ItemMoved("silver-pendant", null, "innkeeper-hald")]);
+        DeltaApplier.Apply(world, moved.Accepted);
+
+        Item? item = world.FindItem("silver-pendant");
+
+        if (item is null || item.HolderId != "innkeeper-hald" || item.LocationId is not null)
+        {
+            Console.WriteLine("  FAIL  picking an item up did not clear its location.");
+            return 1;
+        }
+
+        if (world.ItemsIn("marrow-tavern").Any() || !world.ItemsHeldBy("innkeeper-hald").Any())
+        {
+            Console.WriteLine("  FAIL  the item is queryable from the wrong place after moving.");
+            return 1;
+        }
+
+        Console.WriteLine("  ok    moving an item swaps placement rather than adding to it");
+        return 0;
+    }
+
+    /// <summary>
+    /// Ids are unique across all five namespaces, not merely within each. Found the hard way
+    /// once already, when extraction reused a character id as a location.
+    /// </summary>
+    private static int CheckItemIdIsUniqueAcrossNamespaces()
+    {
+        WorldState world = WorldSeeds.Marrow();
+
+        ValidationOutcome outcome = DeltaValidator.Validate(
+            world,
+            [new ItemIntroduced("innkeeper-hald", "A pendant", "Tarnished.", "marrow-tavern", null)]);
+
+        if (outcome.Rejected.Count != 1)
+        {
+            Console.WriteLine("  FAIL  an item reused a character's id.");
+            return 1;
+        }
+
+        ValidationOutcome other = DeltaValidator.Validate(
+            world,
+            [new LocationIntroduced("well-boarded", "Somewhere", "Nowhere in particular.")]);
+
+        if (other.Rejected.Count != 1)
+        {
+            Console.WriteLine("  FAIL  a location reused a fact's id.");
+            return 1;
+        }
+
+        Console.WriteLine("  ok    ids stay unique across every namespace");
+        return 0;
     }
 
     /// <summary>

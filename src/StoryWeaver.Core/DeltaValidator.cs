@@ -77,6 +77,7 @@ public static class DeltaValidator
         // Lore is authored content, never canon, so it is read-only here: an id may be
         // *referenced* by fact_learned and may never be created, overwritten, or shadowed.
         HashSet<string> loreIds = new(book.Ids, StringComparer.OrdinalIgnoreCase);
+        HashSet<string> items = new(world.Items.Keys, StringComparer.OrdinalIgnoreCase);
 
         // Deltas already seen this batch, ignoring evidence text. Models pad: one observed
         // batch contained the same location_introduced three times with different quotes.
@@ -92,7 +93,7 @@ public static class DeltaValidator
                 continue;
             }
 
-            string? problem = Check(delta, characters, locations, facts, loreIds, authored);
+            string? problem = Check(delta, characters, locations, facts, loreIds, items, authored);
 
             if (problem is not null)
             {
@@ -121,6 +122,9 @@ public static class DeltaValidator
                 case FactEstablished established:
                     facts.Add(established.FactId);
                     break;
+                case ItemIntroduced introduced:
+                    items.Add(introduced.ItemId);
+                    break;
             }
 
             accepted.Add(delta);
@@ -133,11 +137,12 @@ public static class DeltaValidator
     /// Dependency tier. Lower is validated first, so a delta is never judged against a world
     /// missing something the same batch declares.
     ///
-    /// Only three tiers are needed because the delta set is closed and its dependencies are
-    /// shallow: a location depends on nothing, a character may be introduced *into* a location,
-    /// and everything else references entities that already exist by then.
+    /// Four tiers, because the delta set is closed and its dependencies are shallow: a location
+    /// depends on nothing, a character may be introduced *into* a location, an item may be
+    /// placed in a location or handed to a character, and everything else references entities
+    /// that exist by then.
     ///
-    /// This does not weaken the cascade. Tier 2 still sees only what tiers 0 and 1 actually
+    /// This does not weaken the cascade. Each tier sees only what the ones above it actually
     /// had <i>accepted</i>, so a rejected introduction still poisons every reference to it.
     /// </summary>
     private static int Tier(StateDelta delta) => delta switch
@@ -148,6 +153,14 @@ public static class DeltaValidator
 
         // May name a location the batch introduced above.
         CharacterIntroduced => 1,
+
+        // May name a location from tier 0 or a holder introduced in tier 1, so it sits after
+        // both — an item handed to somebody who walked in this same turn is an ordinary shape.
+        ItemIntroduced => 2,
+
+        // Item mutations reference an item that may have been introduced in tier 2. Picking a
+        // thing up on the turn it first appears is the common case, not an edge one.
+        ItemMoved or ItemRenamed or ItemStatusChanged => 3,
 
         // Moves, mood, status, relationships, renames, fact_learned — all reference entities
         // that exist by now.
@@ -169,6 +182,10 @@ public static class DeltaValidator
         FactEstablished d => $"fact:{d.FactId}",
         FactLearned d => $"learned:{d.CharacterId}:{d.FactId}",
         CharacterIntroduced d => $"new-char:{d.CharacterId}",
+        ItemIntroduced d => $"new-item:{d.ItemId}",
+        ItemMoved d => $"item-moved:{d.ItemId}:{d.ToLocationId}:{d.ToHolderId}",
+        ItemRenamed d => $"item-rename:{d.ItemId}:{d.Name}",
+        ItemStatusChanged d => $"item-status:{d.ItemId}:{d.Status}",
         CharacterRenamed d => $"rename:{d.CharacterId}:{d.Name}",
         LocationIntroduced d => $"new-loc:{d.LocationId}",
         _ => delta.ToString() ?? delta.GetType().Name,
@@ -192,6 +209,16 @@ public static class DeltaValidator
             && Same(target.Name, d.Name)
             && (string.IsNullOrWhiteSpace(d.Description) || Same(target.Description, d.Description)),
 
+        ItemMoved d => world.FindItem(d.ItemId) is { } item
+            && Same(item.LocationId, d.ToLocationId)
+            && Same(item.HolderId, d.ToHolderId),
+
+        ItemStatusChanged d => Same(world.FindItem(d.ItemId)?.Status, d.Status),
+
+        ItemRenamed d => world.FindItem(d.ItemId) is { } named
+            && Same(named.Name, d.Name)
+            && (string.IsNullOrWhiteSpace(d.Description) || Same(named.Description, d.Description)),
+
         CharacterMoved d => Same(world.FindCharacter(d.CharacterId)?.LocationId, d.ToLocationId),
         PlayerMoved d => Same(world.Player?.LocationId, d.ToLocationId),
         StatusChanged d => Same(world.FindCharacter(d.CharacterId)?.Status, d.Status),
@@ -214,18 +241,51 @@ public static class DeltaValidator
         HashSet<string> locations,
         HashSet<string> facts,
         HashSet<string> lore,
+        HashSet<string> items,
         bool authored)
     {
         return delta switch
         {
+            // An item is somewhere or somebody has it. Neither is how an object silently stops
+            // existing while still being in canon; both is how it ends up in two places, which
+            // is the shape of the merge that produced false canon in play.
+            ItemIntroduced d =>
+                Blank(d.ItemId) ? "itemId is empty."
+                : Blank(d.Name) ? "name is empty."
+                : items.Contains(d.ItemId)
+                    ? $"item '{d.ItemId}' already exists. Mentioning a known thing is not " +
+                      "introducing it."
+                : Taken(d.ItemId, characters, locations, facts, lore)
+                    ? $"id '{d.ItemId}' is already in use by a character, location, fact or " +
+                      "lore entry."
+                : Placement(d.LocationId, d.HolderId, locations, characters) is { } bad ? bad
+                : null,
+
+            ItemMoved d =>
+                !items.Contains(d.ItemId) ? $"item '{d.ItemId}' does not exist."
+                : Placement(d.ToLocationId, d.ToHolderId, locations, characters) is { } bad ? bad
+                : null,
+
+            ItemRenamed d =>
+                !items.Contains(d.ItemId) ? $"item '{d.ItemId}' does not exist."
+                : Blank(d.Name) ? "name is empty."
+                : string.Equals(d.Name, d.ItemId, StringComparison.OrdinalIgnoreCase)
+                    ? $"name '{d.Name}' is the item's id, not a name."
+                : null,
+
+            ItemStatusChanged d =>
+                !items.Contains(d.ItemId) ? $"item '{d.ItemId}' does not exist."
+                : Blank(d.Status) ? "status is empty."
+                : null,
+
             CharacterIntroduced d =>
                 Blank(d.CharacterId) ? "characterId is empty."
                 : Blank(d.Name) ? "name is empty."
                 : characters.Contains(d.CharacterId)
                     ? $"character '{d.CharacterId}' already exists. Introducing a known " +
                       "character overwrites them; use a state change instead."
-                : Taken(d.CharacterId, locations, facts, lore)
-                    ? $"id '{d.CharacterId}' is already in use by a location, fact or lore entry."
+                : Taken(d.CharacterId, locations, facts, lore, items)
+                    ? $"id '{d.CharacterId}' is already in use by a location, fact, lore entry or item."
                 : d.LocationId is { } loc && !Blank(loc) && !locations.Contains(loc)
                     ? $"location '{loc}' does not exist."
                 : null,
@@ -236,8 +296,8 @@ public static class DeltaValidator
                 : locations.Contains(d.LocationId)
                     ? $"location '{d.LocationId}' already exists. Mentioning a known place " +
                       "is not introducing it."
-                : Taken(d.LocationId, characters, facts, lore)
-                    ? $"id '{d.LocationId}' is already in use by a character, fact or lore entry."
+                : Taken(d.LocationId, characters, facts, lore, items)
+                    ? $"id '{d.LocationId}' is already in use by a character, fact, lore entry or item."
                 : null,
 
             // No uniqueness check on the name: two guards may both be "Guard", and identity
@@ -308,8 +368,8 @@ public static class DeltaValidator
                 : lore.Contains(d.FactId)
                     ? $"'{d.FactId}' is a lore entry. Lore is authored, not established in " +
                       "play — a character can learn it, but it cannot be created here."
-                : Taken(d.FactId, characters, locations)
-                    ? $"id '{d.FactId}' is already in use by a character or location."
+                : Taken(d.FactId, characters, locations, items)
+                    ? $"id '{d.FactId}' is already in use by a character, location or item."
                     // Lore is checked above with a more specific message, so it is
                     // deliberately absent from this Taken call.
                 : null,
@@ -328,6 +388,36 @@ public static class DeltaValidator
     }
 
     private static bool Blank(string? value) => string.IsNullOrWhiteSpace(value);
+
+    /// <summary>
+    /// Where an item is, checked as one rule because the two fields are one decision.
+    ///
+    /// Returns null when the placement is legitimate, or the reason it is not. Shared by
+    /// introduction and movement so the invariant cannot hold at one door and not the other.
+    /// </summary>
+    private static string? Placement(
+        string? locationId,
+        string? holderId,
+        HashSet<string> locations,
+        HashSet<string> characters)
+    {
+        bool placed = !Blank(locationId);
+        bool held = !Blank(holderId);
+
+        return (placed, held) switch
+        {
+            (false, false) =>
+                "an item must be in a location or held by a character. Neither was given, and " +
+                "an item that is nowhere has silently stopped existing.",
+            (true, true) =>
+                $"an item cannot be both in '{locationId}' and held by '{holderId}'. Give one.",
+            (true, false) when !locations.Contains(locationId!) =>
+                $"location '{locationId}' does not exist.",
+            (false, true) when !characters.Contains(holderId!) =>
+                $"character '{holderId}' does not exist.",
+            _ => null,
+        };
+    }
 
     /// <summary>
     /// Ids must be unique across characters, locations, facts and lore — not merely within

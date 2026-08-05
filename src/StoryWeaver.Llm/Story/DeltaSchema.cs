@@ -142,6 +142,59 @@ public static class DeltaSchema
               },
               {
                 "type": "object",
+                "description": "A physical object entered the story in a way that matters: handled, given, taken, produced from a pocket, put on a table. NOT for scenery. A room's furniture, fittings and background objects are description only and must never become items.",
+                "properties": {
+                  "kind": { "type": "string", "enum": ["item_introduced"] },
+                  "itemId": { "type": "string", "description": "A new slug id, e.g. 'silver-pendant'." },
+                  "name": { "type": "string" },
+                  "description": { "type": "string", "description": "What the thing IS, not what just happened to it." },
+                  "locationId": { "type": ["string", "null"], "description": "Where it is, if nobody is holding it. Set this OR holderId, never both, never neither." },
+                  "holderId": { "type": ["string", "null"], "description": "Who has it, if somebody does. Set this OR locationId, never both, never neither." },
+                  "evidence": { "type": "string" }
+                },
+                "required": ["kind", "itemId", "name", "description", "locationId", "holderId", "evidence"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "description": "An item changed hands, was picked up, or was put down. Set toLocationId OR toHolderId, never both, never neither.",
+                "properties": {
+                  "kind": { "type": "string", "enum": ["item_moved"] },
+                  "itemId": { "type": "string" },
+                  "toLocationId": { "type": ["string", "null"] },
+                  "toHolderId": { "type": ["string", "null"] },
+                  "evidence": { "type": "string" }
+                },
+                "required": ["kind", "itemId", "toLocationId", "toHolderId", "evidence"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "description": "An item turned out to be something other than it was taken for - 'old foundation blocks' revealed as a carved capstone. Use its EXISTING id; the id never changes.",
+                "properties": {
+                  "kind": { "type": "string", "enum": ["item_renamed"] },
+                  "itemId": { "type": "string", "description": "The item's EXISTING id. Do not invent a new one." },
+                  "name": { "type": "string" },
+                  "description": { "type": ["string", "null"], "description": "A revised description, or null to keep the current one." },
+                  "evidence": { "type": "string" }
+                },
+                "required": ["kind", "itemId", "name", "description", "evidence"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "description": "An item's physical condition changed: ground to powder, burned, broken, soaked. Not for where it is or who has it.",
+                "properties": {
+                  "kind": { "type": "string", "enum": ["item_status_changed"] },
+                  "itemId": { "type": "string" },
+                  "status": { "type": "string" },
+                  "evidence": { "type": "string" }
+                },
+                "required": ["kind", "itemId", "status", "evidence"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
                 "description": "A place that is NOT in the known ids appeared for the first time. Merely mentioning a known place is not introducing it.",
                 "properties": {
                   "kind": { "type": "string", "enum": ["location_introduced"] },

@@ -68,6 +68,17 @@ public sealed class LlmStateExtractor : IStateExtractor
           is who somebody is: "the shivering figure is called Nessa" belongs in her name
           field, not in the fact store. Their id stays exactly as it was, however wrong it
           now looks.
+        - Objects are items, and most objects in a scene are not. A room is full of furniture,
+          fittings and background things — barrels, mugs, a rack of tools, the rushes on the
+          floor — and none of those belong in canon. An object becomes an item only when it is
+          HANDLED: taken out, handed over, picked up, put down, used, broken. If nobody
+          touches it, it is scenery and you record nothing.
+        - Every item is either in a location or held by a character, never both and never
+          neither. An item that is nowhere has silently stopped existing.
+        - Keep separate objects separate. Two things described differently are two items, even
+          when they are similar and in the same scene, and an action on one says nothing about
+          the other. Recording that the wrong thing was ground, burned or given away is a
+          mistake nothing downstream can detect.
         - A description field describes what something IS, permanently. Never put an event
           in a description.
         - Establishing a fact and someone knowing it are separate. When new information is

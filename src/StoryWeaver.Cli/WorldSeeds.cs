@@ -172,6 +172,31 @@ internal static class WorldSeeds
         };
 
         world.Characters[Character.PlayerId].Knows.Add("capstone-powder-mortar-salt");
+
+        // Both objects already exist, which is the state play was in: two things the player
+        // had been carrying for turns, one of which the plan names. Without them the model
+        // emits status changes against ids that do not exist and the validator rejects
+        // everything, which measures the validator rather than the model.
+        world.Items["weeping-woman-capstone"] = new Item
+        {
+            Id = "weeping-woman-capstone",
+            Name = "The weeping woman capstone",
+            Description =
+                "A dark, slick carved stone depicting a weeping woman with gouged-out eyes. " +
+                "Water beads and runs from it constantly.",
+            LocationId = "marrow-tavern",
+        };
+
+        world.Items["pale-chunks"] = new Item
+        {
+            Id = "pale-chunks",
+            Name = "Morwenna's pale chunks",
+            Description =
+                "Three dry, pale chunks crusted with something white, smelling thinly of old " +
+                "copper. They came out of an oilcloth bundle.",
+            LocationId = "marrow-tavern",
+        };
+
         return world;
     }
 

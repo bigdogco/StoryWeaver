@@ -95,6 +95,53 @@ public sealed record CharacterIntroduced(
     string Description,
     string? LocationId) : StateDelta;
 
+/// <summary>
+/// A thing not previously in canon entered it.
+///
+/// Exactly one of <paramref name="LocationId"/> and <paramref name="HolderId"/> must be set —
+/// an item is somewhere or somebody has it, and "nowhere" is how an object silently stops
+/// existing while still being in canon.
+/// </summary>
+public sealed record ItemIntroduced(
+    string ItemId,
+    string Name,
+    string Description,
+    string? LocationId,
+    string? HolderId) : StateDelta;
+
+/// <summary>
+/// An item changed hands, was picked up, or was put down.
+///
+/// One delta rather than separate take/drop/give kinds, because they are the same operation:
+/// the item stops being where it was and starts being somewhere else. Exactly one target must
+/// be set.
+/// </summary>
+public sealed record ItemMoved(
+    string ItemId,
+    string? ToLocationId,
+    string? ToHolderId) : StateDelta;
+
+/// <summary>
+/// An item is now known to be something other than what it was taken for — "old foundation
+/// blocks" turning out to be a carved capstone.
+///
+/// The same problem <see cref="CharacterRenamed"/> solves, and the same answer: the id never
+/// changes, so every reference survives the revelation.
+/// </summary>
+public sealed record ItemRenamed(
+    string ItemId,
+    string Name,
+    string? Description) : StateDelta;
+
+/// <summary>
+/// An item's physical condition changed — ground to powder, burned, broken.
+///
+/// The <see cref="StatusChanged"/> of objects, and drawn for the same reason: what has happened
+/// to a thing is not what the thing is, and collapsing them means an event overwrites a
+/// description.
+/// </summary>
+public sealed record ItemStatusChanged(string ItemId, string Status) : StateDelta;
+
 /// <summary>A location not previously in canon appeared.</summary>
 public sealed record LocationIntroduced(
     string LocationId,

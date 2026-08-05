@@ -50,6 +50,9 @@ public sealed class WorldState
     public Dictionary<string, Fact> Facts { get; init; } =
         new(StringComparer.OrdinalIgnoreCase);
 
+    public Dictionary<string, Item> Items { get; init; } =
+        new(StringComparer.OrdinalIgnoreCase);
+
     public Character? FindCharacter(string id) =>
         Characters.TryGetValue(id, out Character? character) ? character : null;
 
@@ -58,6 +61,21 @@ public sealed class WorldState
 
     public Fact? FindFact(string id) =>
         Facts.TryGetValue(id, out Fact? fact) ? fact : null;
+
+    public Item? FindItem(string id) =>
+        Items.TryGetValue(id, out Item? item) ? item : null;
+
+    /// <summary>Items lying in a given location — not the ones people there are carrying.
+    /// Use <see cref="ItemsHeldBy"/> for those.</summary>
+    public IEnumerable<Item> ItemsIn(string locationId) =>
+        Items.Values
+            .Where(i => string.Equals(i.LocationId, locationId, StringComparison.OrdinalIgnoreCase))
+            .OrderBy(i => i.Id, StringComparer.Ordinal);
+
+    public IEnumerable<Item> ItemsHeldBy(string characterId) =>
+        Items.Values
+            .Where(i => string.Equals(i.HolderId, characterId, StringComparison.OrdinalIgnoreCase))
+            .OrderBy(i => i.Id, StringComparer.Ordinal);
 
     /// <summary>Everyone currently in a given location, <b>including the player</b> if they
     /// are there. Use <see cref="NpcsWithPlayer"/> for scene population.</summary>

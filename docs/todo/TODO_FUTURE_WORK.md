@@ -273,7 +273,12 @@ Small things the incumbents mostly don't do, cheap to add once the foundations e
 
 ## Domain model gaps found in play
 
-- [ ] **Items and inventory do not exist.** A session had the player pay coppers for a
+- [x] ~~**Items and inventory do not exist.**~~ **Built 2026-08-04** — see
+      [`2026-08-04_items.md`](../devlog/2026-08-04_items.md). `Item`, four deltas, and the
+      false-canon merge fixed at 14/14. *Inventory* as such is still absent: no quantity, no
+      containers, no crafting. The original entry follows.
+
+      A session had the player pay coppers for a
       beer; extraction correctly reported nothing, because there is nothing to report
       against. Not an extraction failure — a missing concept. Wants `Item`, ownership, and
       probably `ItemTransferred` / `ItemAcquired` deltas.

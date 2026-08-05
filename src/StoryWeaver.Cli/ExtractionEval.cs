@@ -139,6 +139,10 @@ internal static class ExtractionEval
         CharacterIntroduced d => $"character_introduced {d.CharacterId} ({d.Name}) @ {d.LocationId}",
         CharacterRenamed d => $"character_renamed   {d.CharacterId} -> {d.Name}",
         LocationIntroduced d => $"location_introduced {d.LocationId} ({d.Name})",
+        ItemIntroduced d => $"item_introduced     {d.ItemId} ({d.Name}) @ {d.LocationId ?? d.HolderId}",
+        ItemMoved d => $"item_moved          {d.ItemId} -> {d.ToLocationId ?? d.ToHolderId}",
+        ItemRenamed d => $"item_renamed        {d.ItemId} -> {d.Name}",
+        ItemStatusChanged d => $"item_status_changed {d.ItemId} = {d.Status}",
         _ => delta.GetType().Name,
     };
 

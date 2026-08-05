@@ -72,6 +72,8 @@ public static class ContextAssembler
                     builder.AppendLine($"Leads to: {joined}");
                 }
             }
+
+            AppendLooseItems(builder, world, here, withIds);
         }
 
         builder.AppendLine();
@@ -85,6 +87,61 @@ public static class ContextAssembler
         }
 
         return builder.ToString().TrimEnd();
+    }
+
+    /// <summary>
+    /// Things lying in the room that nobody is holding.
+    ///
+    /// Listed in the scene because a capstone left on a counter is part of what is there, and
+    /// an item that vanished from the narrator's view while still being in canon is exactly the
+    /// quiet inconsistency this architecture exists to prevent.
+    ///
+    /// The cost to watch: a room accumulating dropped objects grows this block on every turn,
+    /// which is the budgeting problem already deferred for lore. Worth measuring before it is
+    /// worth solving.
+    /// </summary>
+    private static void AppendLooseItems(
+        StringBuilder builder,
+        WorldState world,
+        Location here,
+        bool withIds)
+    {
+        List<Item> loose = [.. world.ItemsIn(here.Id)];
+
+        if (loose.Count == 0)
+        {
+            return;
+        }
+
+        builder.AppendLine("Here:");
+
+        foreach (Item item in loose)
+        {
+            string state = item.Status is "intact" or "" ? string.Empty : $" — {item.Status}";
+            builder.AppendLine($"  - {Label(item.Name, item.Id, withIds)}{state}");
+        }
+    }
+
+    /// <summary>Things a character is carrying, listed under them.</summary>
+    private static void AppendCarried(
+        StringBuilder builder,
+        WorldState world,
+        Character character,
+        bool withIds)
+    {
+        List<Item> carried = [.. world.ItemsHeldBy(character.Id)];
+
+        if (carried.Count == 0)
+        {
+            return;
+        }
+
+        builder.Append("Carrying: ");
+        builder.AppendLine(string.Join(", ", carried.Select(i =>
+        {
+            string state = i.Status is "intact" or "" ? string.Empty : $" ({i.Status})";
+            return Label(i.Name, i.Id, withIds) + state;
+        })));
     }
 
     private static void AppendPlayer(
@@ -101,6 +158,7 @@ public static class ContextAssembler
         builder.AppendLine("## The player");
         builder.AppendLine();
         builder.AppendLine($"{Label(player.Name, player.Id, withIds)} — {player.Status}, {player.Mood}");
+        AppendCarried(builder, world, player, withIds);
 
         // The one knowledge set that constrains narration rather than dialogue: the prose
         // must not reveal something the player has not learned.
@@ -131,6 +189,7 @@ public static class ContextAssembler
             builder.AppendLine($"### {Label(npc.Name, npc.Id, withIds)}");
             builder.AppendLine(npc.Description);
             builder.AppendLine($"State: {npc.Status}, {npc.Mood}");
+            AppendCarried(builder, world, npc, withIds);
             builder.AppendLine(
                 $"Toward the player: {npc.RelationshipToPlayer.Summary} " +
                 $"({npc.RelationshipToPlayer.Standing:+#;-#;0})");
@@ -272,6 +331,11 @@ public static class ContextAssembler
         builder.AppendLine($"Characters: {Join(world.Characters.Keys)}");
         builder.AppendLine($"Locations:  {Join(world.Locations.Keys)}");
         builder.AppendLine($"Facts:      {Join(world.Facts.Keys)}");
+
+        if (world.Items.Count > 0)
+        {
+            builder.AppendLine($"Items:      {Join(world.Items.Keys)}");
+        }
 
         if (lore.Count > 0)
         {

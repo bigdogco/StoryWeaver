@@ -52,6 +52,13 @@ fact_established  mabb-item: Mabb possesses a small item wrapped in oilcloth.
 
 The line is real and the model already finds it. `item_introduced` can be built on it.
 
+> **Superseded the same day.** The conclusion below — that the merge cannot serve as a
+> regression test — was wrong, and wrong for an instructive reason. Once items existed *and*
+> the seed carried both objects, `wrong-object-acted-on` reproduced the merge and then scored
+> 14/14 with the fix. The fixture had been missing the two things the model was supposed to
+> confuse. "A scenario cannot reproduce this" was really "this scenario has nothing in it to
+> get wrong". See [`2026-08-04_items.md`](2026-08-04_items.md).
+
 ## The failure that would not reproduce
 
 Two scenarios were written to reproduce the false-canon merge, and **both produced zero
