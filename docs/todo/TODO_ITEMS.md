@@ -53,6 +53,27 @@ See [`2026-08-04_items.md`](../devlog/2026-08-04_items.md).
       the observed cases; add it when a real session needs to place an object by hand
 - [x] Self-tests for the exclusivity rule and id uniqueness
 
+## Found in play, 2026-08-04
+
+- [ ] **`item_status_changed` is absorbing descriptions.** A mooring ring examined and found to
+      be carved with the weeping woman produced
+      `item_status_changed = "carved with a weeping woman symbol, groove coated in black
+      residue and old blood"`. That is a permanent property discovered, which is what
+      `item_renamed`'s optional description is for — the same shape as a character's identity
+      being revealed.
+
+      Third instance of one pattern: mood absorbing status, facts absorbing descriptions, and
+      now item status absorbing description. Each is *what happened to a thing* colliding with
+      *what a thing is*.
+
+      Same cause as the mood/status bug too — asymmetry. That was fixed by giving status an
+      equal voice ("Status is the body, mood is the feeling"); no equivalent sentence exists
+      for items, so one field is explained and the other is not.
+
+      **Wants a scenario before the rule**, per the pattern that has worked all week: examine
+      an object and discover something permanent about it, and check whether the revision lands
+      in `description` or `status`.
+
 ## Deliberately out of v1
 
 Quantity, item properties/stats, containers, and crafting. Grinding is

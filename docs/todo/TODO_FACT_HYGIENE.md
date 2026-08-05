@@ -86,8 +86,13 @@ largest category as claimed.
 
 ## Still true, still logged
 
-- [ ] Re-run the fact audit against a fresh play session and compare the category split. This
-      is the measurement that matters, and it needs a session played on the current build
+- [ ] Re-run the fact audit against a fresh **human** play session and compare the category
+      split. This is the measurement that matters.
+
+      A model-played session on the current build scored ~68% correct against the human 55%,
+      and **that comparison is not valid** — conversation produces knowledge-worthy facts while
+      action produces events, so the play style flatters the metric. See
+      [`2026-08-04_llm-played-session.md`](../devlog/2026-08-04_llm-played-session.md)
 
 ## Out of scope, logged
 

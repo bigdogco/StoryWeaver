@@ -543,6 +543,47 @@ character-sheet feature, and a separate piece of work.
 
 ---
 
+### Item status absorbs description — and it is the third instance of one pattern
+
+**Severity: Medium.** Found 2026-08-04, in the first session played with items.
+
+A rusted mooring ring is examined and turns out to be carved with the weeping woman. Extraction
+emitted:
+
+```
+item_status_changed  rusted-mooring-ring = "carved with a weeping woman symbol,
+                                            groove coated in black residue and old blood"
+```
+
+Status is condition — intact, broken, burned, ground to powder. This is a **permanent property
+discovered**, which is what `item_renamed`'s optional description is for: the same shape as
+"Shivering figure" becoming Nessa, one level down. Canon now carries a description of the ring's
+appearance in a field meant for what has happened to it, and the real description sits unchanged
+beside it.
+
+**The pattern, now three times:**
+
+| entity | field that absorbed | field that should have taken it |
+|---|---|---|
+| character | `mood` = "injured" | `status` |
+| fact | fact text = a description | the entity's description |
+| item | `status` = a carving | `description`, via `item_renamed` |
+
+Every one is *what has happened to a thing* colliding with *what a thing is*. The distinction is
+obvious in the type system and not in the prose, so the model resolves it by whichever field the
+prompt described more vividly.
+
+**And the cause is the same asymmetry as the mood/status bug.** That fix worked by giving status
+an equal voice — "Status is the body, mood is the feeling, and they are different deltas". No
+equivalent sentence exists for items: the prompt tells the model what an item *is* and when to
+introduce one, and never distinguishes its status from its description. One field was explained
+and the other was not.
+
+Fixable the same way, and `item_status_changed` vs `item_renamed` needs a scenario before the
+rule, per the pattern that has worked all week.
+
+---
+
 ### Mood absorbs status
 
 **Found and fixed 2026-07-24.** Kept here rather than moved to Resolved, because the *cause*
