@@ -1,6 +1,6 @@
 # Design — character sheets
 
-**Status:** design, no code. Written 2026-08-04.
+**Status:** built 2026-08-06. Design written 2026-08-04; all decisions settled and shipped.
 
 Authored identity for characters: who someone is, how they present, what they want, and how
 they feel about the groups in the world. The equivalent of a SillyTavern character card, fitted
@@ -128,6 +128,30 @@ So sheets take the half that works, which is authoring. Making standing *move* c
 reconciliation-pass problem, and stays out of this design entirely.
 
 ## 4. The player is a sheet with the second half missing
+
+**Built 2026-08-06, and the mechanism turned out to need no special case.** Sheets match by id,
+and the player's character id is `player`, so `characters/player.md` works for the same reason
+`characters/innkeeper-hald.md` does. That falls out of the player being an ordinary
+`Character` — the decision that keeps paying.
+
+What a pack writes there is the **premise**: "you carry the crown's seal and the authority that
+comes with it." The scenario's hook, not the player's identity. Character creation then supplies
+who *this* investigator is.
+
+**Attitudes are refused on the player's sheet**, at load, by name. They parse and validate and
+are never rendered, so ignoring them would leave an author with a field that reads as working
+and does nothing — the silent drop refused everywhere else here. A premise can say the same
+thing in prose, which the narrator reads anyway.
+
+The reasoning is the player's, and worth quoting: *player attitude is player attitude shown
+through his play, not hard-wired into his sheet.*
+
+**Still open, and a UI question rather than an architecture one.** A console prompt cannot take
+a multi-paragraph sheet, so the player currently writes one line where an author writes
+sections. The storage is already right — it is their `Character` record, which a pack can seed
+and an editor can edit — so this waits for the UI rather than needing a new file category.
+
+### The original reasoning, unchanged
 
 Consistent with the player being an ordinary `Character`, which has paid off repeatedly.
 

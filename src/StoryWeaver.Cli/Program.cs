@@ -116,7 +116,19 @@ internal static class Program
 
         if (args.Contains("--play", StringComparer.OrdinalIgnoreCase))
         {
-            return await PlaySession.RunAsync(settings).ConfigureAwait(false);
+            try
+            {
+                return await PlaySession.RunAsync(settings).ConfigureAwait(false);
+            }
+            catch (InvalidDataException ex)
+            {
+                // Pack content is authored by hand, so a mistake in it is a user error rather
+                // than a defect — a stack trace tells somebody who mistyped a lore key nothing
+                // they can act on. Reported like a settings error, which has the same shape.
+                Console.Error.WriteLine("Pack error:");
+                Console.Error.WriteLine(ex.Message);
+                return 1;
+            }
         }
 
         if (probe)

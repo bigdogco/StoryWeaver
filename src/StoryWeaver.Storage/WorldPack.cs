@@ -84,10 +84,40 @@ public sealed class WorldPack
         if (seed is not null)
         {
             ApplySheets(seed, sheets);
+            RequirePlayer(seed, Path.Combine(directory, SeedFile));
             RejectUnresolvedReferences(seed, lore, sheets, directory);
         }
 
         return new WorldPack(id, directory, seed, lore, sheets);
+    }
+
+    /// <summary>
+    /// A pack that ships a seed must put the player somewhere in it.
+    ///
+    /// Without this the session simply starts: no character creation, no error, and the
+    /// narrator told "the player is nowhere yet; the story has not opened" on every turn. A
+    /// world nobody is in is not a world, and a silent version of that is the failure mode this
+    /// project refuses everywhere else.
+    ///
+    /// Checked after sheets are merged, because a sheet can create the character — and creating
+    /// them offstage is right for an NPC written before they are placed, and wrong for the
+    /// person the story happens to.
+    /// </summary>
+    private static void RequirePlayer(WorldState seed, string file)
+    {
+        if (seed.Player is not { } player)
+        {
+            throw new InvalidDataException(
+                $"{file}: no '{Character.PlayerId}' character. A seeded world needs somebody " +
+                "for the player to be.");
+        }
+
+        if (player.LocationId is null)
+        {
+            throw new InvalidDataException(
+                $"{file}: the player has no location. A character sheet can introduce somebody " +
+                "offstage, but the story has to start somewhere.");
+        }
     }
 
     /// <summary>
@@ -110,20 +140,36 @@ public sealed class WorldPack
     {
         foreach (CharacterSheet sheet in sheets.Values)
         {
-            Check(sheet.Body, Path.Combine(directory, SheetDirectory, sheet.Id + ".md"));
+            string file = Path.Combine(directory, SheetDirectory, sheet.Id + ".md");
+
+            // The player's attitudes are the player's, earned by playing. An authored one
+            // would be the pack deciding how somebody feels before they have met anyone.
+            //
+            // Refused rather than ignored: they parse and validate, so silently dropping them
+            // at render time would leave an author with a field that reads as working and does
+            // nothing. A premise can say the same thing in prose — "you have never forgiven
+            // the order for Astaria" — which the narrator reads anyway.
+            if (string.Equals(sheet.Id, Character.PlayerId, StringComparison.OrdinalIgnoreCase)
+                && sheet.Attitudes.Count > 0)
+            {
+                throw new InvalidDataException(
+                    $"{file}: the player's sheet cannot declare attitudes. How the player feels " +
+                    "about anyone is decided by playing. Put it in the body as prose instead.");
+            }
+
+            Check(sheet.Body, file);
 
             foreach ((string target, string phrase) in sheet.Attitudes)
             {
-                Check(phrase, Path.Combine(directory, SheetDirectory, sheet.Id + ".md"));
+                Check(phrase, file);
 
                 // An attitude toward nothing is a dangling edge with no visible symptom: the
                 // sheet reads fine and the feeling attaches to nobody.
                 if (seed.FindCharacter(target) is null && !lore.Contains(target))
                 {
                     throw new InvalidDataException(
-                        $"{Path.Combine(directory, SheetDirectory, sheet.Id + ".md")}: attitude " +
-                        $"toward '{target}', which is neither a character in this world nor a " +
-                        "lore entry.");
+                        $"{file}: attitude toward '{target}', which is neither a character in " +
+                        "this world nor a lore entry.");
                 }
             }
         }

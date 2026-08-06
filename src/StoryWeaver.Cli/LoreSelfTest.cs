@@ -104,6 +104,8 @@ internal static class LoreSelfTest
             """,
             e => e.Common && !e.Always);
 
+        failures += CheckSeedMustHaveAPlayer();
+        failures += CheckPlayerSheetCannotDeclareAttitudes();
         failures += CheckSheetParsesWithNestedAttitudes();
         failures += CheckSheetRejectsUnknownKey();
         failures += CheckPlayerReferenceResolvesToTheName();
@@ -186,6 +188,84 @@ internal static class LoreSelfTest
 
         Console.WriteLine("  FAIL  learning a lore entry did not reach the character.");
         return 1;
+    }
+
+    /// <summary>
+    /// A seeded world with nobody for the player to be must fail the load.
+    ///
+    /// Before this it started silently: no character creation, no error, and the narrator told
+    /// "the player is nowhere yet" on every turn.
+    /// </summary>
+    private static int CheckSeedMustHaveAPlayer()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "sw-noplayer-" + Guid.NewGuid().ToString("N"));
+        string pack = Path.Combine(root, "marrow");
+        Directory.CreateDirectory(pack);
+
+        try
+        {
+            WorldState world = WorldSeeds.Marrow();
+            world.Characters.Remove(Character.PlayerId);
+            WorldPackWriter.WriteSeed(Path.Combine(pack, WorldPack.SeedFile), world);
+
+            try
+            {
+                WorldPack.Load(root, "marrow");
+            }
+            catch (InvalidDataException)
+            {
+                Console.WriteLine("  ok    a seed with no player fails the load");
+                return 0;
+            }
+
+            Console.WriteLine("  FAIL  a seed with no player loaded without complaint.");
+            return 1;
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    /// <summary>
+    /// A pack may write the player's premise — "you carry the crown's seal" — but not how they
+    /// feel about anyone. That is decided by playing.
+    ///
+    /// Refused rather than ignored. Player attitudes parse and validate, and are then never
+    /// rendered, so without this an author gets a field that reads as working and does nothing:
+    /// the silent drop this project refuses everywhere else.
+    /// </summary>
+    private static int CheckPlayerSheetCannotDeclareAttitudes()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "sw-sheet-" + Guid.NewGuid().ToString("N"));
+        string pack = Path.Combine(root, "marrow");
+        Directory.CreateDirectory(Path.Combine(pack, WorldPack.SheetDirectory));
+
+        try
+        {
+            WorldPackWriter.WriteSeed(Path.Combine(pack, WorldPack.SeedFile), WorldSeeds.Marrow());
+
+            File.WriteAllText(
+                Path.Combine(pack, WorldPack.SheetDirectory, "player.md"),
+                "---\nattitudes:\n  innkeeper-hald: distrusts him\n---\n\n# You\n\nA traveller.");
+
+            try
+            {
+                WorldPack.Load(root, "marrow");
+            }
+            catch (InvalidDataException)
+            {
+                Console.WriteLine("  ok    a player sheet cannot declare attitudes");
+                return 0;
+            }
+
+            Console.WriteLine("  FAIL  a player sheet declared attitudes and the pack loaded.");
+            return 1;
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
     }
 
     /// <summary>
