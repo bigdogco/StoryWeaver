@@ -104,6 +104,10 @@ internal static class LoreSelfTest
             """,
             e => e.Common && !e.Always);
 
+        failures += CheckSheetParsesWithNestedAttitudes();
+        failures += CheckSheetRejectsUnknownKey();
+        failures += CheckPlayerReferenceResolvesToTheName();
+        failures += CheckUnresolvedReferenceIsFound();
         failures += CheckEstablishedTurnMatchesTheTurn();
         failures += CheckSourceIntroducedInSameBatch();
         failures += CheckFactSourceMustExist();
@@ -182,6 +186,107 @@ internal static class LoreSelfTest
 
         Console.WriteLine("  FAIL  learning a lore entry did not reach the character.");
         return 1;
+    }
+
+    /// <summary>
+    /// The one level of nesting the parser was extended for. Flattening attitudes to
+    /// `dislikes: a, b` would have parsed with the reader that already existed and lost the
+    /// phrase, which is the part the narrator would actually have used.
+    /// </summary>
+    private static int CheckSheetParsesWithNestedAttitudes()
+    {
+        CharacterSheet sheet = MarkdownSheetReader.Parse(
+            """
+            ---
+            attitudes:
+              kings-investigators: fears them, will not say the name aloud
+              player: dislikes him — he stole his sword, years ago now
+            ---
+
+            # Hald
+
+            Heavyset and watchful.
+            """,
+            "innkeeper-hald",
+            "test");
+
+        if (sheet.Name != "Hald"
+            || sheet.Attitudes.Count != 2
+            || sheet.Attitudes["player"] != "dislikes him — he stole his sword, years ago now")
+        {
+            Console.WriteLine("  FAIL  a sheet with nested attitudes did not parse as expected.");
+            return 1;
+        }
+
+        Console.WriteLine("  ok    a sheet parses one level of nested attitudes");
+        return 0;
+    }
+
+    /// <summary>
+    /// Strictness survived the extension. A silently ignored typo means a sheet missing the
+    /// field its author thought they wrote.
+    /// </summary>
+    private static int CheckSheetRejectsUnknownKey()
+    {
+        try
+        {
+            MarkdownSheetReader.Parse(
+                "---\nattitudez: typo\n---\n\n# Hald\n\nHeavyset.",
+                "innkeeper-hald",
+                "test");
+        }
+        catch (InvalidDataException)
+        {
+            Console.WriteLine("  ok    a sheet refuses an unknown frontmatter key");
+            return 0;
+        }
+
+        Console.WriteLine("  FAIL  a sheet accepted an unknown frontmatter key.");
+        return 1;
+    }
+
+    /// <summary>
+    /// `{{player}}` resolves to the name, not to "you" — a sheet describes a character rather
+    /// than narrating to a reader, and extraction already holds the name in its roster.
+    /// </summary>
+    private static int CheckPlayerReferenceResolvesToTheName()
+    {
+        WorldState world = WorldSeeds.Marrow();
+        world.Player!.Name = "Pavel";
+
+        string resolved = EntityReferences.Resolve(
+            "curious about {{player}}, and wary of {{innkeeper-hald}}",
+            world);
+
+        if (resolved != "curious about Pavel, and wary of Hald")
+        {
+            Console.WriteLine($"  FAIL  references resolved to '{resolved}'.");
+            return 1;
+        }
+
+        Console.WriteLine("  ok    entity references resolve to current names");
+        return 0;
+    }
+
+    /// <summary>
+    /// A reference naming nothing must be catchable at load. Reaching a prompt it would render
+    /// as a blank, and left unresolved it would put an id in the prose — the bug that forced
+    /// the ForNarration / ForExtraction split.
+    /// </summary>
+    private static int CheckUnresolvedReferenceIsFound()
+    {
+        List<string> bad = [.. EntityReferences.Unresolved(
+            "wary of {{nobody-at-all}} and of {{innkeeper-hald}}",
+            WorldSeeds.Marrow())];
+
+        if (bad.Count != 1 || bad[0] != "nobody-at-all")
+        {
+            Console.WriteLine($"  FAIL  unresolved references were {string.Join(", ", bad)}.");
+            return 1;
+        }
+
+        Console.WriteLine("  ok    an unresolvable reference is found before it reaches a prompt");
+        return 0;
     }
 
     /// <summary>

@@ -32,18 +32,23 @@ public sealed class TurnEngine
     /// </summary>
     private readonly LoreBook _lore;
 
+    /// <summary>Authored identity from the pack. Read into prompts, never written.</summary>
+    private readonly IReadOnlyDictionary<string, CharacterSheet> _sheets;
+
     public TurnEngine(
         INarrator narrator,
         IStateExtractor extractor,
         IWorldRepository repository,
         int historyTurns = DefaultHistoryTurns,
-        LoreBook? lore = null)
+        LoreBook? lore = null,
+        IReadOnlyDictionary<string, CharacterSheet>? sheets = null)
     {
         _narrator = narrator;
         _extractor = extractor;
         _repository = repository;
         _historyTurns = Math.Max(0, historyTurns);
         _lore = lore ?? LoreBook.Empty;
+        _sheets = sheets ?? new Dictionary<string, CharacterSheet>(StringComparer.OrdinalIgnoreCase);
     }
 
     public async Task<TurnOutcome> RunTurnAsync(
@@ -56,8 +61,8 @@ public sealed class TurnEngine
         // will eventually write one into the prose — while the extractor cannot work without
         // them. Both are built before narration so the extractor sees the world as it was
         // when the prose was written, not as it is after this turn's changes.
-        string narrationContext = ContextAssembler.ForNarration(world, _lore);
-        string extractionContext = ContextAssembler.ForExtraction(world, _lore);
+        string narrationContext = ContextAssembler.ForNarration(world, _lore, _sheets);
+        string extractionContext = ContextAssembler.ForExtraction(world, _lore, _sheets);
 
         IReadOnlyList<StoryBeat> recent = await LoadRecentAsync(worldId, cancellationToken)
             .ConfigureAwait(false);
@@ -138,7 +143,7 @@ public sealed class TurnEngine
         TurnRecord turn,
         CancellationToken cancellationToken = default)
     {
-        string extractionContext = ContextAssembler.ForExtraction(world, _lore);
+        string extractionContext = ContextAssembler.ForExtraction(world, _lore, _sheets);
 
         ExtractionResult extraction;
         string? extractionError = null;
@@ -214,8 +219,8 @@ public sealed class TurnEngine
         IReadOnlyList<StoryBeat> recent =
             await LoadRecentAsync(worldId, cancellationToken, skipLast: 1).ConfigureAwait(false);
 
-        string narrationContext = ContextAssembler.ForNarration(world, _lore);
-        string extractionContext = ContextAssembler.ForExtraction(world, _lore);
+        string narrationContext = ContextAssembler.ForNarration(world, _lore, _sheets);
+        string extractionContext = ContextAssembler.ForExtraction(world, _lore, _sheets);
 
         string narration = await _narrator
             .NarrateAsync(narrationContext, recent, turn.PlayerInput, cancellationToken)

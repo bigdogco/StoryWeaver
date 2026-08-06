@@ -58,7 +58,8 @@ internal static class PlaySession
             new LlmStateExtractor(client),
             repository,
             historyTurns,
-            pack.Lore);
+            pack.Lore,
+            pack.Sheets);
 
         // Resume the save if it exists, otherwise start from the pack's seed and write the
         // first save so the world is on disk before any turn runs.
@@ -72,6 +73,7 @@ internal static class PlaySession
 
         if (!resumed)
         {
+            CreateCharacter(world);
             await repository.SaveAsync(SaveId, world).ConfigureAwait(false);
         }
 
@@ -122,7 +124,7 @@ internal static class PlaySession
                         .TryHandleAsync(input, SaveId, world, repository, pack.Lore)
                         .ConfigureAwait(false))
                 {
-                    HandleCommand(input, world, repository, pack.Lore);
+                    HandleCommand(input, world, repository, pack.Lore, pack.Sheets);
                 }
 
                 continue;
@@ -142,6 +144,57 @@ internal static class PlaySession
                 Console.WriteLine($"Turn failed: {ex.Message}");
             }
         }
+    }
+
+    /// <summary>
+    /// Name and describe the player's character, before turn one.
+    ///
+    /// **Required, not skippable.** The seed used to ship a player called "You" whose one-line
+    /// description nobody chose, which was harmless only while the name appeared nowhere but
+    /// their own record. Character sheets show it to somebody else: an NPC whose sheet reads
+    /// "curious about {{player}}" renders as "curious about You".
+    ///
+    /// Names are fixed — for the player exactly as for any authored character — so this is the
+    /// same act the pack author performed for Hald, done by the person who owns this one.
+    /// </summary>
+    private static void CreateCharacter(WorldState world)
+    {
+        if (world.Player is not { } player)
+        {
+            return;
+        }
+
+        Console.WriteLine();
+        Console.WriteLine("Before you begin — who are you?");
+        Console.WriteLine();
+
+        while (true)
+        {
+            Console.Write("  Name: ");
+            string? name = Console.ReadLine()?.Trim();
+
+            if (!string.IsNullOrWhiteSpace(name))
+            {
+                player.Name = name;
+                break;
+            }
+
+            Console.WriteLine("  A name is required. Everyone in this world will use it.");
+        }
+
+        Console.WriteLine();
+        Console.WriteLine("  Describe yourself — appearance, manner, what you are good at.");
+        Console.WriteLine("  The narrator reads this. Blank keeps the default.");
+        Console.Write("  You are: ");
+
+        string? description = Console.ReadLine()?.Trim();
+
+        if (!string.IsNullOrWhiteSpace(description))
+        {
+            player.Description = description;
+        }
+
+        Console.WriteLine();
     }
 
     /// <summary>
@@ -301,7 +354,12 @@ internal static class PlaySession
         _ => delta.GetType().Name,
     };
 
-    private static void HandleCommand(string input, WorldState world, IWorldRepository repo, LoreBook lore)
+    private static void HandleCommand(
+        string input,
+        WorldState world,
+        IWorldRepository repo,
+        LoreBook lore,
+        IReadOnlyDictionary<string, CharacterSheet> sheets)
     {
         switch (input)
         {
@@ -311,14 +369,14 @@ internal static class PlaySession
 
             case "/state":
                 Console.WriteLine();
-                Console.WriteLine(ContextAssembler.ForExtraction(world, lore));
+                Console.WriteLine(ContextAssembler.ForExtraction(world, lore, sheets));
                 break;
 
             // Worth having its own command: this is the view that must contain no ids, and
             // eyeballing it is the only check that the narrator cannot leak one into prose.
             case "/prose":
                 Console.WriteLine();
-                Console.WriteLine(ContextAssembler.ForNarration(world, lore));
+                Console.WriteLine(ContextAssembler.ForNarration(world, lore, sheets));
                 break;
 
             case "/raw":

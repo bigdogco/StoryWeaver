@@ -20,20 +20,32 @@ Supersedes [`TODO_PLAYER_SHEET.md`](TODO_PLAYER_SHEET.md), whose protection work
 - [x] `{{player}}` resolves to the name
 - [x] Character creation is a required step at world start
 
-## Build
+## Build — done 2026-08-06
 
-- [ ] `CharacterSheet` in Core — id, name, body, attitudes
-- [ ] Markdown reader: extend `MarkdownLoreReader`'s frontmatter parser by one nesting level,
-      keeping unknown keys an error
-- [ ] `WorldPack` loads `characters/*.md`
-- [ ] Load merge: sheet for identity, seed entry for state; a seeded character with no sheet
-      keeps working unchanged
-- [ ] A sheet with no seed entry becomes an offstage character
-- [ ] `{{ }}` resolution in `ContextAssembler`, for sheets and lore bodies alike
-- [ ] `{{ }}` validation at pack load — unresolvable ids fail loudly, naming file and id
-- [ ] `ContextAssembler` sends the sheet body for present characters, and always for the player
-- [ ] Character creation at world start: name and description, required
-- [ ] Sheets for the Marrow cast, so the feature ships with something to read
+See [`2026-08-06_character-sheets.md`](../devlog/2026-08-06_character-sheets.md).
+
+- [x] `CharacterSheet` in Core — id, name, body, attitudes
+- [x] Shared `Frontmatter` reader with exactly one nesting level, same strictness; both
+      readers moved onto it, plus a shared `MarkdownFile` for heading-and-body
+- [x] `WorldPack` loads `characters/*.md`
+- [x] Load merge: sheet for identity, seed entry for state; a seeded character with no sheet
+      is untouched
+- [x] A sheet with no seed entry becomes an offstage character
+- [x] `{{ }}` resolution in `ContextAssembler`, for sheets and lore bodies alike
+- [x] `{{ }}` validation at pack load — unresolvable ids and attitude targets fail by file
+      and name
+- [x] `ContextAssembler` renders the sheet body and attitudes under each present character
+- [x] Character creation at world start: name required, description optional
+- [x] Sheets for Hald and Mabb
+
+## Found while building
+
+- [x] **Authored headings collided with the document's own.** A sheet's `## Manner` landed at
+      the same level as `## Present`, so a character's sections read as top-level sections of
+      the prompt. Authored bodies are now pushed to `####` — an author should not have to know
+      what depth their prose is rendered at
+- [x] **"Curious about You"** — the predicted consequence of the seed's default player name,
+      fixed by character creation rather than a better default
 
 ## Measure first, per the pattern
 

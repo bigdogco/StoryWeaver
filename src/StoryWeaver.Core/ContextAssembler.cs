@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace StoryWeaver.Core;
 
@@ -16,14 +17,17 @@ namespace StoryWeaver.Core;
 /// something, which is the biggest source of "why did the AI forget the Duke existed" in
 /// existing tools. Not worth building before there is something to measure.
 /// </summary>
-public static class ContextAssembler
+public static partial class ContextAssembler
 {
     /// <summary>
     /// Prose-facing view. Names only — no ids anywhere, including in connections. Anything
     /// id-shaped that appears here can end up in the story.
     /// </summary>
-    public static string ForNarration(WorldState world, LoreBook? lore = null) =>
-        Build(world, lore ?? LoreBook.Empty, withIds: false);
+    public static string ForNarration(
+        WorldState world,
+        LoreBook? lore = null,
+        IReadOnlyDictionary<string, CharacterSheet>? sheets = null) =>
+        Build(world, lore ?? LoreBook.Empty, sheets ?? Empty, withIds: false);
 
     /// <summary>
     /// Bookkeeping view. Ids beside every name, plus an explicit roster of known ids.
@@ -33,10 +37,20 @@ public static class ContextAssembler
     /// catches both, but catching them means dropping the delta — better that the model does
     /// not need correcting.
     /// </summary>
-    public static string ForExtraction(WorldState world, LoreBook? lore = null) =>
-        Build(world, lore ?? LoreBook.Empty, withIds: true);
+    public static string ForExtraction(
+        WorldState world,
+        LoreBook? lore = null,
+        IReadOnlyDictionary<string, CharacterSheet>? sheets = null) =>
+        Build(world, lore ?? LoreBook.Empty, sheets ?? Empty, withIds: true);
 
-    private static string Build(WorldState world, LoreBook lore, bool withIds)
+    private static readonly Dictionary<string, CharacterSheet> Empty =
+        new(StringComparer.OrdinalIgnoreCase);
+
+    private static string Build(
+        WorldState world,
+        LoreBook lore,
+        IReadOnlyDictionary<string, CharacterSheet> sheets,
+        bool withIds)
     {
         StringBuilder builder = new();
 
@@ -52,7 +66,7 @@ public static class ContextAssembler
         else
         {
             builder.AppendLine($"Location: {Label(here.Name, here.Id, withIds)}");
-            builder.AppendLine(here.Description);
+            builder.AppendLine(EntityReferences.Resolve(here.Description, world));
 
             if (here.Connections.Count > 0)
             {
@@ -77,9 +91,9 @@ public static class ContextAssembler
         }
 
         builder.AppendLine();
-        AppendPlayer(builder, world, lore, withIds);
-        AppendNpcs(builder, world, lore, withIds);
-        AppendLore(builder, lore, withIds);
+        AppendPlayer(builder, world, lore, sheets, withIds);
+        AppendNpcs(builder, world, lore, sheets, withIds);
+        AppendLore(builder, world, lore, withIds);
 
         if (withIds)
         {
@@ -122,6 +136,59 @@ public static class ContextAssembler
         }
     }
 
+    /// <summary>
+    /// How a character feels about groups and about other people, from their sheet.
+    ///
+    /// **The permanent why, distinct from the standing directly above it.** "Dislikes him — he
+    /// stole his sword, years ago now" is history and stays true however the relationship
+    /// develops; `Toward the player` is a number that moves every turn. He may stop disliking
+    /// you, and he will always be the man whose sword you stole.
+    ///
+    /// Targets are rendered by name, never by id — the same rule that keeps ids out of the
+    /// prose everywhere else.
+    /// </summary>
+    private static void AppendAttitudes(
+        StringBuilder builder,
+        WorldState world,
+        LoreBook lore,
+        IReadOnlyDictionary<string, CharacterSheet> sheets,
+        Character character,
+        bool withIds)
+    {
+        if (!sheets.TryGetValue(character.Id, out CharacterSheet? sheet) || sheet.Attitudes.Count == 0)
+        {
+            return;
+        }
+
+        builder.AppendLine("Feels about:");
+
+        foreach ((string target, string phrase) in sheet.Attitudes.OrderBy(a => a.Key, StringComparer.Ordinal))
+        {
+            string name = world.FindCharacter(target)?.Name
+                          ?? lore.Find(target)?.Title
+                          ?? target;
+
+            builder.AppendLine(
+                $"  - {Label(name, target, withIds)}: {EntityReferences.Resolve(phrase, world)}");
+        }
+    }
+
+    /// <summary>
+    /// Pushes an authored body's headings below the ones this document already uses.
+    ///
+    /// A sheet writes <c>## Manner</c> because that is natural markdown for its own file. Pasted
+    /// in unchanged it lands at the same level as <c>## Present</c> and <c>## World lore</c>, so
+    /// a character's sections read as top-level sections of the prompt and the structure the
+    /// model relies on quietly stops meaning anything.
+    ///
+    /// Authors should not have to know what depth their prose will be rendered at.
+    /// </summary>
+    private static string Indent(string body) =>
+        HeadingLine().Replace(body, "####");
+
+    [GeneratedRegex("(?m)^#{1,3}(?=[ ])")]
+    private static partial Regex HeadingLine();
+
     /// <summary>Things a character is carrying, listed under them.</summary>
     private static void AppendCarried(
         StringBuilder builder,
@@ -148,6 +215,7 @@ public static class ContextAssembler
         StringBuilder builder,
         WorldState world,
         LoreBook lore,
+        IReadOnlyDictionary<string, CharacterSheet> sheets,
         bool withIds)
     {
         if (world.Player is not { } player)
@@ -170,6 +238,7 @@ public static class ContextAssembler
         StringBuilder builder,
         WorldState world,
         LoreBook lore,
+        IReadOnlyDictionary<string, CharacterSheet> sheets,
         bool withIds)
     {
         List<Character> npcs = [.. world.NpcsWithPlayer()];
@@ -187,7 +256,7 @@ public static class ContextAssembler
         foreach (Character npc in npcs)
         {
             builder.AppendLine($"### {Label(npc.Name, npc.Id, withIds)}");
-            builder.AppendLine(npc.Description);
+            builder.AppendLine(Indent(EntityReferences.Resolve(npc.Description, world)));
             builder.AppendLine($"State: {npc.Status}, {npc.Mood}");
             AppendCarried(builder, world, npc, withIds);
             builder.AppendLine(
@@ -196,6 +265,7 @@ public static class ContextAssembler
 
             // Stated explicitly when empty. An absent section reads as "not mentioned"; this
             // has to read as "knows nothing", or the model fills the gap itself.
+            AppendAttitudes(builder, world, lore, sheets, npc, withIds);
             AppendKnowledge(builder, world, lore, npc, withIds, whenEmpty: "Knows: nothing recorded.");
             builder.AppendLine();
         }
@@ -265,7 +335,7 @@ public static class ContextAssembler
     /// cacheable prefix. Injecting lore mid-prompt is the usual way a lorebook becomes
     /// expensive — see CHALLENGES.md — and an earlier decision avoided it by accident.
     /// </summary>
-    private static void AppendLore(StringBuilder builder, LoreBook lore, bool withIds)
+    private static void AppendLore(StringBuilder builder, WorldState world, LoreBook lore, bool withIds)
     {
         List<LoreEntry> selected = [.. lore.Selected()];
 
@@ -319,7 +389,7 @@ public static class ContextAssembler
         foreach (LoreEntry entry in selected)
         {
             builder.AppendLine($"### {entry.Title}");
-            builder.AppendLine(entry.Body);
+            builder.AppendLine(Indent(EntityReferences.Resolve(entry.Body, world)));
             builder.AppendLine();
         }
     }

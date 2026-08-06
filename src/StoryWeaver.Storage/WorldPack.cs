@@ -26,13 +26,20 @@ public sealed class WorldPack
 {
     public const string SeedFile = "seed.json";
     public const string LoreDirectory = "lore";
+    public const string SheetDirectory = "characters";
 
-    private WorldPack(string id, string directory, WorldState? seed, LoreBook lore)
+    private WorldPack(
+        string id,
+        string directory,
+        WorldState? seed,
+        LoreBook lore,
+        IReadOnlyDictionary<string, CharacterSheet> sheets)
     {
         Id = id;
         Directory = directory;
         Seed = seed;
         Lore = lore;
+        Sheets = sheets;
     }
 
     /// <summary>Pack id — the folder name, and the default save id.</summary>
@@ -52,6 +59,9 @@ public sealed class WorldPack
 
     public LoreBook Lore { get; }
 
+    /// <summary>Authored identity, by character id. Empty for a pack that ships none.</summary>
+    public IReadOnlyDictionary<string, CharacterSheet> Sheets { get; }
+
     public bool HasSeed => Seed is not null;
 
     /// <summary>
@@ -64,11 +74,109 @@ public sealed class WorldPack
     {
         string directory = Path.Combine(root, id);
 
-        return new WorldPack(
-            id,
-            directory,
-            LoadSeed(Path.Combine(directory, SeedFile)),
-            MarkdownLoreReader.Load(Path.Combine(directory, LoreDirectory)));
+        WorldState? seed = LoadSeed(Path.Combine(directory, SeedFile));
+        LoreBook lore = MarkdownLoreReader.Load(Path.Combine(directory, LoreDirectory));
+
+        Dictionary<string, CharacterSheet> sheets = MarkdownSheetReader
+            .Load(Path.Combine(directory, SheetDirectory))
+            .ToDictionary(s => s.Id, StringComparer.OrdinalIgnoreCase);
+
+        if (seed is not null)
+        {
+            ApplySheets(seed, sheets);
+            RejectUnresolvedReferences(seed, lore, sheets, directory);
+        }
+
+        return new WorldPack(id, directory, seed, lore, sheets);
+    }
+
+    /// <summary>
+    /// A <c>{{ }}</c> naming nothing fails the load, with the file and the id.
+    ///
+    /// It must never reach a prompt. An id in the prose is the bug that produced "the heavy oak
+    /// door of the marrow-tavern flies outward" and forced the ForNarration / ForExtraction
+    /// split, and a reference resolving to a blank is a sentence with a hole in it — both are
+    /// worse than a startup that refuses to run and says why.
+    ///
+    /// Checked against the seed, which is the world as authored. A reference to somebody the
+    /// story introduces later cannot be validated here, and that is the right trade: an author
+    /// writes about the cast they wrote.
+    /// </summary>
+    private static void RejectUnresolvedReferences(
+        WorldState seed,
+        LoreBook lore,
+        Dictionary<string, CharacterSheet> sheets,
+        string directory)
+    {
+        foreach (CharacterSheet sheet in sheets.Values)
+        {
+            Check(sheet.Body, Path.Combine(directory, SheetDirectory, sheet.Id + ".md"));
+
+            foreach ((string target, string phrase) in sheet.Attitudes)
+            {
+                Check(phrase, Path.Combine(directory, SheetDirectory, sheet.Id + ".md"));
+
+                // An attitude toward nothing is a dangling edge with no visible symptom: the
+                // sheet reads fine and the feeling attaches to nobody.
+                if (seed.FindCharacter(target) is null && !lore.Contains(target))
+                {
+                    throw new InvalidDataException(
+                        $"{Path.Combine(directory, SheetDirectory, sheet.Id + ".md")}: attitude " +
+                        $"toward '{target}', which is neither a character in this world nor a " +
+                        "lore entry.");
+                }
+            }
+        }
+
+        foreach (LoreEntry entry in lore.All)
+        {
+            Check(entry.Body, Path.Combine(directory, LoreDirectory, entry.Id + ".md"));
+        }
+
+        void Check(string text, string file)
+        {
+            foreach (string id in EntityReferences.Unresolved(text, seed))
+            {
+                throw new InvalidDataException(
+                    $"{file}: {{{{{id}}}}} refers to nothing in this world.");
+            }
+        }
+    }
+
+    /// <summary>
+    /// Merges authored identity into the starting world.
+    ///
+    /// <b>The sheet defines the character; the seed holds their starting state.</b> A sheet
+    /// supplies name and description; the seed entry supplies location, mood, status, standing
+    /// and knowledge. Nothing is written twice, so nothing can disagree — which is the failure
+    /// every other arrangement shared in a different disguise.
+    ///
+    /// A sheet with no seed entry creates the character <b>offstage</b>: no location, which
+    /// <see cref="Character.LocationId"/> already allows and <c>/character</c> already does. It
+    /// lets an author write a cast before deciding where anybody stands.
+    ///
+    /// A seeded character with no sheet is untouched, so every pack that existed before sheets
+    /// keeps working exactly as it did.
+    /// </summary>
+    private static void ApplySheets(WorldState seed, Dictionary<string, CharacterSheet> sheets)
+    {
+        foreach (CharacterSheet sheet in sheets.Values)
+        {
+            if (seed.FindCharacter(sheet.Id) is { } existing)
+            {
+                existing.Name = sheet.Name;
+                existing.Description = sheet.Body;
+                continue;
+            }
+
+            seed.Characters[sheet.Id] = new Character
+            {
+                Id = sheet.Id,
+                Name = sheet.Name,
+                Description = sheet.Body,
+                LocationId = null,
+            };
+        }
     }
 
     private static WorldState? LoadSeed(string path)
