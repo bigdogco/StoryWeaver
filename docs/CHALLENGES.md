@@ -788,6 +788,37 @@ moves to **100% across 9 scenarios**.
 
 ---
 
+### Adding a field can change a delta's dependency tier
+
+**Found and fixed 2026-08-04**, one day after `source` was added. A second instance of the
+resolved ordering bug below, from a cause that entry did not anticipate.
+
+`FactEstablished` sat in tier 0 — "depends on nothing else in the batch" — which was true until
+`SourceId` gave it a reference to a character. `CharacterIntroduced` is tier 1, so a fact was
+always judged before any character the same batch introduced:
+
+```
+character_introduced  older-man-square       applied
+fact_established      well-sealed-air-smell  REJECTED: source is not a character
+fact_learned x4                              REJECTED: cascade
+```
+
+A stranger walking in and saying something is the commonest scene in the game. **Sixteen of
+twenty-three rejections in one session** were this single mis-tiering.
+
+**The guard was a comment, and comments cannot fail a build.** Nothing connects "this delta
+gained a field referencing another entity" to "its tier must move". The tiers are now written to
+state what each level may reference, and a self-test covers the shape that broke.
+
+**Check the tier whenever a delta gains a reference to another entity.** That is the rule; there
+is no mechanism enforcing it.
+
+Also worth noting how it was found: fifty turns of *directed* model play hit it within six
+turns, while the scored eval never could — no scenario introduces a character and quotes them in
+the same turn.
+
+---
+
 ### The validator rejected correct deltas because of their order
 
 **Resolved 2026-07-21.** Ours, not the model's — and it looked exactly like a model failure

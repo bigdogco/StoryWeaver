@@ -147,24 +147,27 @@ public static class DeltaValidator
     /// </summary>
     private static int Tier(StateDelta delta) => delta switch
     {
-        // Depend on nothing else in the batch.
+        // Depends on nothing else in the batch.
         LocationIntroduced => 0,
-        FactEstablished => 0,
 
         // May name a location the batch introduced above.
         CharacterIntroduced => 1,
 
-        // May name a location from tier 0 or a holder introduced in tier 1, so it sits after
-        // both — an item handed to somebody who walked in this same turn is an ordinary shape.
-        ItemIntroduced => 2,
+        // Both may name a character introduced in tier 1: a fact through its source, an item
+        // through its holder.
+        //
+        // FactEstablished sat in tier 0 until source existed, and moving it was missed when
+        // the field was added — the comment still read "depends on nothing else in the batch",
+        // which had been true the day before. Live play caught it immediately: a stranger
+        // speaks, is introduced and accepted, and the fact quoting them is rejected for naming
+        // a character who "does not exist", taking every fact_learned with it. Sixteen of
+        // twenty-three rejections in one session were this single mis-tiering.
+        FactEstablished or ItemIntroduced => 2,
 
-        // Item mutations reference an item that may have been introduced in tier 2. Picking a
-        // thing up on the turn it first appears is the common case, not an edge one.
-        ItemMoved or ItemRenamed or ItemStatusChanged => 3,
-
-        // Moves, mood, status, relationships, renames, fact_learned — all reference entities
-        // that exist by now.
-        _ => 2,
+        // Everything that references an entity by now: moves, mood, status, relationships,
+        // renames, fact_learned, and the item mutations. Picking up a thing on the turn it
+        // first appears is the common case, not an edge one.
+        _ => 3,
     };
 
     /// <summary>

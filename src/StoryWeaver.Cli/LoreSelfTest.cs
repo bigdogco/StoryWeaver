@@ -104,6 +104,7 @@ internal static class LoreSelfTest
             """,
             e => e.Common && !e.Always);
 
+        failures += CheckSourceIntroducedInSameBatch();
         failures += CheckFactSourceMustExist();
         failures += CheckRivalClaimsAreNotDuplicates();
         failures += CheckItemMustBeSomewhere();
@@ -180,6 +181,36 @@ internal static class LoreSelfTest
 
         Console.WriteLine("  FAIL  learning a lore entry did not reach the character.");
         return 1;
+    }
+
+    /// <summary>
+    /// A stranger walks in, says something, and both are recorded — the single commonest shape
+    /// in play, and the one that broke when `source` was added without moving
+    /// `FactEstablished` out of tier 0. The fact was judged before the speaker existed, and
+    /// took every `fact_learned` down with it.
+    /// </summary>
+    private static int CheckSourceIntroducedInSameBatch()
+    {
+        WorldState world = WorldSeeds.Marrow();
+
+        ValidationOutcome outcome = DeltaValidator.Validate(
+            world,
+            [
+                new CharacterIntroduced("old-man", "An old man", "Weathered.", "marrow-tavern"),
+                new FactEstablished("well-smells", "The well smells of copper.", "old-man"),
+                new FactLearned(Character.PlayerId, "well-smells"),
+            ]);
+
+        if (outcome.Rejected.Count != 0 || outcome.Accepted.Count != 3)
+        {
+            Console.WriteLine(
+                $"  FAIL  a stranger speaking in one batch produced {outcome.Rejected.Count} " +
+                "rejection(s); expected none.");
+            return 1;
+        }
+
+        Console.WriteLine("  ok    a character introduced and quoted in one batch is accepted");
+        return 0;
     }
 
     /// <summary>
