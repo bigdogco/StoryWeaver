@@ -134,6 +134,7 @@ internal static class EvalScenarios
         ContradictoryClaims,
         ObjectExamined,
         PlaceChanging,
+        PlaceChangingLate,
     ];
 
     /// <summary>
@@ -179,6 +180,21 @@ internal static class EvalScenarios
                          || f.Text.Contains("churn", StringComparison.OrdinalIgnoreCase))),
             new("the square re-introduced", d => d is LocationIntroduced),
         ]);
+
+    /// <summary>
+    /// <see cref="PlaceChanging"/> against a world where the well has forty turns behind it.
+    ///
+    /// The same narration; the difference is entirely in the seed. See
+    /// <see cref="WorldSeeds.Marrow_WellSignificant"/> for the three reasons the base seed
+    /// could not show this failure — the decisive one being that the player was standing in the
+    /// tavern while the narration described the square.
+    ///
+    /// Follows <c>wrong-object-acted-on</c>, which also scored clean until its seed carried the
+    /// canon that caused the failure. <b>Rewriting the prose was the wrong lever twice; the
+    /// world the prose lands in was the right one.</b>
+    /// </summary>
+    private static EvalScenario PlaceChangingLate =>
+        PlaceChanging with { Name = "place-changing-late", Seed = WorldSeeds.Marrow_WellSignificant };
 
     /// <summary>
     /// <b>Diagnostic — reproduces a failure from play.</b> A permanent property of an object is

@@ -201,6 +201,109 @@ internal static class WorldSeeds
     }
 
     /// <summary>
+    /// Marrow late, standing at a well the story has been circling for forty turns.
+    ///
+    /// Written after <c>place-changing</c> failed to reproduce twice. Three things were wrong
+    /// with running that narration against the base seed, and the first alone could account for
+    /// the null result:
+    ///
+    /// <list type="number">
+    /// <item><b>The player was in the tavern.</b> The narration is a well in the square being
+    /// worked on, scored against a world where the player is somewhere else entirely. A place
+    /// the player is not standing in is background, and background is exactly what extraction
+    /// is right to ignore — the same rule <c>atmosphere</c> and <c>narrator-mention</c>
+    /// establish. The scenario was measuring the mention rule, not the misfiling.</item>
+    /// <item><b>The icon and the wire did not exist.</b> The player acts on two objects that
+    /// were not in canon. Same lesson as <see cref="Marrow_WithGrindingPlan"/>: without them
+    /// the model has nothing to attach a change to, and a scenario that cannot express the
+    /// right answer cannot show a wrong one.</item>
+    /// <item><b>The well carried no weight.</b> In play it had forty turns and a dozen facts
+    /// behind it. A boarded well nobody has mentioned since turn 0 is scenery.</item>
+    /// </list>
+    ///
+    /// <b>What is deliberately not seeded: prior facts of the shape under test.</b> The real
+    /// session had six accumulating, and by the fourth the model was arguably following canon's
+    /// own precedent. Seeding that precedent would reproduce the failure by supplying it, which
+    /// proves nothing about whether the schema is the cause. If this seed reproduces without
+    /// it, the finding is clean. If it does not, adding the precedent is the next experiment
+    /// and a different, weaker claim — worth running, worth labelling as what it is.
+    ///
+    /// The seeded facts avoid the words the scoring rule matches on, so nothing here can be
+    /// mistaken for the thing being detected.
+    ///
+    /// <b>A first draft seeded the causal mechanism itself</b> — "tarnished metal touched to
+    /// the well's cap provokes an answer from the shaft" — which is the discovery the narration
+    /// makes. It measurably suppressed the failure (5/7 against 7/7 on the base seed), because
+    /// the model had been told the answer and mostly restated it. A fixture must supply the
+    /// weight behind a scene without supplying the scene's content.
+    /// </summary>
+    public static WorldState Marrow_WellSignificant()
+    {
+        WorldState world = Marrow_Late();
+
+        // Standing at it, not hearing about it from the taproom.
+        world.Characters[Character.PlayerId].LocationId = "marrow-square";
+        world.Characters["guard-tomas"].LocationId = "drowned-lane";
+
+        world.Locations["marrow-square"].Description =
+            "A rutted market square, empty at this hour. The well at its centre is capped with " +
+            "planking spiked down at every edge, and the stones around it are dark and wet.";
+
+        // The two objects the narration acts on. Held rather than placed: they have been
+        // carried for turns, which is the state play was in.
+        world.Items["silver-icon"] = new Item
+        {
+            Id = "silver-icon",
+            Name = "Tarnished silver icon",
+            Description =
+                "A weeping woman worked in silver, black with tarnish and unnaturally cold. It " +
+                "came up out of the shaft on a rope.",
+            HolderId = Character.PlayerId,
+        };
+
+        world.Items["bronze-wire"] = new Item
+        {
+            Id = "bronze-wire",
+            Name = "Length of bronze wire",
+            Description =
+                "A broken arm's length of green-crusted bronze, cut away from the altar in the " +
+                "sunken watchtower.",
+            HolderId = Character.PlayerId,
+        };
+
+        // Weight. Why this well, why tonight, and why touching metal to it means anything —
+        // the accumulated significance the base seed has no way to express.
+        (string Id, string Text)[] history =
+        [
+            ("well-spiked-shut",
+                "The well in Marrow Square was capped with planking and spiked shut after the " +
+                "thing in it was brought up."),
+            ("icon-from-shaft",
+                "The tarnished silver icon was brought up out of the well shaft on a rope."),
+            ("wire-from-altar",
+                "The length of bronze wire was cut from the cult's altar in the sunken " +
+                "watchtower."),
+            ("seepage-worsening",
+                "The black seepage from the well's cracks has come heavier every night this week."),
+            ("close-before-moon-turns",
+                "Morwenna said the well must be closed before the moon turns, or the marsh takes " +
+                "the village."),
+            ("three-nights-at-the-well",
+                "The player has worked at the well for three nights running without closing it."),
+        ];
+
+        foreach ((string id, string text) in history)
+        {
+            world.Facts[id] = new Fact { Id = id, Text = text, EstablishedTurn = 34 };
+            world.Characters[Character.PlayerId].Knows.Add(id);
+        }
+
+        world.TurnNumber = 42;
+
+        return world;
+    }
+
+    /// <summary>
     /// Marrow with one plain object in the room, waiting to be looked at closely.
     ///
     /// Deliberately dull: a ring described only by its condition, so anything the prose reveals

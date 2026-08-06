@@ -100,15 +100,37 @@ it. The remaining three are chapel descriptions, which `location_described` cove
 That also explains why `event-not-fact` scored clean: it has a *character* do something trivial,
 where the real case is a *place* changing.
 
-- [ ] **`Location.Status`** — structurally evidenced and **not yet reproducible in a scenario.**
-      Two attempts failed at forbidden 0.00: passive atmosphere ("I stop and listen") produces
-      nothing, and so does the causal shape taken verbatim from the real turn. In play the well
-      carried forty turns of accumulated significance and a dozen facts; a fresh Marrow has one.
+- [x] **`Location.Status` — reproduces. The blocker is gone.**
 
-      The same wall as `two-objects` — which *did* reproduce once its seed carried the two
-      objects. So the next attempt is a seed where the location is already significant, not
-      another rewrite of the prose. **Do not build until it reproduces**, or the fix cannot be
-      measured.
+      Measured 2026-08-06, `deepseek/deepseek-v3.2` pinned to DeepInfra, n=7 each:
+
+      | scenario | seed | forbidden | rejects |
+      |---|---|---|---|
+      | `place-changing` | base Marrow | **7/7** | 0.43 |
+      | `place-changing-late` | `Marrow_WellSignificant` | **6/7** | 0.00 |
+
+      Every run files the well's condition as facts — `well-fluid-stopped`,
+      `well-sound-changed`, `bronze-provokes-shaft`. Exactly the shape the 50-turn session
+      produced six of.
+
+      **The premise of the block was wrong.** `place-changing` reproduces on the *base* seed,
+      which the note below recorded as scoring 0.00 twice. Why it differs is not established —
+      items, `source` and the tier fix all landed after that measurement, and the provider was
+      not recorded — so this is a fresh result rather than a refutation of an old one. Worth
+      remembering as a case where "cannot reproduce" was allowed to persist as a fact about the
+      world rather than as a dated measurement.
+
+      `Marrow_WellSignificant` is still worth having: the base seed makes the model invent or
+      move items that do not exist (rejects 0.43, measuring the validator), where the loaded
+      seed has real objects to act on and rejects nothing.
+
+      **Ready to build, and the measurement to beat is forbidden 7/7 → 0.**
+
+      - [ ] Add `Location.Status` and a `location_status_changed` delta
+      - [ ] Score on the outcome — the well's condition ends up in status and not in facts,
+            whichever route the model takes there. A rule naming a specific delta is the
+            mistake made four times already
+      - [ ] Re-run both scenarios pinned, plus the full scored set to check for regression
 
 - [x] **`EstablishedTurn` was off by one** — found while tracing which turn produced those
       facts. Deltas were applied before `world.TurnNumber++`, so a fact accepted on turn 7
