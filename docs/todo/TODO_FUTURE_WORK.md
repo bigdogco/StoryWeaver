@@ -509,6 +509,39 @@ Small things the incumbents mostly don't do, cheap to add once the foundations e
       reads as a conversation rather than a sequence of replies. Presentation only; the
       input is already stored verbatim in `TurnRecord.PlayerInput`.
 
+- [ ] **A portable `player.md` — a persona you carry between worlds.** Raised 2026-08-06, when
+      the player sheet was settled as replacing character creation.
+
+      A `player.md` currently belongs to a pack. The idea is that it belongs to *you*: a
+      library of them, merged into whatever world you start, so the investigator you wrote once
+      can walk into any pack that will have them.
+
+      **This is the character-card ecosystem's actual strength**, and the one thing it does
+      that world-pack tools do not — a persona is portable precisely because it carries no
+      state. Worth taking seriously as a differentiator rather than as a convenience.
+
+      What it needs first: a merge story (whose `player.md` wins when a pack ships one — the
+      pack is telling you the premise, the persona is telling you who you are, and those are
+      not the same field), and a UI, without which "merge a file into a pack" is a worse
+      experience than editing the file. Both absent. Not now.
+
+- [ ] **A world editor — placement is the case that argues for it.** Raised 2026-08-06 while
+      settling what happens to a character sheet with no seat in the seed.
+
+      The console can only ask for a location id and list the known ones, so "offstage" reads
+      as a bug and a mistyped id reads as nothing at all. The same act in an editor is a list
+      of locations with a character dropped into one, and the failure becomes an empty slot
+      you can see. **The design was fine; the interface was what made it confusing** — worth
+      remembering before the next feature gets redesigned to suit a text prompt.
+
+      The shape the player described: create `warrior-mike.md`, seat him at `big-lake`, and
+      he activates when the player reaches that location. Editing sheets, placing characters,
+      writing lore, and drawing the location graph are all the same window.
+
+      Prerequisite for nothing currently planned, and the reason 9.2's id enforcement is worth
+      having *now* — an editor would never produce a malformed id, and until it exists a
+      person typing by hand will.
+
 ---
 
 ## The extraction eval

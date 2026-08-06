@@ -11,6 +11,8 @@
 - Always ask me before starting on a task
 - Always work step by step and show reasoning
 - Always ask before committing and pushing
+- Alwasy ask permisiion before making any structural changes to the project
+- Always ask before start writing any code
 - Currently any testing will be done by me manually, only automatic test that can be done is build of the project
 - Update 'docs/todo/TODO_{TASK}_.md' with any new tasks that you identify during development, and check off completed tasks before committing or pushing
 - Make sure 'docs/todo/TODO_FUTURE_WORK.md' is up to date after finishing a task (all tasks in TODO_{TASK}_.md are completed).

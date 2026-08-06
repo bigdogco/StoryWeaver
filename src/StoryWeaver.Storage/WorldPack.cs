@@ -65,6 +65,25 @@ public sealed class WorldPack
     public bool HasSeed => Seed is not null;
 
     /// <summary>
+    /// True when the pack ships <c>characters/player.md</c> — it has decided who the player is,
+    /// and the harness must not ask.
+    ///
+    /// <b>The two are mutually exclusive.</b> A sheet and the opening prompts write the same two
+    /// fields, in that order, so without this the prompts overwrite the pack: the authored name
+    /// always, and the premise — "you carry the crown's seal" — the moment the player types any
+    /// description at all. Silently, because both halves are working exactly as written.
+    ///
+    /// Which way round to resolve it follows decision 1, where it always did: <b>the sheet
+    /// defines the character.</b> The player was the last exception to that, for no reason
+    /// beyond the order the two features were built in.
+    ///
+    /// So a pack ships this file for a named protagonist and omits it for a blank slate, and
+    /// both are expressible. Nothing is locked either way — <c>/rename</c> lets the player
+    /// change their own name and description mid-story, while the story still cannot.
+    /// </summary>
+    public bool AuthorsThePlayer => Sheets.ContainsKey(Character.PlayerId);
+
+    /// <summary>
     /// Loads the pack at <paramref name="root"/>/<paramref name="id"/>.
     ///
     /// A missing pack is an empty one rather than an error — the harness has always been able
@@ -81,14 +100,66 @@ public sealed class WorldPack
             .Load(Path.Combine(directory, SheetDirectory))
             .ToDictionary(s => s.Id, StringComparer.OrdinalIgnoreCase);
 
+        RequireWellFormedIds(lore, sheets, directory);
+
         if (seed is not null)
         {
-            ApplySheets(seed, sheets);
+            ApplySheets(seed, sheets, directory);
             RequirePlayer(seed, Path.Combine(directory, SeedFile));
+            RequireEveryoneIsPlaced(seed, Path.Combine(directory, SeedFile));
             RejectUnresolvedReferences(seed, lore, sheets, directory);
         }
 
         return new WorldPack(id, directory, seed, lore, sheets);
+    }
+
+    /// <summary>
+    /// Filenames are ids, so a mistyped filename is a mistyped id — see <see cref="EntityId"/>
+    /// for what that costs. Checked for lore-only packs too, which never reach the seed path.
+    /// </summary>
+    private static void RequireWellFormedIds(
+        LoreBook lore,
+        Dictionary<string, CharacterSheet> sheets,
+        string directory)
+    {
+        foreach (CharacterSheet sheet in sheets.Values)
+        {
+            EntityId.Require(
+                sheet.Id, "character", Path.Combine(directory, SheetDirectory, sheet.Id + ".md"));
+        }
+
+        foreach (LoreEntry entry in lore.All)
+        {
+            EntityId.Require(
+                entry.Id, "lore", Path.Combine(directory, LoreDirectory, entry.Id + ".md"));
+        }
+    }
+
+    /// <summary>
+    /// Everybody in a seeded world starts somewhere.
+    ///
+    /// A seeded character with no location is unreachable rather than merely absent: the
+    /// narrator only ever sees the player's room, mention never moves anyone, and
+    /// <c>/character</c> cannot place an id that already exists. The pack loads, the character
+    /// is in canon, and nothing can ever bring them into a scene.
+    ///
+    /// <b>This does not apply to <c>/character</c>, and should not.</b> Blank-means-offstage
+    /// stays for people invented in play — a brother back home, a name from a rumour — because
+    /// the player who invented them remembers them and can bring them up again. The rule
+    /// divides on who authored the character, not on whether a location is known: an author who
+    /// forgot a seat has no such memory, and no symptom either.
+    /// </summary>
+    private static void RequireEveryoneIsPlaced(WorldState seed, string file)
+    {
+        foreach (Character character in seed.Characters.Values)
+        {
+            if (character.LocationId is null)
+            {
+                throw new InvalidDataException(
+                    $"{file}: '{character.Id}' is in no location. A seeded character has to " +
+                    "start somewhere the player can reach — give them a 'locationId'.");
+            }
+        }
     }
 
     /// <summary>
@@ -197,31 +268,32 @@ public sealed class WorldPack
     /// and knowledge. Nothing is written twice, so nothing can disagree — which is the failure
     /// every other arrangement shared in a different disguise.
     ///
-    /// A sheet with no seed entry creates the character <b>offstage</b>: no location, which
-    /// <see cref="Character.LocationId"/> already allows and <c>/character</c> already does. It
-    /// lets an author write a cast before deciding where anybody stands.
+    /// <b>A sheet with no seed entry fails the load.</b> It used to create the character
+    /// offstage, on the reasoning that <see cref="Character.LocationId"/> allows it and
+    /// <c>/character</c> already does it. That was wrong for an authored character — see
+    /// <see cref="RequireEveryoneIsPlaced"/> — and the two cases are told apart here because
+    /// only this one can say the useful thing: the sheet exists, the seat does not.
     ///
     /// A seeded character with no sheet is untouched, so every pack that existed before sheets
     /// keeps working exactly as it did.
     /// </summary>
-    private static void ApplySheets(WorldState seed, Dictionary<string, CharacterSheet> sheets)
+    private static void ApplySheets(
+        WorldState seed,
+        Dictionary<string, CharacterSheet> sheets,
+        string directory)
     {
         foreach (CharacterSheet sheet in sheets.Values)
         {
-            if (seed.FindCharacter(sheet.Id) is { } existing)
+            if (seed.FindCharacter(sheet.Id) is not { } existing)
             {
-                existing.Name = sheet.Name;
-                existing.Description = sheet.Body;
-                continue;
+                throw new InvalidDataException(
+                    $"{Path.Combine(directory, SheetDirectory, sheet.Id + ".md")}: " +
+                    $"'{sheet.Id}' has a sheet but no place in {SeedFile}. A character has to " +
+                    "start somewhere — add them at a location, the way an RPG seats its cast.");
             }
 
-            seed.Characters[sheet.Id] = new Character
-            {
-                Id = sheet.Id,
-                Name = sheet.Name,
-                Description = sheet.Body,
-                LocationId = null,
-            };
+            existing.Name = sheet.Name;
+            existing.Description = sheet.Body;
         }
     }
 
@@ -246,6 +318,29 @@ public sealed class WorldPack
         if (seed is null)
         {
             throw new InvalidDataException($"{path}: the seed is empty.");
+        }
+
+        // The keys are the ids everything else matches against — a sheet filename, a {{ }}
+        // reference, a connection, a `knows` entry. Checked before anything reads them, so a
+        // malformed one is reported as itself rather than as the dangling reference it causes.
+        foreach (string key in seed.Characters.Keys)
+        {
+            EntityId.Require(key, "character", path);
+        }
+
+        foreach (string key in seed.Locations.Keys)
+        {
+            EntityId.Require(key, "location", path);
+        }
+
+        foreach (string key in seed.Items.Keys)
+        {
+            EntityId.Require(key, "item", path);
+        }
+
+        foreach (string key in seed.Facts.Keys)
+        {
+            EntityId.Require(key, "fact", path);
         }
 
         // A seed describing a player who is nowhere would open the story with "the player is

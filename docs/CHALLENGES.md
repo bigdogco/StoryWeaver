@@ -899,3 +899,36 @@ property in `required` — optionality is expressed as a nullable type, not by o
 
 Re-run `--probe-schema` if the extraction model changes; this is a per-model property, and
 the routing hazard above means it is not even stable per model ID.
+
+### A pack could define a character nothing could reach
+
+**Found 2026-08-06**, by walking the load path aloud rather than by a failing session — the
+same way the narration-history gap above was found, and worth noting twice.
+
+`WorldPack.ApplySheets` created a character from a sheet with no `seed.json` entry, placing
+them offstage (`LocationId = null`). Decision 4 of the sheets design, intended to let an author
+write a cast before deciding where anyone stands.
+
+Every route to that character was shut:
+
+- the **narrator** never sees them — `AppendNpcs` filters on the player's location, and someone
+  nowhere is in no location
+- the **player** cannot summon them by name — *mention never creates or moves an entity*,
+  measured 0/7 and consistent across 21 runs, and a deliberate rule for NPC speech
+- `/character` cannot place them — it only introduces, and `AskId` refuses an id already in
+  canon
+- the **extractor** sees only the bare slug, because `AppendKnownIds` lists every character id
+  with no name and no description attached
+
+So the pack loaded, the character existed in canon, and they could never appear. A silent drop
+with no symptom — exactly what `RequirePlayer` and `RejectUnresolvedReferences` exist to
+prevent, in a case neither of them covered.
+
+The lesson is narrower than "validate more". Both `/character` and a sheet can leave a
+character nowhere, and only one of them is a bug: the player who invents a brother back home
+remembers him, and an author who forgot a seat has no memory and no symptom. **A permissive
+rule inherited from one authoring path was applied to another where nothing could recover
+from it.** Reversed to a load-time refusal — see §9.1 of the character-sheets design.
+
+Found alongside it: nothing enforces the kebab-case id convention, so `warrior_mike.md`
+referenced as `warrior-mike` would produce exactly this failure with a one-glyph diff.

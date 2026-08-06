@@ -105,6 +105,13 @@ internal static class LoreSelfTest
             e => e.Common && !e.Always);
 
         failures += CheckSeedMustHaveAPlayer();
+        failures += CheckSheetMustBePlacedInTheSeed();
+        failures += CheckSeededCharacterMustHaveALocation();
+        failures += CheckSeededCharacterWithoutASheetIsUntouched();
+        failures += CheckIdShape();
+        failures += CheckMalformedSheetFilenameIsRefused();
+        failures += CheckShippedPackLoads();
+        failures += CheckAPlayerSheetReplacesCharacterCreation();
         failures += CheckPlayerSheetCannotDeclareAttitudes();
         failures += CheckSheetParsesWithNestedAttitudes();
         failures += CheckSheetRejectsUnknownKey();
@@ -219,6 +226,272 @@ internal static class LoreSelfTest
             }
 
             Console.WriteLine("  FAIL  a seed with no player loaded without complaint.");
+            return 1;
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    /// <summary>
+    /// A sheet with no seed entry must fail the load.
+    ///
+    /// It used to create the character offstage, and that character was unreachable rather than
+    /// dormant: the narrator only sees the player's room, mention never moves anyone (0/7,
+    /// across 21 runs), and <c>/character</c> refuses an id already in canon. The pack loaded
+    /// and the character could never appear.
+    /// </summary>
+    private static int CheckSheetMustBePlacedInTheSeed()
+    {
+        return InPack("unplaced", pack =>
+        {
+            WorldPackWriter.WriteSeed(Path.Combine(pack, WorldPack.SeedFile), WorldSeeds.Marrow());
+
+            Directory.CreateDirectory(Path.Combine(pack, WorldPack.SheetDirectory));
+            File.WriteAllText(
+                Path.Combine(pack, WorldPack.SheetDirectory, "warrior-mike.md"),
+                "# Mike\n\nA warrior nobody remembered to seat.");
+
+            return "a sheet with no seed entry fails the load";
+        });
+    }
+
+    /// <summary>
+    /// The same rule, reached the other way: a seed entry with no <c>locationId</c>. Separate
+    /// from the sheet case because only that one can say "the sheet exists, the seat does not".
+    /// </summary>
+    private static int CheckSeededCharacterMustHaveALocation()
+    {
+        return InPack("nowhere", pack =>
+        {
+            WorldState world = WorldSeeds.Marrow();
+            world.Characters["innkeeper-hald"].LocationId = null;
+            WorldPackWriter.WriteSeed(Path.Combine(pack, WorldPack.SeedFile), world);
+
+            return "a seeded character with no location fails the load";
+        });
+    }
+
+    /// <summary>
+    /// The other half of the reversal, and the one a regression would hit silently: tightening
+    /// the sheet rule must not have made a sheet mandatory. Every pack authored before sheets
+    /// existed is characters in <c>seed.json</c> and nothing else.
+    /// </summary>
+    private static int CheckSeededCharacterWithoutASheetIsUntouched()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "sw-nosheet-" + Guid.NewGuid().ToString("N"));
+        string pack = Path.Combine(root, "marrow");
+        Directory.CreateDirectory(pack);
+
+        try
+        {
+            WorldPackWriter.WriteSeed(Path.Combine(pack, WorldPack.SeedFile), WorldSeeds.Marrow());
+
+            WorldPack loaded = WorldPack.Load(root, "marrow");
+
+            if (loaded.Seed?.FindCharacter("innkeeper-hald") is { } hald && hald.Name == "Hald")
+            {
+                Console.WriteLine("  ok    a seeded character with no sheet still loads");
+                return 0;
+            }
+
+            Console.WriteLine("  FAIL  a sheetless pack no longer loads its own characters.");
+            return 1;
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    /// <summary>
+    /// Ids are matched by exact string comparison everywhere, so <c>warrior_mike</c> and
+    /// <c>warrior-mike</c> are two different things that read as one.
+    /// </summary>
+    private static int CheckIdShape()
+    {
+        (string Id, bool Ok)[] cases =
+        [
+            ("warrior-mike", true),
+            ("player", true),
+            ("marrow-tavern-2", true),
+            ("warrior_mike", false),
+            ("Warrior-Mike", false),
+            ("warrior mike", false),
+            ("-mike", false),
+            ("mike-", false),
+            ("warrior--mike", false),
+            ("", false),
+        ];
+
+        int failures = 0;
+
+        foreach ((string id, bool ok) in cases)
+        {
+            if (EntityId.IsWellFormed(id) != ok)
+            {
+                Console.WriteLine($"  FAIL  id '{id}' should have been {(ok ? "accepted" : "refused")}.");
+                failures++;
+            }
+        }
+
+        if (failures == 0)
+        {
+            Console.WriteLine("  ok    ids are lowercase words joined by single hyphens");
+        }
+
+        return failures;
+    }
+
+    /// <summary>
+    /// The filename <i>is</i> the id, so the check has to bite at pack load and not only in a
+    /// unit test — an underscore in a filename is the way this mistake actually arrives.
+    /// </summary>
+    private static int CheckMalformedSheetFilenameIsRefused()
+    {
+        return InPack("badid", pack =>
+        {
+            WorldPackWriter.WriteSeed(Path.Combine(pack, WorldPack.SeedFile), WorldSeeds.Marrow());
+
+            Directory.CreateDirectory(Path.Combine(pack, WorldPack.SheetDirectory));
+            File.WriteAllText(
+                Path.Combine(pack, WorldPack.SheetDirectory, "warrior_mike.md"),
+                "# Mike\n\nA warrior whose id has an underscore in it.");
+
+            return "a sheet filename that is not a usable id fails the load";
+        });
+    }
+
+    /// <summary>
+    /// A pack that ships <c>characters/player.md</c> has decided who the player is, and the
+    /// opening prompts must not run.
+    ///
+    /// Both branches, because the interesting failure is the one that still looks like it
+    /// works: the sheet loads, the prompts run afterwards, and the pack's premise is overwritten
+    /// by whatever the player typed. Checking only the sheet branch would pass while the
+    /// blank-slate path silently stopped asking anyone their name.
+    ///
+    /// The prompts themselves are console input and cannot be driven from here. What is
+    /// checked is the decision they hang off, and that the sheet actually reached the player's
+    /// record.
+    /// </summary>
+    private static int CheckAPlayerSheetReplacesCharacterCreation()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "sw-playersheet-" + Guid.NewGuid().ToString("N"));
+        string pack = Path.Combine(root, "marrow");
+        Directory.CreateDirectory(pack);
+
+        try
+        {
+            WorldPackWriter.WriteSeed(Path.Combine(pack, WorldPack.SeedFile), WorldSeeds.Marrow());
+
+            WorldPack blank = WorldPack.Load(root, "marrow");
+
+            if (blank.AuthorsThePlayer)
+            {
+                Console.WriteLine("  FAIL  a pack with no player.md claimed to author the player.");
+                return 1;
+            }
+
+            Directory.CreateDirectory(Path.Combine(pack, WorldPack.SheetDirectory));
+            File.WriteAllText(
+                Path.Combine(pack, WorldPack.SheetDirectory, "player.md"),
+                "# Aldric\n\nYou carry the crown's seal, and the authority that comes with it.");
+
+            WorldPack authored = WorldPack.Load(root, "marrow");
+
+            if (!authored.AuthorsThePlayer)
+            {
+                Console.WriteLine("  FAIL  a pack with player.md did not claim to author the player.");
+                return 1;
+            }
+
+            if (authored.Seed?.Player is not { } player
+                || player.Name != "Aldric"
+                || !player.Description.Contains("crown's seal"))
+            {
+                Console.WriteLine("  FAIL  player.md did not reach the player's record.");
+                return 1;
+            }
+
+            Console.WriteLine("  ok    a player sheet replaces character creation, and only then");
+            return 0;
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    /// <summary>
+    /// The pack this repository actually ships, loaded through the real path.
+    ///
+    /// Every other check here builds a pack to fail. This one exists because a load-time rule
+    /// is a rule about content that already exists, and tightening one can break the world in
+    /// the next folder over without a single synthetic test noticing.
+    ///
+    /// Skipped rather than failed when the folder is absent: the harness has always been
+    /// runnable from anywhere, and <c>worlds/</c> resolves relative to the working directory.
+    /// </summary>
+    private static int CheckShippedPackLoads()
+    {
+        const string root = "worlds";
+        const string id = "marrow";
+
+        if (!Directory.Exists(Path.Combine(root, id)))
+        {
+            Console.WriteLine($"  skip  no {root}/{id} in the working directory");
+            return 0;
+        }
+
+        try
+        {
+            WorldPack pack = WorldPack.Load(root, id);
+
+            if (pack.Seed is null)
+            {
+                Console.WriteLine($"  FAIL  {root}/{id} loaded without a seed.");
+                return 1;
+            }
+
+            Console.WriteLine(
+                $"  ok    {root}/{id} loads — {pack.Seed.Characters.Count} seated, " +
+                $"{pack.Sheets.Count} with sheets, {pack.Lore.All.Count()} lore");
+            return 0;
+        }
+        catch (InvalidDataException ex)
+        {
+            Console.WriteLine($"  FAIL  {root}/{id} no longer loads: {ex.Message}");
+            return 1;
+        }
+    }
+
+    /// <summary>
+    /// Builds a throwaway pack, expects <see cref="WorldPack.Load"/> to refuse it, and cleans
+    /// up either way. <paramref name="build"/> writes the pack and returns what passing means.
+    /// </summary>
+    private static int InPack(string label, Func<string, string> build)
+    {
+        string root = Path.Combine(Path.GetTempPath(), $"sw-{label}-" + Guid.NewGuid().ToString("N"));
+        string pack = Path.Combine(root, "marrow");
+        Directory.CreateDirectory(pack);
+
+        try
+        {
+            string expectation = build(pack);
+
+            try
+            {
+                WorldPack.Load(root, "marrow");
+            }
+            catch (InvalidDataException)
+            {
+                Console.WriteLine($"  ok    {expectation}");
+                return 0;
+            }
+
+            Console.WriteLine($"  FAIL  expected a refusal: {expectation}.");
             return 1;
         }
         finally

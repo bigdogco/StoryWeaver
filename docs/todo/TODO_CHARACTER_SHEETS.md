@@ -15,7 +15,8 @@ Supersedes [`TODO_PLAYER_SHEET.md`](TODO_PLAYER_SHEET.md), whose protection work
 - [x] Attitudes toward groups *and* toward anyone with a sheet, including the player
 - [x] The sheet holds the permanent *why*; canon holds the moving *standing*
 - [x] Parser extended by exactly one nesting level, same strictness
-- [x] A sheet with no seed entry defines an offstage character
+- [x] ~~A sheet with no seed entry defines an offstage character~~ — **reversed 2026-08-06**,
+      it must be placed in the seed. See §9.1 and "Amendments" below
 - [x] `{{player}}` and `{{entity-id}}`, resolved at assembly, validated at load
 - [x] `{{player}}` resolves to the name
 - [x] Character creation is a required step at world start
@@ -30,7 +31,7 @@ See [`2026-08-06_character-sheets.md`](../devlog/2026-08-06_character-sheets.md)
 - [x] `WorldPack` loads `characters/*.md`
 - [x] Load merge: sheet for identity, seed entry for state; a seeded character with no sheet
       is untouched
-- [x] A sheet with no seed entry becomes an offstage character
+- [x] ~~A sheet with no seed entry becomes an offstage character~~ — to be replaced, below
 - [x] `{{ }}` resolution in `ContextAssembler`, for sheets and lore bodies alike
 - [x] `{{ }}` validation at pack load — unresolvable ids and attitude targets fail by file
       and name
@@ -46,6 +47,59 @@ See [`2026-08-06_character-sheets.md`](../devlog/2026-08-06_character-sheets.md)
       what depth their prose is rendered at
 - [x] **"Curious about You"** — the predicted consequence of the seed's default player name,
       fixed by character creation rather than a better default
+
+## Amendments — built 2026-08-06
+
+Design: §9 of [`CHARACTER_SHEETS.md`](../design/CHARACTER_SHEETS.md). Both are load-time
+refusals in `WorldPack`, alongside `RequirePlayer` and `RejectUnresolvedReferences`.
+Devlog: [`2026-08-06_placement-and-ids.md`](../devlog/2026-08-06_placement-and-ids.md).
+
+### 9.1 A sheet must be placed in the seed
+
+- [x] `WorldPack.ApplySheets` refuses a sheet whose id has no `seed.json` entry, naming the
+      file and saying to add them at a location
+- [x] `RequireEveryoneIsPlaced` — **broader than the design said**, and better: *every*
+      seeded character needs a location, not only those with sheets. A `locationId: null`
+      entry is unreachable for the same reasons and authored by the same person
+- [x] `/character` left alone. Blank-means-offstage stays for characters invented in play
+- [x] `worlds/marrow` still loads — 3 seated, 2 with sheets, 3 lore
+- [x] Self-tests: sheet with no seed entry refused; seeded character with no location
+      refused; a seeded character with **no sheet** still loads untouched
+
+### 9.2 Ids are kebab-case, enforced
+
+- [x] `EntityId` in Storage — lowercase letters, digits, single hyphens, no leading or
+      trailing hyphen, no doubled hyphen. Hand-written rather than a regex
+- [x] Applied to sheet filenames, lore filenames, and character/location/item/fact keys in
+      `seed.json`. Checked before anything reads them, so a malformed id is reported as
+      itself rather than as the dangling reference it causes
+- [x] Self-tests: the accept/refuse table, plus a pack whose sheet filename has an
+      underscore — the way this mistake actually arrives
+
+### 9.3 A player sheet replaces character creation
+
+- [x] `WorldPack.AuthorsThePlayer` — true when the pack ships `characters/player.md`
+- [x] `PlaySession` skips the opening prompts when it is set, and says who you are instead,
+      pointing at `/rename` so an authored protagonist does not read as a locked one
+- [x] `worlds/marrow` deliberately ships **no** `player.md` — it is the blank-slate world and
+      the only coverage the prompt path has
+- [x] Self-test covers **both** branches. The interesting failure is the one that still looks
+      like it works, and checking only the sheet branch would pass while the blank-slate path
+      silently stopped asking anyone their name
+
+### Found while building
+
+- [x] **A check on shipped content needs a check against shipped content.** Every other
+      self-test builds a pack designed to fail. Tightening a load rule can break the world in
+      the next folder over without one of them noticing, so `CheckShippedPackLoads` loads the
+      real `worlds/marrow` — skipping, not failing, when run from elsewhere
+
+### Left open on purpose
+
+- [ ] **Should extraction-proposed ids be held to the same shape?** `Slug()` already produces
+      kebab-case for the authoring commands, so this is only about the model's own
+      `character_introduced`. Refusing there is a rejection cascade rather than a load error —
+      a different cost, and it belongs with `DeltaValidator`
 
 ## Measure first, per the pattern
 

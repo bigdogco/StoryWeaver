@@ -1,6 +1,7 @@
 # Design — character sheets
 
 **Status:** built 2026-08-06. Design written 2026-08-04; all decisions settled and shipped.
+**Amended 2026-08-06** — decision 4 reversed, decision 7 added. See §9.
 
 Authored identity for characters: who someone is, how they present, what they want, and how
 they feel about the groups in the world. The equivalent of a SillyTavern character card, fitted
@@ -151,6 +152,39 @@ a multi-paragraph sheet, so the player currently writes one line where an author
 sections. The storage is already right — it is their `Character` record, which a pack can seed
 and an editor can edit — so this waits for the UI rather than needing a new file category.
 
+### The sheet and the opening prompts are mutually exclusive — settled 2026-08-06
+
+They wrote the same two fields, in that order, and nobody had said which wins. The prompts ran
+second, so a pack shipping `player.md` had its authored name overwritten *always*, and its
+premise — "you carry the crown's seal" — overwritten the moment the player typed any
+description at all. Both halves working exactly as written, and no symptom.
+
+**A `player.md` replaces character creation entirely.** `WorldPack.AuthorsThePlayer`, and the
+harness does not ask.
+
+The direction follows decision 1, where it always did: *the sheet defines the character.* The
+player was the last exception to that, for no reason beyond the order the two features were
+built in.
+
+What it buys is that both shapes are now expressible, by presence or absence of one file:
+
+| | `player.md` | opening prompts |
+|---|---|---|
+| a named protagonist, visual-novel shape | ✅ | — |
+| a blank slate the player invents | — | ✅ |
+
+**Nothing is locked either way.** `/rename` already lets the player change their own name and
+description mid-story while the story cannot, so an authored protagonist is a starting point
+rather than a cage. The session says so on the way in, because a game that simply never asks
+reads as one that forgot to.
+
+**The seed still needs a `player` entry**, with a location — a sheet has nowhere to put one. So
+a pack with `player.md` spans two files exactly as Hald does. That is the cost decision 1
+already accepted, applied consistently rather than waived for one character.
+
+`worlds/marrow` deliberately ships **no** `player.md`: it is the blank-slate world, and the
+only coverage the prompt path has.
+
 ### The original reasoning, unchanged
 
 Consistent with the player being an ordinary `Character`, which has paid off repeatedly.
@@ -280,9 +314,10 @@ problem, and it is one prompt at the start of a world.
    strictness. The phrase is the value. §2.
 3. **NPC-to-NPC attitudes** — yes, toward the player and toward anyone with a sheet. The N×N
    concern was wrong: it applies to derived data, not authored. §3.
-4. **A sheet without a seed entry** — defines the character as offstage, which
+4. ~~**A sheet without a seed entry** — defines the character as offstage, which
    `Character.LocationId` already supports and `/character` already does. Lets an author write a
-   cast before placing them.
+   cast before placing them.~~ **Reversed 2026-08-06 — see §9.1.** The offstage character it
+   created was unreachable.
 5. **`{{player}}` resolves to the name**, not "you". A sheet describes a character rather than
    narrating to a reader. §6.1.
 6. **Character creation is a required step at world start** — the player names and describes
@@ -290,3 +325,75 @@ problem, and it is one prompt at the start of a world.
 
 Ready to build. The one item larger than it looks is 6: it is the first thing a new world does
 and needs a place in the harness that does not exist yet.
+
+---
+
+## 9. Amendments, 2026-08-06
+
+Both found by walking the load path aloud after sheets shipped, not by a failing session.
+
+### 9.1 Decision 4 reversed — a sheet must be placed in the seed
+
+**Was:** a sheet with no seed entry creates the character offstage (`LocationId = null`).
+**Now:** it fails the load, naming the file and saying the character is nowhere.
+
+The offstage character it produced was **unreachable**, not dormant. Three exits, all shut:
+
+| route | why it fails |
+|---|---|
+| the narrator introduces them | `AppendNpcs` filters on the player's location; someone nowhere is never in a scene |
+| the player mentions them by name | *mention never creates or moves an entity* — measured 0/7, consistent across 21 runs |
+| the player places them with `/character` | it only **introduces**; `AskId` refuses an id already in canon |
+
+The extractor is the one thing that sees them, because `AppendKnownIds` lists every character
+id — but it gets a bare slug with no name and no description, so nothing would make it emit
+`character_moved` for a person it knows nothing about.
+
+**The asymmetry that makes the reversal right.** `/character` still allows blank-means-offstage,
+and should: a brother back home, a name from a rumour — someone the player invented by talking
+about them, who is not anywhere yet. The player knows who they meant and can bring them up
+again. An author who wrote a sheet and forgot the seat has no such memory, and no symptom
+either: the pack loads, the character exists, and they never appear. That is the silent drop
+this project refuses everywhere else.
+
+So the rule divides on **who authored the character**, not on whether a location is known:
+
+- **authored (a sheet)** — must be placed. Same shape as `RequirePlayer`.
+- **played (`/character`)** — may be nowhere. Unchanged.
+
+**Built slightly broader than written, on purpose.** A `seed.json` entry with
+`locationId: null` and no sheet is unreachable for exactly the same reasons, and is authored by
+exactly the same person. Refusing one and not the other would have been a rule about *files*
+pretending to be a rule about authorship. So the shipped check is **every character in a seed
+has a location** — `RequireEveryoneIsPlaced` — with the sheet case kept separate in
+`ApplySheets` only because it is the one that can say the useful thing: *the sheet exists, the
+seat does not.* Two errors, two messages, one rule.
+
+In the player's words: *same as in any RPG, a character has to start somewhere, some area the
+player can go to.*
+
+**What this closes off, honestly.** Writing a cast before deciding where anyone stands now
+means writing `seed.json` entries with placeholder locations, rather than sheets alone. That is
+a worse authoring experience in a text editor and a non-issue in an editor UI, which is where
+placement belongs anyway — a list of locations, and the character dropped into one. The CLI is
+what made "offstage" read as a bug; a map would have made it read as an empty slot.
+
+### 9.2 Decision 7 — ids are kebab-case, enforced
+
+`warrior_mike` and `warrior-mike` are the same character to a human reader and two different
+strings to everything else. A sheet named `warrior_mike.md` referenced from `seed.json` as
+`warrior-mike` produces a character with no seat *and* an unresolvable seed entry, and the
+diff between them is one glyph that is easy to look straight past while hunting for it.
+
+The convention already exists — `innkeeper-hald`, `drinker-mabb`, `kings-investigators` — and
+nothing enforces it. **Make it a load error:** an id must be lowercase letters, digits and
+single hyphens, and must not start or end with one.
+
+Applies to what an author types: sheet filenames, lore filenames, and ids inside `seed.json`.
+The error names the file and shows the offending id.
+
+**Open, and deliberately not decided here:** whether ids *proposed by extraction* are held to
+the same shape. `Slug()` already produces kebab-case for the authoring commands, so the
+question is only about the model's own `character_introduced` ids. Refusing them there is a
+rejection cascade rather than a load error, which is a different cost — and it belongs with
+`DeltaValidator`, not with this design.

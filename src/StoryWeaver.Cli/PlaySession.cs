@@ -73,7 +73,15 @@ internal static class PlaySession
 
         if (!resumed)
         {
-            CreateCharacter(world);
+            if (pack.AuthorsThePlayer)
+            {
+                AnnounceAuthoredPlayer(world);
+            }
+            else
+            {
+                CreateCharacter(world);
+            }
+
             await repository.SaveAsync(SaveId, world).ConfigureAwait(false);
         }
 
@@ -147,7 +155,33 @@ internal static class PlaySession
     }
 
     /// <summary>
+    /// Say who the pack decided you are, when it shipped a <c>player.md</c>.
+    ///
+    /// Not decoration. The alternative is a session that simply never asks, which reads as the
+    /// prompt having been forgotten — and "why didn't it ask my name" is a worse first
+    /// impression than a line saying where the name came from. It also points at
+    /// <c>/rename</c>, so an authored protagonist does not read as a locked one.
+    /// </summary>
+    private static void AnnounceAuthoredPlayer(WorldState world)
+    {
+        if (world.Player is not { } player)
+        {
+            return;
+        }
+
+        Console.WriteLine();
+        Console.WriteLine($"You are {player.Name}, as this world has it.");
+        Console.WriteLine("  /rename if you would rather be someone else.");
+        Console.WriteLine();
+    }
+
+    /// <summary>
     /// Name and describe the player's character, before turn one.
+    ///
+    /// **Skipped entirely when the pack ships `characters/player.md`** — see
+    /// <see cref="WorldPack.AuthorsThePlayer"/>. The two write the same fields and the prompts
+    /// run second, so running both means the pack's premise is destroyed by any answer given
+    /// here.
     ///
     /// **Required, not skippable.** The seed used to ship a player called "You" whose one-line
     /// description nobody chose, which was harmless only while the name appeared nowhere but
