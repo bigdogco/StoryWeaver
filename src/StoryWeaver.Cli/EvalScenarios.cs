@@ -179,6 +179,16 @@ internal static class EvalScenarios
                          || f.Text.Contains("fluid", StringComparison.OrdinalIgnoreCase)
                          || f.Text.Contains("churn", StringComparison.OrdinalIgnoreCase))),
             new("the square re-introduced", d => d is LocationIntroduced),
+        ],
+        Expected:
+        [
+            // Scored on the world, not on the delta that got there. The route does not matter
+            // — location_status_changed is the obvious one, but a place introduced with a
+            // status would be just as correct. A rule naming a specific delta is the mistake
+            // this project has made four times, every time by describing the fix instead of
+            // the outcome.
+            new("the square's condition is recorded as its status",
+                w => !string.IsNullOrWhiteSpace(w.FindLocation("marrow-square")?.Status)),
         ]);
 
     /// <summary>

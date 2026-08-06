@@ -143,6 +143,7 @@ internal static class ExtractionEval
         ItemMoved d => $"item_moved          {d.ItemId} -> {d.ToLocationId ?? d.ToHolderId}",
         ItemRenamed d => $"item_renamed        {d.ItemId} -> {d.Name}",
         ItemStatusChanged d => $"item_status_changed {d.ItemId} = {d.Status}",
+        LocationStatusChanged d => $"location_status_changed {d.LocationId} = {d.Status}",
         _ => delta.GetType().Name,
     };
 

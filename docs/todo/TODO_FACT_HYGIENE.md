@@ -124,13 +124,20 @@ where the real case is a *place* changing.
       move items that do not exist (rejects 0.43, measuring the validator), where the loaded
       seed has real objects to act on and rejects nothing.
 
-      **Ready to build, and the measurement to beat is forbidden 7/7 → 0.**
+      **Built the same day. forbidden 7/7 → 0, required 7/7, 14/14 runs clean.**
 
-      - [ ] Add `Location.Status` and a `location_status_changed` delta
-      - [ ] Score on the outcome — the well's condition ends up in status and not in facts,
-            whichever route the model takes there. A rule naming a specific delta is the
-            mistake made four times already
-      - [ ] Re-run both scenarios pinned, plus the full scored set to check for regression
+      - [x] `Location.Status` and a `location_status_changed` delta, through all nine touch
+            points: the record, the delta, the converter map, the JSON schema branch, the
+            validator (identity, no-op, existence), the applier, both describe lines, and the
+            context assembler
+      - [x] Scored on the outcome — a `StateRule` asserting the square *ends the turn* with a
+            status, so any route there passes. A rule naming a specific delta is the mistake
+            made four times already
+      - [x] Rendered back into context as `Right now: …`, printed only when set. A status
+            nothing reads would be a field that looks like it works
+      - [x] A prompt rule drawing the line where the misfiling happens: a place's condition is
+            this turn's, a fact is something a character could be told later
+      - [ ] Full scored set re-run pinned — see the devlog for the number
 
 - [x] **`EstablishedTurn` was off by one** — found while tracing which turn produced those
       facts. Deltas were applied before `world.TurnNumber++`, so a fact accepted on turn 7

@@ -194,6 +194,7 @@ public static class DeltaValidator
         ItemStatusChanged d => $"item-status:{d.ItemId}:{d.Status}",
         CharacterRenamed d => $"rename:{d.CharacterId}:{d.Name}",
         LocationIntroduced d => $"new-loc:{d.LocationId}",
+        LocationStatusChanged d => $"loc-status:{d.LocationId}:{d.Status}",
         _ => delta.ToString() ?? delta.GetType().Name,
     };
 
@@ -220,6 +221,8 @@ public static class DeltaValidator
             && Same(item.HolderId, d.ToHolderId),
 
         ItemStatusChanged d => Same(world.FindItem(d.ItemId)?.Status, d.Status),
+
+        LocationStatusChanged d => Same(world.FindLocation(d.LocationId)?.Status, d.Status),
 
         ItemRenamed d => world.FindItem(d.ItemId) is { } named
             && Same(named.Name, d.Name)
@@ -281,6 +284,11 @@ public static class DeltaValidator
 
             ItemStatusChanged d =>
                 !items.Contains(d.ItemId) ? $"item '{d.ItemId}' does not exist."
+                : Blank(d.Status) ? "status is empty."
+                : null,
+
+            LocationStatusChanged d =>
+                !locations.Contains(d.LocationId) ? $"location '{d.LocationId}' does not exist."
                 : Blank(d.Status) ? "status is empty."
                 : null,
 

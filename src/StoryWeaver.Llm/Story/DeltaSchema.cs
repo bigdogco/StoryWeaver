@@ -196,6 +196,18 @@ public static class DeltaSchema
               },
               {
                 "type": "object",
+                "description": "A place's condition changed: flooding, burning, filling with smoke, fallen silent. What the place is DOING now, not what it permanently is. Use this for a place changing rather than writing it down as a fact.",
+                "properties": {
+                  "kind": { "type": "string", "enum": ["location_status_changed"] },
+                  "locationId": { "type": "string" },
+                  "status": { "type": "string" },
+                  "evidence": { "type": "string" }
+                },
+                "required": ["kind", "locationId", "status", "evidence"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
                 "description": "A place that is NOT in the known ids appeared for the first time. Merely mentioning a known place is not introducing it.",
                 "properties": {
                   "kind": { "type": "string", "enum": ["location_introduced"] },

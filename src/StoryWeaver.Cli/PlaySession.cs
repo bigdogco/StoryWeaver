@@ -385,6 +385,7 @@ internal static class PlaySession
         ItemMoved d => $"{d.ItemId} -> {d.ToLocationId ?? d.ToHolderId}",
         ItemRenamed d => $"{d.ItemId} is now {d.Name}",
         ItemStatusChanged d => $"{d.ItemId} is {d.Status}",
+        LocationStatusChanged d => $"{d.LocationId} is {d.Status}",
         _ => delta.GetType().Name,
     };
 

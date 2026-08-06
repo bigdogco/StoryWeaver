@@ -155,6 +155,15 @@ public sealed record ItemRenamed(
 /// </summary>
 public sealed record ItemStatusChanged(string ItemId, string Status) : StateDelta;
 
+/// <summary>
+/// A place's condition changed — the water rising, the fire taking hold, the noise stopping.
+///
+/// The <see cref="StatusChanged"/> of places. Last of the three, and the gap was measurable:
+/// six of nine misfiled facts in one session were a single well's changing state, filed as
+/// permanent truths because nothing else in the schema would hold them.
+/// </summary>
+public sealed record LocationStatusChanged(string LocationId, string Status) : StateDelta;
+
 /// <summary>A location not previously in canon appeared.</summary>
 public sealed record LocationIntroduced(
     string LocationId,

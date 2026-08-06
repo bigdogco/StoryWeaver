@@ -82,6 +82,14 @@ public static class DeltaApplier
 
                 break;
 
+            case LocationStatusChanged d:
+                if (world.FindLocation(d.LocationId) is { } statusLocation)
+                {
+                    statusLocation.Status = d.Status;
+                }
+
+                break;
+
             case LocationIntroduced d:
                 world.Locations[d.LocationId] = new Location
                 {

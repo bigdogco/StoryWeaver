@@ -39,6 +39,7 @@ public sealed class StateDeltaConverter : JsonConverter<StateDelta>
         ["item_moved"] = typeof(ItemMoved),
         ["item_renamed"] = typeof(ItemRenamed),
         ["item_status_changed"] = typeof(ItemStatusChanged),
+        ["location_status_changed"] = typeof(LocationStatusChanged),
     };
 
     private static readonly Dictionary<Type, string> TypeToKind =

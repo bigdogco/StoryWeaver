@@ -131,6 +131,13 @@ public sealed class LlmStateExtractor : IStateExtractor
           must emit status_changed; add mood_changed as well only if how they FEEL also
           changed. A character beaten senseless whose status still reads "normal" is recorded
           as unhurt, and everything downstream will treat them as unhurt.
+        - Places have a status too, and it is the commonest thing to get wrong. When a place
+          starts doing something — water rising, a fire taking, a noise starting or stopping,
+          a structure straining — that is location_status_changed, NOT a fact. A fact is
+          something that stays true and that a character could be told later. "The sound from
+          the shaft became a churning" is the well's condition this turn and will be wrong the
+          next; it is not knowledge anyone can carry. Write the place's condition into its
+          status and establish no fact for it.
         - If nothing changed, return an empty deltas list. That is a valid answer.
         """;
 

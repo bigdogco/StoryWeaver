@@ -932,3 +932,34 @@ from it.** Reversed to a load-time refusal — see §9.1 of the character-sheets
 
 Found alongside it: nothing enforces the kebab-case id convention, so `warrior_mike.md`
 referenced as `warrior-mike` would produce exactly this failure with a one-glyph diff.
+
+### A degraded provider corrupts a regression check — the fifth sighting
+
+**2026-08-06.** The scored set was re-run after adding `Location.Status` and came back dirty:
+`movement` 0/2, `new-character` 1/5, four calls timing out at 45s. It reads exactly like a
+regression from the change.
+
+It was not. Running the **same three scenarios against HEAD in a worktree** — the build without
+the change — produced the same failures and *more* timeouts. Routed traffic landed on the same
+upstream, so there was nowhere healthy to compare against.
+
+The previous four sightings were all the same shape: OpenRouter routing one model id across
+upstreams of differing quality, and a score moving because the mix moved. **This one is
+different and the pin does not help.** A single pinned upstream degrading in *latency* turns
+healthy runs into timeouts, and a timeout scores as every required delta missing. The failure
+mode of the infrastructure imitates the failure mode of a bad change.
+
+Two things caught it, and only the second was decisive:
+
+- `forbidden` was **0.00 in every run of every build**. Missing deltas without any wrong ones
+  is what a dead call looks like, not what a broken schema looks like
+- **the baseline was re-run under the same conditions.** This is the only real answer. A
+  before-number recorded on a different day is not a control, because the thing that changed
+  in between may be the provider
+
+So the rule gains a clause. *No single routed sweep is evidence about a change* becomes: pin
+the provider, **check the error count before reading the score**, and when a sweep looks bad,
+re-run the previous build now rather than trusting a number from last week.
+
+Recorded as unfinished: the scored set still needs a clean run on a healthy provider, and the
+50/50 baseline needs re-establishing with it.

@@ -68,6 +68,14 @@ public static partial class ContextAssembler
             builder.AppendLine($"Location: {Label(here.Name, here.Id, withIds)}");
             builder.AppendLine(EntityReferences.Resolve(here.Description, world));
 
+            // Printed only when set. Most places never have one, and "status: normal" under
+            // every room would spend context to say nothing — the reason the field defaults to
+            // empty rather than to "normal" as a character's does.
+            if (!string.IsNullOrWhiteSpace(here.Status))
+            {
+                builder.AppendLine($"Right now: {here.Status}");
+            }
+
             if (here.Connections.Count > 0)
             {
                 // Resolved to names for narration. An unresolvable connection is skipped
