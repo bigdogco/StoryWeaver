@@ -88,8 +88,15 @@ public sealed class TurnEngine
         // Commit order: mutate, bump the turn counter, then persist. Nothing here can fail
         // partway in the in-memory case; the JSON repository is what makes the write atomic,
         // which is why that requirement lives on the interface.
-        DeltaApplier.Apply(world, validation.Accepted);
+        // The counter moves first, so a fact established this turn is stamped with the turn it
+        // happened on. Applying first recorded everything one turn early: a fact accepted on
+        // turn 7 carried establishedTurn 6, while LastSeenTurn — set after the increment —
+        // was right, so the two disagreed about when "now" was.
+        //
+        // Found while auditing which turn produced a run of misfiled facts, and the off-by-one
+        // made the trail read wrong.
         world.TurnNumber++;
+        DeltaApplier.Apply(world, validation.Accepted);
         TouchPresentCharacters(world);
 
         TurnRecord record = new()

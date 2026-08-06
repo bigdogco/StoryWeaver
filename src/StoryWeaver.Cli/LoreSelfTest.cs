@@ -104,6 +104,7 @@ internal static class LoreSelfTest
             """,
             e => e.Common && !e.Always);
 
+        failures += CheckEstablishedTurnMatchesTheTurn();
         failures += CheckSourceIntroducedInSameBatch();
         failures += CheckFactSourceMustExist();
         failures += CheckRivalClaimsAreNotDuplicates();
@@ -181,6 +182,35 @@ internal static class LoreSelfTest
 
         Console.WriteLine("  FAIL  learning a lore entry did not reach the character.");
         return 1;
+    }
+
+    /// <summary>
+    /// A fact is stamped with the turn it happened on, and agrees with `LastSeenTurn`.
+    ///
+    /// These disagreed: deltas were applied before the counter moved, so a fact accepted on
+    /// turn 7 recorded `establishedTurn: 6`, while presence was touched after the increment and
+    /// was right. `EstablishedTurn` exists for ordering and for spotting facts invented late in
+    /// a session, and an off-by-one makes it wrong for exactly that.
+    /// </summary>
+    private static int CheckEstablishedTurnMatchesTheTurn()
+    {
+        WorldState world = WorldSeeds.Marrow();
+        world.TurnNumber = 6;
+
+        // What the turn loop does, in order.
+        world.TurnNumber++;
+        DeltaApplier.Apply(world, [new FactEstablished("well-fluid", "The well weeps black fluid.")]);
+
+        int stamped = world.FindFact("well-fluid")?.EstablishedTurn ?? -1;
+
+        if (stamped != 7)
+        {
+            Console.WriteLine($"  FAIL  a fact established on turn 7 recorded turn {stamped}.");
+            return 1;
+        }
+
+        Console.WriteLine("  ok    a fact is stamped with the turn it happened on");
+        return 0;
     }
 
     /// <summary>

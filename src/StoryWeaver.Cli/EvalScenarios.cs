@@ -133,7 +133,52 @@ internal static class EvalScenarios
         WrongObjectActedOn,
         ContradictoryClaims,
         ObjectExamined,
+        PlaceChanging,
     ];
+
+    /// <summary>
+    /// <b>Diagnostic — reproduces the largest remaining category of misfiled facts.</b>
+    ///
+    /// A place is *doing* something. Not a description of what it permanently is, and not an
+    /// event anyone needs to know about later — a condition it is in right now, which will be
+    /// in a different condition next turn.
+    ///
+    /// A 50-turn session produced six facts of exactly this shape about one well:
+    /// <c>well-sound-changed</c>, <c>well-fluid</c>, <c>well-boards-straining</c>,
+    /// <c>well-fluid-stopped</c>, <c>well-sound-churning</c>, <c>well-sound-faded</c>. Six of
+    /// the nine misfiled facts in that session, all about the same location.
+    ///
+    /// <b>Characters have <c>Status</c>. Items have <c>Status</c>. Locations do not.</b> So a
+    /// well that is filling, straining and then falling silent has nowhere to record what it is
+    /// doing, and the fact store is the only open slot in the schema.
+    ///
+    /// Explains why <c>event-not-fact</c> scored clean: that scenario has a *character* do
+    /// something trivial, where the real case is a *place* changing.
+    /// </summary>
+    private static EvalScenario PlaceChanging => new(
+        "place-changing",
+        "*I drop the silver icon on the stones beside the well and press the bronze wire flat against the boards.*",
+        """
+        The icon hits the cobbles with a dull clink and slicks the grey rock with a smear of
+        black scum. You press the broken wire against the rotting planks.
+
+        The moment the tarnished metal touches the wood, the black fluid weeping from the
+        cracks abruptly stops. For a heartbeat the square is silent. Then the sound from the
+        shaft returns and it is not what it was — the slow rhythmic sliding has become a
+        churning, and the boards bow outward against their spikes with the sound of a boat
+        working against a mooring.
+        """,
+        Required: [],
+        Forbidden:
+        [
+            new("the square's condition filed as facts",
+                d => d is FactEstablished f
+                     && (f.Text.Contains("sound", StringComparison.OrdinalIgnoreCase)
+                         || f.Text.Contains("board", StringComparison.OrdinalIgnoreCase)
+                         || f.Text.Contains("fluid", StringComparison.OrdinalIgnoreCase)
+                         || f.Text.Contains("churn", StringComparison.OrdinalIgnoreCase))),
+            new("the square re-introduced", d => d is LocationIntroduced),
+        ]);
 
     /// <summary>
     /// <b>Diagnostic — reproduces a failure from play.</b> A permanent property of an object is

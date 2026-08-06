@@ -80,6 +80,41 @@ largest category as claimed.
 - [x] ~~Prompt line: a completed action is not a fact~~ — `event-not-fact` cannot reproduce it
 - [x] ~~Prompt line: never write a fact about who knows something~~ — `knowledge-not-fact`
       scores clean
+
+---
+
+## The momentary-events residue, characterised 2026-08-04
+
+The last misfiled category, and it is **not** a grab-bag. A 50-turn directed session produced
+nine misfiled facts, and **six were one location's changing state**:
+
+```
+well-sound-changed  well-fluid  well-boards-straining
+well-fluid-stopped  well-sound-churning  well-sound-faded
+```
+
+**Characters have `Status`. Items have `Status`. Locations do not.** A well that is filling,
+straining, then falling silent has nowhere to record what it is *doing*, so the fact store takes
+it. The remaining three are chapel descriptions, which `location_described` covers.
+
+That also explains why `event-not-fact` scored clean: it has a *character* do something trivial,
+where the real case is a *place* changing.
+
+- [ ] **`Location.Status`** — structurally evidenced and **not yet reproducible in a scenario.**
+      Two attempts failed at forbidden 0.00: passive atmosphere ("I stop and listen") produces
+      nothing, and so does the causal shape taken verbatim from the real turn. In play the well
+      carried forty turns of accumulated significance and a dozen facts; a fresh Marrow has one.
+
+      The same wall as `two-objects` — which *did* reproduce once its seed carried the two
+      objects. So the next attempt is a seed where the location is already significant, not
+      another rewrite of the prose. **Do not build until it reproduces**, or the fix cannot be
+      measured.
+
+- [x] **`EstablishedTurn` was off by one** — found while tracing which turn produced those
+      facts. Deltas were applied before `world.TurnNumber++`, so a fact accepted on turn 7
+      recorded turn 6, while `LastSeenTurn` was set after the increment and was right. The two
+      disagreed about when "now" was. Fixed and self-tested
+
 - [ ] The knowledge-worthiness test — **decided, and deliberately not written yet.** It is a
       good test and there is currently no scenario that fails without it. Revisit if the
       category reappears in a fresh play session
