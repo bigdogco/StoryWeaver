@@ -1,5 +1,6 @@
 using System.Text.Json;
 using StoryWeaver.Core;
+using StoryWeaver.Storage;
 
 namespace StoryWeaver.Cli;
 
@@ -52,6 +53,7 @@ internal static class JsonSelfTest
             typeof(CharacterRenamed));
 
         failures += CheckRoundTrip();
+        failures += CheckTurnRecordProvider();
         failures += CheckCrossNamespaceIds();
         failures += CheckRejects("unknown kind", """{"kind":"teleported","characterId":"h"}""");
         failures += CheckRejects("missing kind", """{"characterId":"h","mood":"wary"}""");
@@ -111,6 +113,72 @@ internal static class JsonSelfTest
 
         Console.WriteLine("  ok    round trip preserves value equality");
         return 0;
+    }
+
+    /// <summary>
+    /// The provider survives a real save and load, and a turn written before the field
+    /// existed still reads back.
+    ///
+    /// The second half is the one that matters. Every turn recorded up to 2026-08-12 has no
+    /// provider in it, and a save that throws on load is a playthrough destroyed by a
+    /// bookkeeping field. Null is the right answer for those turns: it says "we do not know
+    /// who served this", which is exactly true and permanently unrecoverable.
+    ///
+    /// Driven through <see cref="JsonWorldRepository"/> rather than a serializer directly, so
+    /// it exercises the options the game actually writes with.
+    /// </summary>
+    private static int CheckTurnRecordProvider()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "sw-prov-" + Guid.NewGuid().ToString("N"));
+
+        try
+        {
+            JsonWorldRepository repository = new(root);
+
+            repository.AppendTurnAsync("w", new TurnRecord
+            {
+                TurnNumber = 7,
+                PlayerInput = "*I push the door open.*",
+                Narration = "The cold comes in.",
+                ExtractionProvider = "StreamLake",
+            }).GetAwaiter().GetResult();
+
+            // A turn as written before the field existed, appended by hand to the same file.
+            File.AppendAllText(
+                Path.Combine(root, "w", "history.jsonl"),
+                """{"turnNumber":8,"playerInput":"*I wait.*","narration":"Nothing happens.","applied":[],"noOps":[],"rejected":[]}"""
+                    + Environment.NewLine);
+
+            IReadOnlyList<TurnRecord> back = repository.LoadHistoryAsync("w").GetAwaiter().GetResult();
+
+            if (back.Count != 2)
+            {
+                Console.WriteLine($"  FAIL  expected two turns back, got {back.Count}.");
+                return 1;
+            }
+
+            if (back[0].ExtractionProvider != "StreamLake")
+            {
+                Console.WriteLine("  FAIL  the provider did not survive a save and load.");
+                return 1;
+            }
+
+            if (back[1].ExtractionProvider is not null || back[1].TurnNumber != 8)
+            {
+                Console.WriteLine("  FAIL  a turn saved before the field existed did not load as provider-unknown.");
+                return 1;
+            }
+
+            Console.WriteLine("  ok    the extraction provider survives a save, and old turns still load");
+            return 0;
+        }
+        finally
+        {
+            if (Directory.Exists(root))
+            {
+                Directory.Delete(root, recursive: true);
+            }
+        }
     }
 
     /// <summary>

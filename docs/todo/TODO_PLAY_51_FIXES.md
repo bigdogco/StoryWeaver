@@ -154,7 +154,22 @@ StreamLake.** That explanation was invented for an infrastructure symptom.
 
 ## Next
 
-- [ ] `providerIgnore: ["DeepInfra"]` in settings — an exclude list, so routing keeps every
-      other upstream and no single host becomes a point of failure. The player's own config
-- [ ] **Record the provider on `TurnRecord`** and in the eval's recorded baselines. Its absence
-      is what let "movement is broken" and "movement was always fine" both look true today
+- [x] `providerIgnore: ["AtlasCloud", "DeepInfra"]` on the extraction role. An exclude list,
+      so routing keeps every other upstream and no single host becomes a point of failure.
+      The note beside it records the numbers and ends "re-test before removing — this is
+      degradation, not a permanent property", which is the difference between this exclusion
+      and AtlasCloud's, which is a capability judgement
+- [x] **`TurnRecord.ExtractionProvider`**, set at all three construction sites (turn, retry,
+      reroll) and shown on the turn header as `--- turn 12 · StreamLake ---`. Self-tested
+      through `JsonWorldRepository` rather than a serializer, so it exercises the options the
+      game really writes with — and the test's second half is that a turn saved *before* the
+      field existed still loads, as provider-unknown
+
+## Still open
+
+- [ ] **Re-check "`relationship_changed` has never fired"** on a healthy provider — see the
+      retraction above. Cited as settled in the character-sheets design
+- [ ] Narration's provider is still unrecorded. It needs `INarrator` to return more than a
+      string, and prose has no score to attribute to anyone yet. Worth doing the day a
+      narration eval exists, not before
+- [ ] The 51-turn save, and every turn before today, is permanently provider-unknown

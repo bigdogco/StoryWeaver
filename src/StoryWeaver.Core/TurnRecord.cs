@@ -33,6 +33,25 @@ public sealed record TurnRecord
     /// only thing that settles an argument about whether a bug is in the model or in us.</summary>
     public string? RawExtraction { get; init; }
 
+    /// <summary>
+    /// Which upstream provider served the extraction call, when the gateway reported one.
+    ///
+    /// <b>Added because its absence made a day's measurements unreadable.</b> One model id is
+    /// routed across many independent hosts running their own copies of the same weights, and
+    /// they are not equivalent: on 2026-08-12 the scored set was 0/5 to 3/5 on one and 50/50
+    /// clean on another within the same hour. Without this field, "canon got worse around turn
+    /// thirty" has no way to become "turn thirty was served by the host that pads mood_changed
+    /// until it runs out of tokens".
+    ///
+    /// Null when the gateway does not say. That is not an error — it is what "we do not know
+    /// who served this" honestly looks like, and it is exactly the state every turn recorded
+    /// before now is permanently in.
+    ///
+    /// Extraction only. Narration's provider would need <see cref="INarrator"/> to return more
+    /// than a string, and prose quality has no score to attribute to anyone yet.
+    /// </summary>
+    public string? ExtractionProvider { get; init; }
+
     public DateTimeOffset Timestamp { get; init; } = DateTimeOffset.UtcNow;
 }
 

@@ -343,7 +343,11 @@ internal static class PlaySession
 
     private static void PrintDeltas(TurnRecord turn)
     {
-        Console.WriteLine($"  --- turn {turn.TurnNumber} ---");
+        // The provider is on the header rather than buried, because the question it answers —
+        // "why did this turn go badly" — is asked while looking at exactly this block. One
+        // model id is served by many independent hosts and they are measurably not equal.
+        string served = turn.ExtractionProvider is { } p ? $" · {p}" : string.Empty;
+        Console.WriteLine($"  --- turn {turn.TurnNumber}{served} ---");
 
         if (turn.Applied.Count == 0)
         {

@@ -113,6 +113,7 @@ public sealed class TurnEngine
             NoOps = validation.NoOps,
             Rejected = validation.Rejected,
             RawExtraction = extraction.Raw,
+            ExtractionProvider = extraction.Provider,
         };
 
         await _repository.SaveAsync(worldId, world, cancellationToken).ConfigureAwait(false);
@@ -171,6 +172,7 @@ public sealed class TurnEngine
             NoOps = validation.NoOps,
             Rejected = validation.Rejected,
             RawExtraction = extraction.Raw,
+            ExtractionProvider = extraction.Provider,
         };
 
         await _repository.SaveAsync(worldId, world, cancellationToken).ConfigureAwait(false);
@@ -253,6 +255,7 @@ public sealed class TurnEngine
             NoOps = validation.NoOps,
             Rejected = validation.Rejected,
             RawExtraction = extraction.Raw,
+            ExtractionProvider = extraction.Provider,
         };
 
         await _repository.SaveAsync(worldId, world, cancellationToken).ConfigureAwait(false);
