@@ -156,6 +156,28 @@ public sealed record ItemRenamed(
 public sealed record ItemStatusChanged(string ItemId, string Status) : StateDelta;
 
 /// <summary>
+/// An object left the world for good — destroyed, burned, swallowed, thrown where nothing will
+/// get it back.
+///
+/// <b>The counterpart to the rule that an item is somewhere or held by somebody.</b> That rule
+/// is right and stays: an item that is merely *nowhere* has silently stopped existing, which is
+/// the quietest way for an object to vanish. But some things genuinely stop existing, and
+/// without a way to say so the model says it the only way it can — <c>item_moved</c> to nothing,
+/// which is refused, leaving canon asserting the old placement. A key hurled into a lava
+/// fissure stayed recorded as lying in a cellar, retrievable, for the rest of the session.
+///
+/// <b>The item is removed rather than flagged.</b> Canon is what is true now, and a destroyed
+/// thing is not part of the world; the turn history keeps the record of it having been. Nothing
+/// structural points at an item — knowledge is keyed to facts and lore — so removal breaks no
+/// reference.
+///
+/// <paramref name="Reason"/> is not decoration. "Gone" and "gone because you threw it in the
+/// marsh" are different things to a narrator reading the turn log, and this is the only place
+/// the second one survives.
+/// </summary>
+public sealed record ItemLost(string ItemId, string Reason) : StateDelta;
+
+/// <summary>
 /// An object turned out to be a person.
 ///
 /// <b>The id is kept.</b> Ids are already unique across every namespace, so the entity moves

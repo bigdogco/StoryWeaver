@@ -145,6 +145,7 @@ internal static class ExtractionEval
         ItemStatusChanged d => $"item_status_changed {d.ItemId} = {d.Status}",
         LocationStatusChanged d => $"location_status_changed {d.LocationId} = {d.Status}",
         ItemRevealedAsCharacter d => $"item_revealed_as_character {d.ItemId} is {d.Name}",
+        ItemLost d => $"item_lost {d.ItemId} ({d.Reason})",
         _ => delta.GetType().Name,
     };
 

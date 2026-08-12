@@ -421,6 +421,35 @@ internal static class WorldSeeds
     }
 
     /// <summary>
+    /// The player, in the square, holding something they are about to throw away for good.
+    ///
+    /// The marsh is the point: it is named in the square's description and is not a location,
+    /// so a thing thrown into it has no id to be moved to. That is the shape of both real
+    /// observations — a rock into the dark, a key into a lava fissure.
+    /// </summary>
+    public static WorldState Marrow_HoldingAKey()
+    {
+        WorldState world = Marrow();
+
+        world.Characters[Character.PlayerId].LocationId = "marrow-square";
+
+        world.Locations["marrow-square"].Description =
+            "A rutted market square, mostly empty. The well at its centre is boarded over, and " +
+            "past the low wall on the east side the black marsh begins, going out flat and " +
+            "bottomless to the horizon.";
+
+        world.Items["iron-key"] = new Item
+        {
+            Id = "iron-key",
+            Name = "Iron key",
+            Description = "A heavy iron key, the bit worn round with use.",
+            HolderId = Character.PlayerId,
+        };
+
+        return world;
+    }
+
+    /// <summary>
     /// Marrow with one plain object in the room, waiting to be looked at closely.
     ///
     /// Deliberately dull: a ring described only by its condition, so anything the prose reveals

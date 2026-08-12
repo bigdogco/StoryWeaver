@@ -82,6 +82,10 @@ public static class DeltaApplier
 
                 break;
 
+            case ItemLost d:
+                world.Items.Remove(d.ItemId);
+                break;
+
             case ItemRevealedAsCharacter d:
                 if (world.FindItem(d.ItemId) is { } revealed)
                 {

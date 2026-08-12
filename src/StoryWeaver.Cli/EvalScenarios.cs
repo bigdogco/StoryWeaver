@@ -139,7 +139,51 @@ internal static class EvalScenarios
         MoveProposed,
         SecondIdenticalObject,
         ObjectLeavesTheHand,
+        ObjectLostForGood,
     ];
+
+    /// <summary>
+    /// <b>Diagnostic — an object leaves play entirely, and canon has no way to say so.</b>
+    ///
+    /// Observed twice, in two consecutive sessions:
+    ///
+    /// <code>
+    /// marrow-LLM  t32  item_moved loose-rock     -> null/null   "dropping into the dark"
+    /// ashfall     t42  item_moved heavy-iron-key -> null/null   "into the lava-bright fissure"
+    /// </code>
+    ///
+    /// Both refused, correctly, by the rule that an item is in a location or held by somebody —
+    /// an item that is nowhere has silently stopped existing, which is the failure that rule
+    /// exists to prevent. But the model was right both times, and the refusal costs more than
+    /// the delta: the key is still recorded lying in the cellar, retrievable, twenty turns
+    /// after it went into the lava.
+    ///
+    /// <b>Declined once on one observation, reversed on the second.</b> Worth recording as a
+    /// judgement that was too tight rather than quietly changing course — "one rejected delta
+    /// is not a schema change" was right, and two in two sessions with canon left contradicting
+    /// the story is a different case.
+    ///
+    /// Scored on the outcome: the key must not still be sitting in the world. How it stops
+    /// being there is not this scenario's business.
+    /// </summary>
+    private static EvalScenario ObjectLostForGood => new(
+        "object-lost-for-good",
+        "*I take the key out and hurl it as far into the marsh as I can throw.*",
+        """
+        You wind up and let it go. The key turns over once, catching what little light there
+        is, and drops into the black water forty feet out with a sound barely worth the name.
+
+        The surface closes. There is no ripple to speak of, and the marsh here is bottomless
+        and has been swallowing heavier things than that for a thousand years.
+        """,
+        Required: [],
+        Forbidden: [],
+        Seed: WorldSeeds.Marrow_HoldingAKey,
+        Expected:
+        [
+            new("the key is gone from canon",
+                w => !w.Items.ContainsKey("iron-key")),
+        ]);
 
     /// <summary>
     /// <b>Diagnostic — reproduces the failure found in the 50-turn `ashfall` session.</b>

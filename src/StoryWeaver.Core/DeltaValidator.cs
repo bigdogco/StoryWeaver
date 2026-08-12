@@ -120,6 +120,11 @@ public static class DeltaValidator
                     characters.Add(promoted.ItemId);
                     items.Remove(promoted.ItemId);
                     break;
+                // Removed from the batch's view too, so anything later in the same turn that
+                // tries to move or re-lose it is refused rather than pointing at a ghost.
+                case ItemLost lost:
+                    items.Remove(lost.ItemId);
+                    break;
                 case LocationIntroduced introduced:
                     locations.Add(introduced.LocationId);
                     break;
@@ -204,6 +209,7 @@ public static class DeltaValidator
         LocationIntroduced d => $"new-loc:{d.LocationId}",
         LocationStatusChanged d => $"loc-status:{d.LocationId}:{d.Status}",
         ItemRevealedAsCharacter d => $"revealed:{d.ItemId}",
+        ItemLost d => $"lost:{d.ItemId}",
         _ => delta.ToString() ?? delta.GetType().Name,
     };
 
@@ -305,6 +311,14 @@ public static class DeltaValidator
             // legitimately change only the name; a promotion is the moment the thing stops
             // being an object, and a person carried over with an object's description reads
             // to the narrator as a person-shaped prop.
+            // An item can only be lost once, and only if it was there to lose. The reason is
+            // required because "gone" and "gone because it went into the fissure" are
+            // different records, and this delta is the only place the second survives.
+            ItemLost d =>
+                !items.Contains(d.ItemId) ? $"item '{d.ItemId}' does not exist."
+                : Blank(d.Reason) ? "reason is empty."
+                : null,
+
             ItemRevealedAsCharacter d =>
                 !items.Contains(d.ItemId) ? $"item '{d.ItemId}' does not exist."
                 : Blank(d.Name) ? "name is empty."

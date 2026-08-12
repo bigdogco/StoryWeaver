@@ -91,10 +91,51 @@ there**, which is its own argument for reading the real transcript instead of pa
       statuses; on the floor, down the shaft, tied to the gate are placements, and a placement
       is `item_moved`. If an object ends the turn resting on, inside, or fastened to something
       in a room, it is in that room
-- [x] **The other two candidates were not needed.** An `item_lost` for things that leave play,
-      and a third placement kind for fixtures, were both plausible on the evidence and are both
-      unbuilt. The chain ending up in the cellar it is chained inside is correct, and one
-      rejected `item_moved → null/null` in fifty turns does not earn a schema change
+- [x] ~~**The other two candidates were not needed.**~~ **Half reversed the same day.** A third
+      placement kind for fixtures is still unbuilt and still unnecessary. `item_lost` was
+      declined on "one rejected delta is not a schema change", then a second `ashfall` session
+      produced a second one — a key hurled into a lava fissure — and that time canon was left
+      **actively wrong**, still recording the key as lying in the cellar, retrievable, for the
+      rest of the session. Built; see below
+
+## `item_lost` — built 2026-08-12, and the shape of it is the finding
+
+**`object-lost-for-good` 0/6 → 10/10, and `object-leaves-the-hand` 16/20 → 19/20.**
+
+The first attempt was an ordinary new delta kind: a `StateDelta`, a converter entry, a
+validator rule, an applier case, a schema branch and a prompt rule. It worked, and it
+**wrecked an unrelated scenario**:
+
+| build | `object-leaves-the-hand` | `object-lost-for-good` |
+|---|---|---|
+| before any of this | **16/20** | 0/6 |
+| + schema branch, prompt rule before the placement rule | 10/20 | 6/6 |
+| + schema branch, no prompt rule | 2/20 | 10/10 |
+| + schema branch, prompt rule after the placement rule | **0/20** | 10/10 |
+| **no schema branch: rewrite + extended bullet** | **19/20** | **10/10** |
+
+**A schema branch is not free.** The `anyOf` competes for the model's attention, and a new
+prompt rule competes with the rules already there — moving that one rule by four lines swung an
+unrelated scenario between 0/20 and 10/20. Nothing about the placement logic changed in any of
+those rows.
+
+What works instead costs the model nothing, because **the model was already emitting the right
+thing**: `item_moved` with no destination at all, unprompted, in both real sessions and in most
+baseline runs. So there is no `item_lost` in the schema and no rule teaching it. The extractor
+rewrites that output into `ItemLost` on the way in, and the one existing bullet about items
+being somewhere gained a sentence naming the exception.
+
+- [x] `ItemLost(ItemId, Reason)` in Core — validator, applier, converter. Removes the item;
+      canon is what is true now, and the turn history keeps the record
+- [x] **No schema branch and no new prompt rule.** Measured, not assumed
+- [x] `Normalise` in `LlmStateExtractor` rewrites `item_moved → null/null`, carrying the
+      evidence text across as the reason
+- [x] The existing "every item is either in a location or held" bullet extended with the
+      exception, rather than a new bullet added
+- [x] Self-test: a lost item leaves canon **and** leaves the batch's view, so a later delta
+      naming it is refused rather than pointing at a ghost
+- [x] Full scored set 49/50, forbidden 0.00 — the one miss is `two-stage-entry`, which has
+      bounced 8/10–10/10 across samples all week
 - [x] **Checked: it does not happen to characters.** Every `status_changed` across all five
       saves swept for whereabouts-shaped text — 253+ turns, one candidate, and it is a false
       positive (*"sinking deeper into bog, mud up to waist"* is a condition, and the player was
@@ -110,3 +151,27 @@ there**, which is its own argument for reading the real transcript instead of pa
 
 - **The item table in `saves/ashfall` is not being repaired.** It is evidence, and the three
   wrong placements are the record of what happened
+
+---
+
+## Observed 2026-08-12, second `ashfall` session: nothing holds a region's state
+
+Two facts in fifty turns are a whole landscape changing:
+
+```
+t4   quiet-settling-now      The Quiet is settling now.
+t43  mountain-waking-up      The mountain is waking up.
+```
+
+Neither is durable — both will be wrong in an hour — and neither belongs to a location. They
+are true of the whole map at once. Characters have `Status`, items have `Status`, locations
+have `Status` since this morning. **A region does not**, so the fact store takes it. That is the
+same shape as the well before `Location.Status`, one level up.
+
+- [ ] **Do not build on two observations.** This is exactly the arithmetic that got `item_lost`
+      declined and then reversed, so state the threshold rather than the hunch: a world- or
+      region-level status is worth designing when it reproduces in a scenario *and* appears in
+      a third session. Two facts out of eleven is a hunch
+- [ ] Note the confound before anyone acts on it: `ashfall` is a world whose entire premise is
+      one slow catastrophe. A pack about a market town would probably produce none of these,
+      and one session of one world is not evidence about the schema

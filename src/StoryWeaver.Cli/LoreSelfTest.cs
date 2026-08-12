@@ -123,6 +123,7 @@ internal static class LoreSelfTest
         failures += CheckEstablishedTurnMatchesTheTurn();
         failures += CheckSourceIntroducedInSameBatch();
         failures += CheckItemBecomesCharacterAndSpeaks();
+        failures += CheckALostItemLeavesCanon();
         failures += CheckFactSourceMustExist();
         failures += CheckRivalClaimsAreNotDuplicates();
         failures += CheckItemMustBeSomewhere();
@@ -885,6 +886,58 @@ internal static class LoreSelfTest
         }
 
         Console.WriteLine("  ok    an item can become a character and be quoted in one batch");
+        return 0;
+    }
+
+    /// <summary>
+    /// A thing that is gone stops being in canon, and the batch stops seeing it.
+    ///
+    /// <see cref="ItemLost"/> is never emitted by the model — it has no schema branch, by
+    /// measurement rather than oversight. The extractor rewrites an <c>item_moved</c> with no
+    /// destination into it, because that is what models already produce for a thing thrown
+    /// where it cannot come back from.
+    ///
+    /// The second half is the one worth having: an item removed mid-batch must be gone from
+    /// the batch's view too, so a later delta naming it is refused rather than pointing at a
+    /// ghost.
+    /// </summary>
+    private static int CheckALostItemLeavesCanon()
+    {
+        WorldState world = WorldSeeds.Marrow();
+
+        world.Items["iron-key"] = new Item
+        {
+            Id = "iron-key",
+            Name = "Iron key",
+            Description = "A heavy iron key.",
+            HolderId = Character.PlayerId,
+        };
+
+        List<StateDelta> deltas =
+        [
+            new ItemLost("iron-key", "thrown into the marsh"),
+            new ItemStatusChanged("iron-key", "sunk"),
+        ];
+
+        ValidationOutcome outcome = DeltaValidator.Validate(world, deltas);
+
+        if (outcome.Accepted.Count != 1 || outcome.Rejected.Count != 1)
+        {
+            Console.WriteLine(
+                $"  FAIL  expected the loss accepted and the later change refused; got " +
+                $"{outcome.Accepted.Count} accepted, {outcome.Rejected.Count} rejected.");
+            return 1;
+        }
+
+        DeltaApplier.Apply(world, outcome.Accepted);
+
+        if (world.Items.ContainsKey("iron-key"))
+        {
+            Console.WriteLine("  FAIL  a lost item is still in canon.");
+            return 1;
+        }
+
+        Console.WriteLine("  ok    a lost item leaves canon, and the batch stops seeing it");
         return 0;
     }
 
