@@ -119,6 +119,7 @@ internal static class LoreSelfTest
         failures += CheckUnresolvedReferenceIsFound();
         failures += CheckEstablishedTurnMatchesTheTurn();
         failures += CheckSourceIntroducedInSameBatch();
+        failures += CheckItemBecomesCharacterAndSpeaks();
         failures += CheckFactSourceMustExist();
         failures += CheckRivalClaimsAreNotDuplicates();
         failures += CheckItemMustBeSomewhere();
@@ -698,6 +699,73 @@ internal static class LoreSelfTest
         }
 
         Console.WriteLine("  ok    a character introduced and quoted in one batch is accepted");
+        return 0;
+    }
+
+    /// <summary>
+    /// An object proves to be a person, and speaks on the same turn.
+    ///
+    /// Both halves matter and the second is the one that silently breaks.
+    /// <see cref="ItemRevealedAsCharacter"/> sits in tier 1 so a <see cref="FactEstablished"/>
+    /// naming it as source — judged in tier 2 — sees a character that exists. Put it in the
+    /// default tier and the fact is rejected for naming somebody who "does not exist", taking
+    /// every <c>fact_learned</c> behind it. That is not hypothetical: it is what the missing
+    /// promotion cost in play, and it is separately what mis-tiering <c>FactEstablished</c>
+    /// cost when <c>source</c> was added — 16 of 23 rejections in one session.
+    /// </summary>
+    private static int CheckItemBecomesCharacterAndSpeaks()
+    {
+        WorldState world = WorldSeeds.Marrow();
+
+        world.Items["tarp-covered-shape"] = new Item
+        {
+            Id = "tarp-covered-shape",
+            Name = "Shape under a tarp",
+            Description = "A shape under a heavy, salt-stained tarp.",
+            LocationId = "marrow-tavern",
+        };
+
+        // Deliberately in the order a model would emit them, with the fact before the
+        // promotion. Tier sorting is what makes this work; emission order must not matter.
+        List<StateDelta> deltas =
+        [
+            new FactEstablished("the-debt", "The weeping silver was given to keep the debt.", "tarp-covered-shape"),
+            new FactLearned(Character.PlayerId, "the-debt"),
+            new ItemRevealedAsCharacter("tarp-covered-shape", "Bloated man", "A drowned man, still breathing."),
+        ];
+
+        ValidationOutcome outcome = DeltaValidator.Validate(world, deltas);
+
+        if (outcome.Rejected.Count > 0)
+        {
+            Console.WriteLine(
+                $"  FAIL  promotion batch rejected: {outcome.Rejected[0].Reason}");
+            return 1;
+        }
+
+        DeltaApplier.Apply(world, outcome.Accepted);
+
+        if (world.Items.ContainsKey("tarp-covered-shape"))
+        {
+            Console.WriteLine("  FAIL  the promoted item is still an item.");
+            return 1;
+        }
+
+        if (world.FindCharacter("tarp-covered-shape") is not { } man
+            || man.Name != "Bloated man"
+            || man.LocationId != "marrow-tavern")
+        {
+            Console.WriteLine("  FAIL  the promoted character is missing, misnamed or nowhere.");
+            return 1;
+        }
+
+        if (!man.Knows.Contains("the-debt"))
+        {
+            Console.WriteLine("  FAIL  the speaker does not know what they said.");
+            return 1;
+        }
+
+        Console.WriteLine("  ok    an item can become a character and be quoted in one batch");
         return 0;
     }
 

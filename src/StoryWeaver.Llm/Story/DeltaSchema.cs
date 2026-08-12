@@ -196,6 +196,19 @@ public static class DeltaSchema
               },
               {
                 "type": "object",
+                "description": "An object turned out to be a person. Use this the moment a thing you recorded as an item proves to be alive: it breathes, moves on its own, or speaks. Keeps the same id, so a fact in this same batch may name it as a source.",
+                "properties": {
+                  "kind": { "type": "string", "enum": ["item_revealed_as_character"] },
+                  "itemId": { "type": "string", "description": "The item's EXISTING id. Do not invent a new one and do not also introduce a character." },
+                  "name": { "type": "string" },
+                  "description": { "type": "string", "description": "Who they are, now that you can see." },
+                  "evidence": { "type": "string" }
+                },
+                "required": ["kind", "itemId", "name", "description", "evidence"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
                 "description": "A place's condition changed: flooding, burning, filling with smoke, fallen silent. What the place is DOING now, not what it permanently is. Use this for a place changing rather than writing it down as a fact.",
                 "properties": {
                   "kind": { "type": "string", "enum": ["location_status_changed"] },

@@ -386,6 +386,7 @@ internal static class PlaySession
         ItemRenamed d => $"{d.ItemId} is now {d.Name}",
         ItemStatusChanged d => $"{d.ItemId} is {d.Status}",
         LocationStatusChanged d => $"{d.LocationId} is {d.Status}",
+        ItemRevealedAsCharacter d => $"{d.ItemId} is not a thing but a person ({d.Name})",
         _ => delta.GetType().Name,
     };
 

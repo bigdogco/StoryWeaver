@@ -156,6 +156,29 @@ public sealed record ItemRenamed(
 public sealed record ItemStatusChanged(string ItemId, string Status) : StateDelta;
 
 /// <summary>
+/// An object turned out to be a person.
+///
+/// <b>The id is kept.</b> Ids are already unique across every namespace, so the entity moves
+/// from <see cref="WorldState.Items"/> to <see cref="WorldState.Characters"/> without any
+/// reference to it breaking. The same principle as <see cref="CharacterRenamed"/>: a revelation
+/// changes what we know a thing is, never which thing it is.
+///
+/// <b>Why a delta of its own rather than an introduction plus a removal.</b> Two deltas would
+/// mean a batch that half-applies leaves either a man and a shape in the same room, or nothing
+/// at all. Extraction measured exactly that: given no promotion, models introduce a new
+/// character and leave the item lying there, in a room that now contains both.
+///
+/// Found in play, four times in one session. A shape under a tarp was introduced as an item —
+/// correctly — and then proved to be a living man. Every attempt to give it a character's
+/// status was rejected, and the rejection of a fact naming it as the speaker took three
+/// <c>fact_learned</c> with it, so the revelation never reached canon at all.
+/// </summary>
+public sealed record ItemRevealedAsCharacter(
+    string ItemId,
+    string Name,
+    string Description) : StateDelta;
+
+/// <summary>
 /// A place's condition changed — the water rising, the fire taking hold, the noise stopping.
 ///
 /// The <see cref="StatusChanged"/> of places. Last of the three, and the gap was measurable:

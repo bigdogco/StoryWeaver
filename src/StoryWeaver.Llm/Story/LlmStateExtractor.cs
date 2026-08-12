@@ -61,6 +61,12 @@ public sealed class LlmStateExtractor : IStateExtractor
           more than one space — down a shaft, along a passage, into the chamber beyond —
           report where they finish. Reporting only the first step leaves them standing in a
           place the story has already left.
+        - But a journey has to actually happen. Proposing somewhere, naming it, standing up,
+          turning toward the door, or setting off is NOT movement — those people are still in
+          the room the turn ends in. Ask where the prose leaves them standing, not where they
+          are headed. Recording an arrival early is worse than recording it late: the next
+          turn, when they really do arrive, has nothing left to report and the journey
+          vanishes. Introducing the place they named is fine; moving anyone into it is not.
         - When the story reveals the name of someone already in the known ids — an
           anonymous figure who gives their name, a stranger someone greets — emit
           character_renamed with their EXISTING id. Do not introduce them again as a new
@@ -79,6 +85,10 @@ public sealed class LlmStateExtractor : IStateExtractor
           when they are similar and in the same scene, and an action on one says nothing about
           the other. Recording that the wrong thing was ground, burned or given away is a
           mistake nothing downstream can detect.
+        - Identical is not the same. When the prose picks up something that matches an item
+          already in the known ids — a twin, a matching pair, another of the same make — emit
+          item_introduced with a NEW id naming where this one came from: shrine-medallion,
+          not weeping-woman-medallion. Two coins from the same mint are two coins.
         - An item's status is its condition — intact, broken, burned, wet, ground to powder.
           Its description is what it IS. A carving found under the rust, a maker's mark, an
           inscription: those were always there and are what the thing is, so revise the
@@ -138,6 +148,12 @@ public sealed class LlmStateExtractor : IStateExtractor
           the shaft became a churning" is the well's condition this turn and will be wrong the
           next; it is not knowledge anyone can carry. Write the place's condition into its
           status and establish no fact for it.
+        - An object that proves to be alive is PROMOTED, not re-introduced. A covered shape,
+          a bundle, a heap of rags you recorded as an item, which then breathes or moves or
+          speaks, is item_revealed_as_character on the id you already have. Do not introduce a
+          new character and leave the item lying there: that puts a person and a thing in the
+          same room, both real, and nothing downstream can tell they were ever one. Because the
+          id survives, a fact in this same batch may name it as sourceId.
         - If nothing changed, return an empty deltas list. That is a valid answer.
         """;
 

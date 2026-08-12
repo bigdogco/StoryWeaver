@@ -304,6 +304,78 @@ internal static class WorldSeeds
     }
 
     /// <summary>
+    /// Marrow with a shape under a tarp — an item that is about to turn out to be a person.
+    ///
+    /// Taken from the 51-turn session at turn 12, where the extractor introduced
+    /// <c>tarp-covered-shape</c> as an item, correctly: a covered shape is an object until it
+    /// moves. It then spent four turns trying to treat it as a character and being refused
+    /// every time, and one of those refusals took a real revelation out of canon.
+    ///
+    /// Seeded as an item rather than narrated into existence, because the failure is not in the
+    /// introduction — that part was right. It is in what happens next.
+    /// </summary>
+    public static WorldState Marrow_WithCoveredShape()
+    {
+        WorldState world = Marrow();
+
+        world.Items["tarp-covered-shape"] = new Item
+        {
+            Id = "tarp-covered-shape",
+            Name = "Shape under a tarp",
+            Description =
+                "A shape covered by a heavy, salt-stained tarp, lying on a bed of rotting " +
+                "reeds against the far wall.",
+            LocationId = "marrow-tavern",
+        };
+
+        return world;
+    }
+
+    /// <summary>
+    /// Marrow where the player already carries a medallion, and a second identical one is
+    /// hanging in the room.
+    ///
+    /// From turn 40 of the 51-turn session. The player had taken one medallion off a body
+    /// twenty turns earlier; lifting a second off a shrine, extraction emitted
+    /// <c>item_renamed</c> on the <i>first</i> one, with a description ending "An exact match
+    /// for…". It noticed they were identical and collapsed them into a single object.
+    ///
+    /// <b>The distance is deliberate.</b> The first medallion is seeded as already held and
+    /// long familiar, because that is what makes the merge tempting — the model is not
+    /// confusing two things in front of it, it is matching a new object against a remembered
+    /// one. A scenario with both objects in the same paragraph would be the
+    /// <c>two-objects</c> case, which already scores clean.
+    /// </summary>
+    public static WorldState Marrow_WithMedallionAlready()
+    {
+        WorldState world = Marrow();
+
+        world.Items["weeping-woman-medallion"] = new Item
+        {
+            Id = "weeping-woman-medallion",
+            Name = "Tarnished silver medallion of the weeping woman",
+            Description =
+                "A heavy silver disk depicting a weeping woman with bowed head and gouged, " +
+                "empty eye sockets. Ice-cold to the touch.",
+            HolderId = Character.PlayerId,
+        };
+
+        world.Items["crude-wooden-shrine"] = new Item
+        {
+            Id = "crude-wooden-shrine",
+            Name = "Crude wooden shrine",
+            Description =
+                "A shrine carved into the shape of a kneeling woman with a blank, eyeless " +
+                "face. A tarnished silver medallion hangs at its neck on a rotting hemp cord.",
+            LocationId = "marrow-tavern",
+        };
+
+        world.Characters[Character.PlayerId].Knows.Add("well-boarded");
+
+        return world;
+    }
+
+    /// <summary>
     /// Marrow with one plain object in the room, waiting to be looked at closely.
     ///
     /// Deliberately dull: a ring described only by its condition, so anything the prose reveals

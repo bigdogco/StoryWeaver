@@ -116,6 +116,10 @@ public static class DeltaValidator
                 case CharacterIntroduced introduced:
                     characters.Add(introduced.CharacterId);
                     break;
+                case ItemRevealedAsCharacter promoted:
+                    characters.Add(promoted.ItemId);
+                    items.Remove(promoted.ItemId);
+                    break;
                 case LocationIntroduced introduced:
                     locations.Add(introduced.LocationId);
                     break;
@@ -151,7 +155,11 @@ public static class DeltaValidator
         LocationIntroduced => 0,
 
         // May name a location the batch introduced above.
-        CharacterIntroduced => 1,
+        // ItemRevealedAsCharacter sits here for the same reason and not one step later: the
+        // turn an object proves to be a person is the turn it speaks, and the fact quoting it
+        // is judged in tier 2. Putting it in the default tier would reject that fact and every
+        // fact_learned behind it — which is precisely the failure this delta was built to fix.
+        CharacterIntroduced or ItemRevealedAsCharacter => 1,
 
         // Both may name a character introduced in tier 1: a fact through its source, an item
         // through its holder.
@@ -195,6 +203,7 @@ public static class DeltaValidator
         CharacterRenamed d => $"rename:{d.CharacterId}:{d.Name}",
         LocationIntroduced d => $"new-loc:{d.LocationId}",
         LocationStatusChanged d => $"loc-status:{d.LocationId}:{d.Status}",
+        ItemRevealedAsCharacter d => $"revealed:{d.ItemId}",
         _ => delta.ToString() ?? delta.GetType().Name,
     };
 
@@ -290,6 +299,18 @@ public static class DeltaValidator
             LocationStatusChanged d =>
                 !locations.Contains(d.LocationId) ? $"location '{d.LocationId}' does not exist."
                 : Blank(d.Status) ? "status is empty."
+                : null,
+
+            // A description is required where ItemRenamed leaves it optional. A rename may
+            // legitimately change only the name; a promotion is the moment the thing stops
+            // being an object, and a person carried over with an object's description reads
+            // to the narrator as a person-shaped prop.
+            ItemRevealedAsCharacter d =>
+                !items.Contains(d.ItemId) ? $"item '{d.ItemId}' does not exist."
+                : Blank(d.Name) ? "name is empty."
+                : string.Equals(d.Name, d.ItemId, StringComparison.OrdinalIgnoreCase)
+                    ? $"name '{d.Name}' is the id, not a name."
+                : Blank(d.Description) ? "description is empty."
                 : null,
 
             CharacterIntroduced d =>

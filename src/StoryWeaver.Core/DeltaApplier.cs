@@ -82,6 +82,30 @@ public static class DeltaApplier
 
                 break;
 
+            case ItemRevealedAsCharacter d:
+                if (world.FindItem(d.ItemId) is { } revealed)
+                {
+                    // Where they are is where the thing was. A held object that turns out to
+                    // be alive stands where its holder stands — odd, and the alternative
+                    // (nowhere) is the offstage state a seeded character is now forbidden.
+                    string? where = revealed.LocationId
+                        ?? (revealed.HolderId is { } holder
+                            ? world.FindCharacter(holder)?.LocationId
+                            : null);
+
+                    world.Items.Remove(d.ItemId);
+
+                    world.Characters[d.ItemId] = new Character
+                    {
+                        Id = d.ItemId,
+                        Name = d.Name,
+                        Description = d.Description,
+                        LocationId = where,
+                    };
+                }
+
+                break;
+
             case LocationStatusChanged d:
                 if (world.FindLocation(d.LocationId) is { } statusLocation)
                 {

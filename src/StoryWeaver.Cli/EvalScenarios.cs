@@ -135,7 +135,170 @@ internal static class EvalScenarios
         ObjectExamined,
         PlaceChanging,
         PlaceChangingLate,
+        ObjectProvesAlive,
+        MoveProposed,
+        SecondIdenticalObject,
     ];
+
+    /// <summary>
+    /// <b>Diagnostic — reproduces a failure from the 51-turn session.</b> A second object
+    /// indistinguishable from one the player already carries.
+    ///
+    /// Turn 40. Instead of <c>item_introduced</c>, extraction emitted <c>item_renamed</c> on
+    /// the medallion already in the player's hand, describing it as "an exact match" for the
+    /// new one. Two objects became one, and the first one's description was overwritten.
+    ///
+    /// <b>The mirror image of the deduplication problem</b>, which is logged as out of scope:
+    /// that one is canon failing to merge things that are the same, this is canon merging
+    /// things that are merely alike. Both come from judging identity by description.
+    ///
+    /// <b>There is a tell worth noting even if nothing acts on it.</b> The <c>item_moved</c>
+    /// into the player's hand that turn was a <i>no-op</i>, because the item named was already
+    /// held. A pickup that changes nothing means the wrong id was chosen.
+    ///
+    /// Distinct from <c>two-objects</c>, which puts both in the same paragraph and scores
+    /// clean. Here the twin is a remembered one, and the distance is what makes the merge
+    /// tempting.
+    /// </summary>
+    private static EvalScenario SecondIdenticalObject => new(
+        "second-identical-object",
+        "*I lift the medallion off the shrine's neck.*",
+        """
+        You pinch the rotting hemp cord at the carved woman's throat. The fibres are slimy and
+        deeply degraded; they part like wet ash at your touch, and the heavy silver disk drops
+        free into your palm.
+
+        You wipe away a thin film of green-black slime with your thumb. The pitted face of the
+        weeping woman looks back at you, head bowed, eye sockets gouged empty. It is ice-cold,
+        and it is the twin of the one already hanging at your belt — the same size, the same
+        casting, down to the flaw in the rim.
+        """,
+        Required: [],
+        Forbidden:
+        [
+            // The exact failure: the medallion already held gets rewritten to describe the
+            // new one, and the two become one object.
+            new("the medallion already held is rewritten",
+                d => d is ItemRenamed r && r.ItemId == "weeping-woman-medallion"),
+        ],
+        Seed: WorldSeeds.Marrow_WithMedallionAlready,
+        Expected:
+        [
+            // Outcome, not route. Two medallions must exist by the end of the turn, whichever
+            // deltas got us there.
+            new("two medallions exist",
+                w => w.Items.Values.Count(i =>
+                    i.Name.Contains("medallion", StringComparison.OrdinalIgnoreCase)) >= 2),
+
+            new("the one already carried is still carried",
+                w => w.FindItem("weeping-woman-medallion")?.HolderId == Character.PlayerId),
+        ]);
+
+    /// <summary>
+    /// <b>Diagnostic — reproduces a failure from the 51-turn session.</b> Somebody suggests
+    /// going somewhere and starts to move. Nobody has gone anywhere.
+    ///
+    /// Turn 21: the player said "we need another place to hide", the companion proposed the
+    /// salt-house and turned toward it, and extraction emitted <c>location_introduced</c> +
+    /// <c>player_moved</c> + <c>character_moved</c>. On turn 22 the player actually walked
+    /// there and the turn produced <b>no deltas at all</b> — canon already had them inside.
+    ///
+    /// <b>The inverse of <c>two-stage-entry</c>, and the distinction matters.</b> That scenario
+    /// exists because reporting only the first hop of a real journey leaves the player behind;
+    /// the rule it produced — "report where they finish" — is correct and is not what is wrong
+    /// here. A turn where nobody sets off has no finish to report. Over-correcting the first
+    /// rule would break the second, so both stay scored.
+    ///
+    /// Introducing the salt-house is <i>not</i> forbidden. A named, described building is a
+    /// real place whether or not anyone has walked into it, and the failure was never that.
+    /// </summary>
+    private static EvalScenario MoveProposed => new(
+        "move-proposed",
+        "*I shake my head.* If we go back through the square they will be waiting. We need somewhere else to sit out the night.",
+        """
+        Mabb lets his hand drop from your shoulder. "Aye. And there's not many empty beds in
+        this bog." His eyes go past you to the shuttered window and the black water beyond it.
+
+        "There's the old salt-house, out on the stilts at the end of the boardwalk. Nobody's
+        cured a fish in it since my father's time and the roof leaks like a sieve, but the door
+        still bars from the inside."
+
+        He pushes himself up off the bench, joints cracking, and turns toward the door with the
+        air of a man who expects to be followed.
+        """,
+        Required: [],
+        Forbidden:
+        [
+            new("the player moved without going anywhere", d => d is PlayerMoved),
+            new("Mabb moved without going anywhere",
+                d => d is CharacterMoved m && m.CharacterId == "drinker-mabb"),
+        ],
+        Expected:
+        [
+            new("the player is still in the tavern",
+                w => w.PlayerLocationId == "marrow-tavern"),
+        ]);
+
+    /// <summary>
+    /// <b>Diagnostic — reproduces the most expensive failure of the 51-turn session.</b>
+    ///
+    /// An object turns out to be a person. Canon has no way to say so.
+    ///
+    /// In play, <c>tarp-covered-shape</c> was introduced as an item on turn 12 — correctly, a
+    /// covered shape is an object — and then the extractor tried four separate times to treat
+    /// it as a character and was refused every time. One of those was a <c>fact_established</c>
+    /// naming it as the speaker, and its rejection took three <c>fact_learned</c> with it, so
+    /// the man's revelation never entered canon at all. It happened in the prose and the world
+    /// does not know it.
+    ///
+    /// <b>Scored on the outcome.</b> The thing must end the turn as a character; how it gets
+    /// there is not this scenario's business. That also makes it impossible to pass before the
+    /// feature exists, which is what a reproduction is for.
+    ///
+    /// The speech is deliberately included: attribution is where the real cost was, and a
+    /// scenario that only proves the thing moved would miss it.
+    /// </summary>
+    private static EvalScenario ObjectProvesAlive => new(
+        "object-proves-alive",
+        "*I take the corner of the tarp and pull it back.*",
+        """
+        The salt-stiffened canvas comes away in your fist. Underneath is a man — bloated,
+        skin the colour of old fat, mottled grey with marsh-weed — and he is breathing. A
+        slow, wet rise and fall. His eye sockets are empty and packed with dark peat.
+
+        The hand nearest you slides across the reeds. Then he forces his waterlogged torso up
+        onto one elbow, black sludge weeping from his nose and mouth, and speaks in a voice
+        like water moving in a pipe.
+
+        "The weeping silver," he says. "Given by the deep mud. To keep the debt."
+        """,
+        Required: [],
+        Forbidden: [],
+        Seed: WorldSeeds.Marrow_WithCoveredShape,
+        Expected:
+        [
+            // The route is not specified on purpose. A promotion delta is the obvious one, but
+            // an introduction plus the item going away would be just as correct an outcome.
+            new("the shape ends the turn as a character",
+                w => w.Characters.Values.Any(c =>
+                    c.Description.Contains("bloated", StringComparison.OrdinalIgnoreCase)
+                    || c.Name.Contains("man", StringComparison.OrdinalIgnoreCase))),
+
+            // Added after the first baseline scored 3/5 on the rule above by a route that is
+            // not actually correct: introducing a *new* character and leaving the item where
+            // it was. That leaves a man and a shape-under-a-tarp in the same room, both real.
+            // A promotion has to remove the thing it promoted, and there is currently no delta
+            // that can — which is exactly the gap.
+            new("the shape is no longer an item",
+                w => !w.Items.ContainsKey("tarp-covered-shape")),
+
+            // The expensive half. In play this was lost entirely: the fact naming the shape as
+            // its source was rejected, and three fact_learned went down with it.
+            new("what he says is recorded as a fact",
+                w => w.Facts.Values.Any(f =>
+                    f.Text.Contains("debt", StringComparison.OrdinalIgnoreCase)
+                    || f.Text.Contains("deep mud", StringComparison.OrdinalIgnoreCase))),
+        ]);
 
     /// <summary>
     /// <b>Diagnostic — reproduces the largest remaining category of misfiled facts.</b>
