@@ -119,19 +119,42 @@ forbidden 0.**
 - [x] `dotnet build` clean, self-tests pass
 - [x] Each scenario measured before and after, provider pinned, error count checked first
 
-## Found while working: `movement` is failing, and it is not from today
+## Found while working: `movement` is not failing — DeepInfra is
 
-`movement` — the plainest scenario in the scored set, "the player walks to the square" — scored
-**1/5**. It is in `All`, so this matters.
+`movement` scored **1/5** and was about to be fixed with a prompt rule. It is not broken.
 
-**Not caused by any of today's changes.** HEAD in a worktree, same provider, same n: **0/3**
-with two timeouts. The current build is if anything marginally better. Checked because the
-movement prompt rule for item 2 is exactly the kind of edit that could have caused it.
+| build | provider | movement |
+|---|---|---|
+| current | DeepInfra | 0–1 of 5, 4–6 timeouts per 8 |
+| `98896fb`, pre-`Location.Status` | DeepInfra | 1/2, 6 of 8 timed out |
+| current | **StreamLake** | **8/8** |
+| HEAD, without the prompt rule | **StreamLake** | **8/8** |
 
-Left unfixed on purpose: it needs its own reproduction and its own before/after, and folding it
-into three other fixes is how a fourth failure gets attributed to the wrong cause.
+- [x] Reproduced, diagnosed, and **the fix reverted** — a rule written against mood-padding
+      was deleted once HEAD scored 8/8 without it on a healthy provider. Committing an
+      unmeasured prompt change to compensate for one sick upstream is the failure that was
+      one step away
+- [x] **Full scored set, StreamLake: 50/50 clean, required 100%, forbidden 0.00, rejects
+      0.00.** The regression run owed since `Location.Status`. Today's four changes cost
+      nothing
+- [x] Sixth sighting of the provider hazard, logged in `CHALLENGES.md` — the worst so far,
+      because the symptom was 0% versus 100% rather than quality drift
 
-- [ ] **Reproduce and fix `movement`.** Suspect the same intent-vs-arrival boundary, from the
-      other side — but that is a guess, and the seed is the lever, not the prose
-- [ ] Full scored set re-run — **still owed from `Location.Status`**, and now doubly so.
-      Blocked on a provider that is not timing out on a third of calls
+### A retraction, and something it reopens
+
+`hostility` missing its standing rule 5/5 was explained here as long-standing, "consistent with
+`relationship_changed` never having fired in 102 turns of play". **It scores 10/10 on
+StreamLake.** That explanation was invented for an infrastructure symptom.
+
+- [ ] **Re-check "`relationship_changed` has never fired"** on a healthy provider before it is
+      trusted again. It is load-bearing for the character-sheets design, which cites it as the
+      reason authored attitudes take the authoring half and leave standing to canon. The
+      conclusion may well survive — a per-turn extractor genuinely cannot track accumulation —
+      but the evidence for it was gathered without a provider name attached
+
+## Next
+
+- [ ] `providerIgnore: ["DeepInfra"]` in settings — an exclude list, so routing keeps every
+      other upstream and no single host becomes a point of failure. The player's own config
+- [ ] **Record the provider on `TurnRecord`** and in the eval's recorded baselines. Its absence
+      is what let "movement is broken" and "movement was always fine" both look true today

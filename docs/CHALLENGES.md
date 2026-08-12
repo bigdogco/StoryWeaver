@@ -963,3 +963,58 @@ re-run the previous build now rather than trusting a number from last week.
 
 Recorded as unfinished: the scored set still needs a clean run on a healthy provider, and the
 50/50 baseline needs re-establishing with it.
+
+### The same provider, 0% and 100% — the sixth sighting, and the worst
+
+**2026-08-12.** `movement` — the plainest scenario in the scored set, "the player walks out to
+the square" — scored **0–1 of 5** with timeouts on a third to three-quarters of calls. It was
+about to be treated as a real extraction failure and fixed with a prompt rule.
+
+It is not broken. Same model id, same prompt, same scenario:
+
+| provider | movement |
+|---|---|
+| DeepInfra | 0–1 of 5, plus 4–6 timeouts per 8 |
+| **StreamLake** | **8/8** at 60 tokens a call |
+
+And the full scored set, which had never had a clean run all day: **50/50 on StreamLake,
+required 100%, forbidden 0.00, rejects 0.00.** Every scenario that looked broken —
+`new-character` 1/5, `hostility` 5/10, `two-stage-entry` 8/10 — was clean.
+
+**What the bad provider actually does**, visible only by reading deltas rather than scores:
+
+```
+mood_changed  innkeeper-hald = guarded
+mood_changed  drinker-mabb   = maudlin
+mood_changed  player         = neutral
+REJECTED mood_changed player = neutral      <- its own duplicate
+```
+
+Degenerate repetition. It sprays moods at everyone present, restates values canon already
+holds, repeats until the validator rejects the copies, and never reports the movement. That
+also explains why timeouts clustered on this one scenario all day: it has the least to extract,
+so the most room to pad.
+
+**Three things this cost, and they are the lesson:**
+
+- **A prompt rule was written against the padding, then deleted.** HEAD scores 8/8 on a healthy
+  provider without it. The rule fixed a problem that does not exist, and would have been
+  committed as a permanent instruction on the strength of one sick upstream.
+- **A wrong explanation was offered for `hostility`** — that its standing rule failing 5/5 was
+  long-standing, consistent with `relationship_changed` never firing in 102 turns of play. It
+  scores 10/10 on StreamLake. An explanation invented for a symptom that was infrastructure.
+  The "relationship_changed never fires" note now needs re-checking before it is trusted again.
+- **"When did it break?" is unanswerable.** The recorded 50/50 baseline does not say which
+  provider produced it. It may have been failing on DeepInfra for weeks.
+
+**The rule, restated:** *a measurement without a provider name attached is not a measurement.*
+Both "movement is broken" and "movement was always fine" were true today, and only the missing
+provider name made that possible.
+
+**And the practical defence already exists** — `providerIgnore` in settings, deliberately an
+exclude list rather than a pin, so routing keeps every remaining upstream and one bad host
+cannot become a single point of failure.
+
+**What the architecture got right:** none of this corrupted canon. Every run today, at its
+worst, scored `forbidden 0.00`. A degraded provider produces *missing* deltas, not wrong ones,
+and the validator rejects the garbage. The 51-turn session played on this and canon held.
