@@ -12,8 +12,7 @@
         "summary": "no strong feelings"
       },
       "lastSeenTurn": null,
-      "id": "drinker-mabb",
-      "name": "Mabb"
+      "id": "drinker-mabb"
     },
     "innkeeper-hald": {
       "description": "The innkeeper of the Drowned Crow. Heavyset, watchful, wipes the same patch of counter when he is thinking.",
@@ -28,8 +27,7 @@
         "summary": "suspicious of strangers"
       },
       "lastSeenTurn": null,
-      "id": "innkeeper-hald",
-      "name": "Hald"
+      "id": "innkeeper-hald"
     },
     "player": {
       "description": "A traveller, recently arrived in Marrow.",
@@ -42,18 +40,15 @@
         "summary": "no strong feelings"
       },
       "lastSeenTurn": null,
-      "id": "player",
-      "name": "You"
+      "id": "player"
     },
-    "inspector-mona":
-    {
-        "relationshipToPlayer": {
+    "inspector-mona": {
+      "relationshipToPlayer": {
         "standing": 100,
         "summary": "likes and respects player"
       },
       "locationId": "marrow-square",
-      "id":"inspector-mona",
-      "name":"Mona"
+      "id": "inspector-mona"
     }
   },
   "locations": {

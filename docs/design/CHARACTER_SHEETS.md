@@ -272,26 +272,30 @@ worlds/marrow/seed.json                        where he starts (location, mood, 
 twice, so nothing can disagree — which is the failure the other options all shared, in different
 disguises.
 
-> ⚠️ **This paragraph has never been true, and was found out by authoring a second pack on
-> 2026-08-12.** `Entity.Name` is `required`, so `seed.json` *cannot* omit a name — the
-> deserializer refuses the file. Marrow has always carried names for Hald and Mabb, which
-> looked like harmless duplication and was actually the format complying with the type while
-> the design said otherwise.
+> **This paragraph was false for a week, and is now true.** Found by authoring a second pack on
+> 2026-08-12: `Entity.Name` was `required`, so `seed.json` *could not* omit a name — the
+> deserializer refused the file. Marrow had always carried names for Hald and Mabb, which read
+> as harmless duplication and was the format quietly complying with the type while this
+> document said the opposite.
 >
-> The sheet still wins: `ApplySheets` overwrites both fields. So the observable behaviour is
-> correct and deterministic, and what is wrong is that two files can now state a name and only
-> one of them is read. Rename someone in their sheet and the seed keeps the old name with no
-> error — the exact silent disagreement decision 1 was written to prevent.
+> It was not harmless. `ApplySheets` overwrites, so the sheet always won and the behaviour
+> looked right — but two files stated one field and only one was read. Rename somebody in
+> their sheet and the seed keeps the old name, silently, forever.
 >
-> **The fix is not to add the names.** It is to make `Name` optional on the seed path and then
-> refuse, loudly, a seed that names a character who has a sheet — which turns the duplication
-> into a load error instead of a trap. That touches a Core type, so it is logged rather than
-> done: see [`TODO_SECOND_PACK.md`](../todo/TODO_SECOND_PACK.md).
+> **Fixed the same day.** `Name` is no longer `required`, and two load-time checks replace it:
+> a seed that names a character who has a sheet is refused, and any entity left without a name
+> after the merge is refused. Both are strictly stronger than what was lost — `required` only
+> ever checked that the property was *present*, and `"name": ""` satisfied it.
 >
-> Worth noting *how* this surfaced. Before writing the pack I pre-flighted it with a script
-> that reimplemented the load rules — and it passed, because it checked what I believed the
-> rules were. The real loader failed it in one line. **A check written from the same
-> understanding as the thing it checks cannot find a misunderstanding.**
+> Worth keeping *how* this surfaced. Before writing the pack it was pre-flighted with a script
+> that reimplemented the load rules, and it passed. The real loader failed it in one line.
+> **A check written from the same understanding as the thing it checks cannot find a
+> misunderstanding.**
+>
+> And what fixing it exposed: `CheckPlayerSheetCannotDeclareAttitudes` began failing for
+> duplication *before* reaching the attitude it was testing. It would have stayed green while
+> testing nothing. **A test that asserts only "this throws" passes on the wrong exception**,
+> and adding a rule upstream of one is how that happens.
 
 This is the pack/save split applied one level deeper: **identity is content, condition is
 state.** A character's name is not a thing the world does to them, and their mood is not part

@@ -63,9 +63,15 @@ wrong is that two files can state a name and only one is read: rename someone in
 and the seed keeps the old one, silently. That is the precise failure decision 1 was written to
 prevent.
 
-- [ ] **Make `Name` optional on the seed path, then refuse a seed that names a character who
-      has a sheet.** Turns the duplication into a load error rather than a trap. Touches a Core
-      type, so it wants its own decision — not folded in here
+- [x] **Fixed the same day.** `Entity.Name` is no longer `required`; `RequireSheetsOwnTheirNames`
+      refuses a seed that names a character who has a sheet, and `RequireEverythingIsNamed`
+      refuses anything left nameless after the merge. Both packs had their duplicated names
+      removed — six of them across marrow and ashfall
+- [x] Strictly stronger than what was given up: `required` only checked that the property was
+      *present*, so `"name": ""` satisfied it and produced a nameless character. A blank name
+      is now a load error
+- [x] Every entity construction site in `src/` verified to still set `Name`, since the compiler
+      no longer insists
 
 **How it surfaced is worth keeping.** The pack was pre-flighted with a script that
 reimplemented the load rules, and it passed. The real loader failed it in one line. *A check

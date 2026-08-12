@@ -112,6 +112,9 @@ internal static class LoreSelfTest
         failures += CheckMalformedSheetFilenameIsRefused();
         failures += CheckShippedPackLoads();
         failures += CheckAPlayerSheetReplacesCharacterCreation();
+        failures += CheckTheSheetOwnsTheName();
+        failures += CheckASeedNamingASheetedCharacterIsRefused();
+        failures += CheckABlankNameIsRefused();
         failures += CheckPlayerSheetCannotDeclareAttitudes();
         failures += CheckSheetParsesWithNestedAttitudes();
         failures += CheckSheetRejectsUnknownKey();
@@ -395,6 +398,12 @@ internal static class LoreSelfTest
                 return 1;
             }
 
+            // Rewritten without the player's name: once a sheet exists it owns the name, and
+            // a seed that also states one is a load error.
+            WorldState authoredSeed = WorldSeeds.Marrow();
+            authoredSeed.Characters[Character.PlayerId].Name = string.Empty;
+            WorldPackWriter.WriteSeed(Path.Combine(pack, WorldPack.SeedFile), authoredSeed);
+
             Directory.CreateDirectory(Path.Combine(pack, WorldPack.SheetDirectory));
             File.WriteAllText(
                 Path.Combine(pack, WorldPack.SheetDirectory, "player.md"),
@@ -423,6 +432,86 @@ internal static class LoreSelfTest
         {
             Directory.Delete(root, recursive: true);
         }
+    }
+
+    /// <summary>
+    /// A character named only by their sheet loads, with the sheet's name.
+    ///
+    /// This is decision 1 working for the first time. Until 2026-08-12 the seed *could not*
+    /// omit a name — <see cref="Entity.Name"/> was <c>required</c>, so the deserializer refused
+    /// the file and every pack wrote the name twice while the design said it should not.
+    /// </summary>
+    private static int CheckTheSheetOwnsTheName()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "sw-namedby-" + Guid.NewGuid().ToString("N"));
+        string pack = Path.Combine(root, "marrow");
+        Directory.CreateDirectory(Path.Combine(pack, WorldPack.SheetDirectory));
+
+        try
+        {
+            WorldState world = WorldSeeds.Marrow();
+            world.Characters["innkeeper-hald"].Name = string.Empty;
+            WorldPackWriter.WriteSeed(Path.Combine(pack, WorldPack.SeedFile), world);
+
+            File.WriteAllText(
+                Path.Combine(pack, WorldPack.SheetDirectory, "innkeeper-hald.md"),
+                "# Halden\n\nHeavyset and watchful, with a publican's memory for faces.");
+
+            WorldPack loaded = WorldPack.Load(root, "marrow");
+
+            if (loaded.Seed?.FindCharacter("innkeeper-hald")?.Name != "Halden")
+            {
+                Console.WriteLine("  FAIL  a character named only by their sheet did not get the name.");
+                return 1;
+            }
+
+            Console.WriteLine("  ok    a sheet can be the only place a character is named");
+            return 0;
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    /// <summary>
+    /// Naming somebody in both files is refused, rather than silently resolved in the sheet's
+    /// favour.
+    ///
+    /// The failure it prevents is a rename: change the name in the sheet, and the seed goes on
+    /// asserting the old one where nothing reads it. Two files claiming one field is the shape
+    /// decision 1 exists to forbid, and it had been the shape the format required.
+    /// </summary>
+    private static int CheckASeedNamingASheetedCharacterIsRefused()
+    {
+        return InPack("dupname", pack =>
+        {
+            // WorldSeeds.Marrow() names Hald, which is exactly the duplication under test.
+            WorldPackWriter.WriteSeed(Path.Combine(pack, WorldPack.SeedFile), WorldSeeds.Marrow());
+
+            Directory.CreateDirectory(Path.Combine(pack, WorldPack.SheetDirectory));
+            File.WriteAllText(
+                Path.Combine(pack, WorldPack.SheetDirectory, "innkeeper-hald.md"),
+                "# Hald\n\nHeavyset and watchful.");
+
+            return "a seed naming a character who has a sheet fails the load";
+        });
+    }
+
+    /// <summary>
+    /// A blank name is refused — which <c>required</c> never did. It checked that the property
+    /// was present, and <c>"name": ""</c> is present.
+    /// </summary>
+    private static int CheckABlankNameIsRefused()
+    {
+        return InPack("blankname", pack =>
+        {
+            WorldState world = WorldSeeds.Marrow();
+            world.Characters["drinker-mabb"].Name = "   ";
+            WorldPackWriter.WriteSeed(Path.Combine(pack, WorldPack.SeedFile), world);
+
+            return "a seeded character with a blank name fails the load";
+        });
     }
 
     /// <summary>
@@ -542,7 +631,12 @@ internal static class LoreSelfTest
 
         try
         {
-            WorldPackWriter.WriteSeed(Path.Combine(pack, WorldPack.SeedFile), WorldSeeds.Marrow());
+            // The name is cleared because the sheet owns it. Without this the pack fails for
+            // duplication before it ever reaches the attitude check, and this test would pass
+            // on the wrong exception — green, and testing nothing.
+            WorldState seed = WorldSeeds.Marrow();
+            seed.Characters[Character.PlayerId].Name = string.Empty;
+            WorldPackWriter.WriteSeed(Path.Combine(pack, WorldPack.SeedFile), seed);
 
             File.WriteAllText(
                 Path.Combine(pack, WorldPack.SheetDirectory, "player.md"),

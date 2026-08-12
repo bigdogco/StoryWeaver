@@ -104,7 +104,12 @@ public sealed class WorldPack
 
         if (seed is not null)
         {
+            // Before the merge, because afterwards every sheeted character has a name and
+            // there is no way to tell whether the seed supplied one.
+            RequireSheetsOwnTheirNames(seed, sheets, Path.Combine(directory, SeedFile));
+
             ApplySheets(seed, sheets, directory);
+            RequireEverythingIsNamed(seed, Path.Combine(directory, SeedFile));
             RequirePlayer(seed, Path.Combine(directory, SeedFile));
             RequireEveryoneIsPlaced(seed, Path.Combine(directory, SeedFile));
             RejectUnresolvedReferences(seed, lore, sheets, directory);
@@ -132,6 +137,64 @@ public sealed class WorldPack
         {
             EntityId.Require(
                 entry.Id, "lore", Path.Combine(directory, LoreDirectory, entry.Id + ".md"));
+        }
+    }
+
+    /// <summary>
+    /// A character with a sheet is named by the sheet, and not also by the seed.
+    ///
+    /// This is decision 1 — *nothing is written twice, so nothing can disagree* — finally
+    /// enforceable. It never was: <see cref="Entity.Name"/> was <c>required</c>, so a seed
+    /// omitting a name was refused by the deserializer and every pack wrote it twice anyway.
+    /// The duplication looked harmless because <see cref="ApplySheets"/> overwrites and the
+    /// sheet always won.
+    ///
+    /// It was not harmless. Rename somebody in their sheet and the seed keeps the old name,
+    /// silently, forever — two files claiming one field with only one of them read. Refused
+    /// rather than tolerated, for the same reason a player sheet cannot declare attitudes: a
+    /// field that reads as working and does nothing is worse than a field that is absent.
+    /// </summary>
+    private static void RequireSheetsOwnTheirNames(
+        WorldState seed,
+        Dictionary<string, CharacterSheet> sheets,
+        string file)
+    {
+        foreach (Character character in seed.Characters.Values)
+        {
+            if (!string.IsNullOrWhiteSpace(character.Name) && sheets.ContainsKey(character.Id))
+            {
+                throw new InvalidDataException(
+                    $"{file}: '{character.Id}' is named here and in their sheet. The sheet " +
+                    "owns the name — remove it from the seed, which holds only where they " +
+                    "start and how they are doing.");
+            }
+        }
+    }
+
+    /// <summary>
+    /// Everything the story can refer to has something to call it.
+    ///
+    /// Run after the merge, so a character named only by their sheet passes. This is what
+    /// <c>required</c> was doing, done properly: <c>required</c> checked that a property was
+    /// present, which <c>"name": ""</c> satisfies.
+    /// </summary>
+    private static void RequireEverythingIsNamed(WorldState seed, string file)
+    {
+        IEnumerable<(string Kind, Entity Entity)> everything =
+        [
+            .. seed.Characters.Values.Select(c => ("character", (Entity)c)),
+            .. seed.Locations.Values.Select(l => ("location", (Entity)l)),
+            .. seed.Items.Values.Select(i => ("item", (Entity)i)),
+        ];
+
+        foreach ((string kind, Entity entity) in everything)
+        {
+            if (string.IsNullOrWhiteSpace(entity.Name))
+            {
+                throw new InvalidDataException(
+                    $"{file}: the {kind} '{entity.Id}' has no name. Give it one here, or — for " +
+                    $"a character — in {SheetDirectory}/{entity.Id}.md.");
+            }
         }
     }
 
