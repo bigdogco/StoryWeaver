@@ -95,8 +95,16 @@ there**, which is its own argument for reading the real transcript instead of pa
       and a third placement kind for fixtures, were both plausible on the evidence and are both
       unbuilt. The chain ending up in the cellar it is chained inside is correct, and one
       rejected `item_moved → null/null` in fifty turns does not earn a schema change
-- [ ] Check whether the same shape exists for characters: a `status` reading "fled into the
-      tunnel" while `locationId` says otherwise. Not observed, cheap to look for
+- [x] **Checked: it does not happen to characters.** Every `status_changed` across all five
+      saves swept for whereabouts-shaped text — 253+ turns, one candidate, and it is a false
+      positive (*"sinking deeper into bog, mud up to waist"* is a condition, and the player was
+      in a bog location that exists). No character status disagrees with any `locationId`
+
+      **And the reason is the same reason items fail.** A character always ends a turn in a
+      *place*, which `character_moved` expresses exactly. An item can end a turn on the floor,
+      down a shaft, or knotted around a gate — destinations the schema has no way to name, so
+      the free-text field absorbs them. The bug was never about items being special; it was
+      about destinations that are not locations, and only items get those.
 
 ## Out of scope
 

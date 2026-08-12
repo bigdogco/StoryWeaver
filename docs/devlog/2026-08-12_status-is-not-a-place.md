@@ -84,8 +84,21 @@ than the fix itself.
 - No collateral damage on the three neighbouring object scenarios
 - Full scored set 50/50 clean
 
+## Checked afterwards: characters do not have this problem
+
+Every `status_changed` in all five saves, swept for whereabouts-shaped text. **253+ turns, one
+candidate, and it is a false positive** — *"sinking deeper into bog, mud up to waist"* is a
+condition, and the player was standing in a bog location that exists. No character status
+disagrees with any `locationId`.
+
+The reason turns out to be the same reason items *do* fail, which makes the fix feel less like
+a patch. **A character always ends a turn in a place**, and `character_moved` names places. An
+item can end a turn on the floor, down a shaft, or knotted around a gate — destinations the
+schema cannot name at all, so the free-text field takes them.
+
+The bug was never that items are special. It is that only items get destinations that are not
+locations.
+
 ## Still open
 
-- Whether the same shape exists for **characters** — a `status` reading "fled into the tunnel"
-  while `locationId` says otherwise. Not observed, cheap to look for
 - The `ashfall` item table stays wrong on purpose. It is the evidence
