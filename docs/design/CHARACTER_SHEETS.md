@@ -121,12 +121,52 @@ files without duplicating anything.
 
 ### What stays out: extracted relationship change
 
-`relationship_changed` has fired **zero times across 102 turns and two sessions**, through a lie
-exposed, open contempt for the crown, and a man terrified into cooperation. Extraction cannot
-track standing — it accumulates across scenes and a per-turn extractor sees one turn.
+`relationship_changed` has fired **once across 253 turns and five sessions** — turn 11 of
+`marrow-LLM-1`, where an innkeeper turned openly hostile in as many words. Everything else came
+through unmoved: a lie exposed, open contempt for the crown, a man terrified into cooperation,
+and a companion watching the player burn somebody alive.
+
+Extraction cannot track standing — it accumulates across scenes and a per-turn extractor sees
+one turn.
 
 So sheets take the half that works, which is authoring. Making standing *move* correctly is the
 reconciliation-pass problem, and stays out of this design entirely.
+
+### Re-checked 2026-08-12, and the reason is sharper than "the model can't"
+
+The evidence was gathered before measurements carried provider names, so it was re-examined
+after a provider was found scoring 0% on scenarios another scored 100% on. **The conclusion
+holds, and the mechanism turns out to be the opposite of what "never fires" suggests.**
+
+**The capability is fine.** The `hostility` eval scenario — where the prose states outright
+that a character's regard has changed — scores **10/10** on a healthy provider. The model emits
+`relationship_changed` perfectly well when asked a question it can see the answer to.
+
+**The trigger is what never occurs.** One firing in 253 turns of play, and the one that fired
+was the case that looks like the eval: somebody announcing hostility in the scene.
+
+The cleanest evidence is the contrast inside a single session. After 51 turns, every standing
+sat at exactly its seeded value:
+
+```
+drinker-mabb      0    no strong feelings        (seed)
+innkeeper-hald  -10    suspicious of strangers   (seed)
+inspector-mona  100    likes and respects        (seed)
+```
+
+while **mood moved constantly** over the same turns — `terrified`, `enraged`,
+`shaken, relieved`. Same prose, same extractor, same call.
+
+**Mood is visible in one scene and standing is not.** That is the whole of it. Ordinary prose
+does not announce that someone's regard has shifted; it shows a moment, and standing is the
+integral of many moments. A per-turn extractor is structurally the wrong instrument, and no
+prompt rule fixes a thing the input does not contain.
+
+**A note on what cannot be tested.** The eval only covers the case where the prose says it
+outright, and it passes. There is no scenario for the realistic case — resentment accumulating
+across scenes — and there cannot usefully be one, because a scenario is a single turn by
+construction. That is not a gap in the eval; it is the same finding stated from the other side,
+and it is why this belongs to the reconciliation pass.
 
 ## 4. The player is a sheet with the second half missing
 

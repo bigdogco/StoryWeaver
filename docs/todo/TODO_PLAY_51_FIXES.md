@@ -146,11 +146,12 @@ forbidden 0.**
 `relationship_changed` never having fired in 102 turns of play". **It scores 10/10 on
 StreamLake.** That explanation was invented for an infrastructure symptom.
 
-- [ ] **Re-check "`relationship_changed` has never fired"** on a healthy provider before it is
-      trusted again. It is load-bearing for the character-sheets design, which cites it as the
-      reason authored attitudes take the authoring half and leave standing to canon. The
-      conclusion may well survive — a per-turn extractor genuinely cannot track accumulation —
-      but the evidence for it was gathered without a provider name attached
+- [x] **Re-checked 2026-08-12: the claim survives, with better evidence.** Every saved session
+      swept — **one firing in 253 turns across five sessions**, against the "zero in 102" the
+      design cited. The capability is not the constraint: `hostility` scores 10/10 on a healthy
+      provider. What does not occur is the trigger. Sharpest evidence is inside one session:
+      after 51 turns every standing sat at its seeded value while mood moved constantly over
+      the same prose. Written up in §3 of the character-sheets design
 
 ## Next
 
@@ -167,8 +168,10 @@ StreamLake.** That explanation was invented for an infrastructure symptom.
 
 ## Still open
 
-- [ ] **Re-check "`relationship_changed` has never fired"** on a healthy provider — see the
-      retraction above. Cited as settled in the character-sheets design
+- [x] **Re-checked — the claim survives.** See item above and §3 of the character-sheets
+      design. My retraction cast doubt on the design conclusion; the doubt was misplaced, and
+      only the *link* I drew between the eval failure and the play finding was wrong. They
+      have different causes: one was a sick provider, the other is structural
 - [ ] Narration's provider is still unrecorded. It needs `INarrator` to return more than a
       string, and prose has no score to attribute to anyone yet. Worth doing the day a
       narration eval exists, not before

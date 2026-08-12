@@ -371,6 +371,22 @@ Small things the incumbents mostly don't do, cheap to add once the foundations e
       Silas is terrified into cooperation. All of it landed as facts and moods, none as
       standing.
 
+      **Re-checked 2026-08-12, deliberately, and it survived.** The earlier evidence predates
+      measurements carrying provider names, and was re-examined after one upstream was caught
+      scoring 0% on scenarios another scored 100% on. Every saved session was swept:
+      **one firing in 253 turns across five sessions** — `marrow-LLM-1` turn 11, an innkeeper
+      announcing hostility in as many words, which is the case the eval scenario also covers.
+
+      The re-check produced a better statement of the mechanism than "it never fires". The
+      `hostility` scenario scores **10/10** on a healthy provider, so **the capability is
+      fine** — what does not occur is the trigger. And the sharpest evidence is inside one
+      session rather than across them: after 51 turns every standing sat at exactly its seeded
+      value, while `mood` moved constantly over the same prose through the same call.
+
+      **Mood is visible in one scene; standing is the integral of many.** No prompt rule fixes
+      a thing the input does not contain, which is why this stays a reconciliation-pass item
+      and not a prompt item.
+
 ---
 
 ## Dice-resolved checks — combat and everything else uncertain

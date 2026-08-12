@@ -122,7 +122,10 @@ Devlog: [`2026-08-06_placement-and-ids.md`](../devlog/2026-08-06_placement-and-i
 
 - **Stats and numbers.** "Quick with a knife" is prose; anything the engine reasons about is the
   dice-resolved-checks design
-- **Extracted relationship change.** `relationship_changed` has fired zero times in 102 turns;
-  making standing move is the reconciliation-pass problem
+- **Extracted relationship change.** `relationship_changed` has fired **once in 253 turns
+  across five sessions**, re-checked 2026-08-12 on a healthy provider. The capability is fine
+  — the `hostility` scenario scores 10/10 — but the trigger does not occur, because standing
+  accumulates and a per-turn extractor sees one turn. Making it move is the reconciliation-pass
+  problem
 - **Budgeting or selective loading.** Send whole sheets for present characters and measure
   before introducing a way to silently omit one
