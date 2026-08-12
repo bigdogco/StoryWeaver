@@ -272,6 +272,27 @@ worlds/marrow/seed.json                        where he starts (location, mood, 
 twice, so nothing can disagree — which is the failure the other options all shared, in different
 disguises.
 
+> ⚠️ **This paragraph has never been true, and was found out by authoring a second pack on
+> 2026-08-12.** `Entity.Name` is `required`, so `seed.json` *cannot* omit a name — the
+> deserializer refuses the file. Marrow has always carried names for Hald and Mabb, which
+> looked like harmless duplication and was actually the format complying with the type while
+> the design said otherwise.
+>
+> The sheet still wins: `ApplySheets` overwrites both fields. So the observable behaviour is
+> correct and deterministic, and what is wrong is that two files can now state a name and only
+> one of them is read. Rename someone in their sheet and the seed keeps the old name with no
+> error — the exact silent disagreement decision 1 was written to prevent.
+>
+> **The fix is not to add the names.** It is to make `Name` optional on the seed path and then
+> refuse, loudly, a seed that names a character who has a sheet — which turns the duplication
+> into a load error instead of a trap. That touches a Core type, so it is logged rather than
+> done: see [`TODO_SECOND_PACK.md`](../todo/TODO_SECOND_PACK.md).
+>
+> Worth noting *how* this surfaced. Before writing the pack I pre-flighted it with a script
+> that reimplemented the load rules — and it passed, because it checked what I believed the
+> rules were. The real loader failed it in one line. **A check written from the same
+> understanding as the thing it checks cannot find a misunderstanding.**
+
 This is the pack/save split applied one level deeper: **identity is content, condition is
 state.** A character's name is not a thing the world does to them, and their mood is not part
 of who they are.

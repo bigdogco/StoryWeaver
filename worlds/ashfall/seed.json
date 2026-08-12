@@ -1,0 +1,86 @@
+{
+  "turnNumber": 0,
+  "characters": {
+    "player": {
+      "description": "A traveller who came over the pass on the wrong day.",
+      "locationId": "waystation-common-room",
+      "status": "normal",
+      "mood": "neutral",
+      "knows": [],
+      "relationshipToPlayer": {
+        "standing": 0,
+        "summary": "no strong feelings"
+      },
+      "lastSeenTurn": null,
+      "id": "player",
+      "name": "You"
+    },
+    "keeper-ilse": {
+      "locationId": "waystation-common-room",
+      "status": "normal",
+      "mood": "brisk",
+      "knows": [
+        "road-closed-at-the-teeth"
+      ],
+      "relationshipToPlayer": {
+        "standing": 0,
+        "summary": "another mouth to feed"
+      },
+      "lastSeenTurn": null,
+      "id": "keeper-ilse",
+      "name": "Ilse"
+    },
+    "courier-behn": {
+      "locationId": "waystation-common-room",
+      "status": "normal",
+      "mood": "impatient",
+      "knows": [
+        "road-closed-at-the-teeth"
+      ],
+      "relationshipToPlayer": {
+        "standing": -5,
+        "summary": "sizing up a stranger"
+      },
+      "lastSeenTurn": null,
+      "id": "courier-behn",
+      "name": "Behn"
+    }
+  },
+  "locations": {
+    "waystation-common-room": {
+      "description": "A long stone room dug half into the mountain, roofed in slate that ticks under the falling ash. One fire, a dozen chairs, and four people who did not choose each other's company. The shutters are closed and the lamps are lit at midday.",
+      "status": "",
+      "connections": [
+        "ash-road"
+      ],
+      "id": "waystation-common-room",
+      "name": "The Waystation"
+    },
+    "ash-road": {
+      "description": "The cinder road outside, switchbacking up toward the pass. Grey ash comes down steadily and without wind, settling on everything at the same rate, so the road and the rocks and the milestones are all going the same colour.",
+      "status": "",
+      "connections": [
+        "waystation-common-room"
+      ],
+      "id": "ash-road",
+      "name": "The ash road"
+    }
+  },
+  "items": {
+    "sealed-courier-tube": {
+      "description": "A brass tube the length of a forearm, capped at both ends and sealed with grey wax. It is heavier than a tube of letters ought to be.",
+      "locationId": null,
+      "holderId": "courier-behn",
+      "status": "intact",
+      "id": "sealed-courier-tube",
+      "name": "Sealed courier tube"
+    }
+  },
+  "facts": {
+    "road-closed-at-the-teeth": {
+      "id": "road-closed-at-the-teeth",
+      "text": "The pass is closed at the Teeth, and has been for six days.",
+      "establishedTurn": 0
+    }
+  }
+}

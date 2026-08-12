@@ -17,20 +17,26 @@ namespace StoryWeaver.Cli;
 /// </summary>
 internal static class PlaySession
 {
-    /// <summary>
-    /// Which pack to play. Content — the authored world.
-    /// </summary>
-    private const string PackId = "marrow";
+    /// <summary>Pack played when <c>--pack</c> is not given.</summary>
+    private const string DefaultPackId = "marrow";
 
     /// <summary>
-    /// Which save to play it in. State — this playthrough.
+    /// Which pack to play, and which save to play it in — content and state, and always two
+    /// identifiers even when they hold the same string.
     ///
-    /// The same string as <see cref="PackId"/> today, and a separate constant on purpose:
-    /// they are different identifiers that have been sharing one name, and a pack supporting
-    /// several saves is only a matter of choosing this at startup. Kept identical for now so
-    /// existing saves keep working untouched.
+    /// <b>Set once at startup and never again.</b> Static mutable state in a class this size
+    /// is worth a raised eyebrow; the alternative was threading two strings through six method
+    /// signatures for no behavioural gain, in a console harness that runs exactly one session
+    /// per process. A UI would pass them as parameters and these would go.
+    ///
+    /// <b>The save defaults to the pack id.</b> Two packs sharing one save is not a
+    /// configuration, it is a corruption: the character and location ids written by one world
+    /// do not exist in the other, so resuming would load a world whose contents the pack has
+    /// never heard of.
     /// </summary>
-    private const string SaveId = "marrow";
+    private static string _packId = DefaultPackId;
+
+    private static string _saveId = DefaultPackId;
 
     private const string SaveRoot = "saves";
 
@@ -41,15 +47,26 @@ internal static class PlaySession
     /// </summary>
     private const string PackRoot = "worlds";
 
-    public static async Task<int> RunAsync(StoryWeaverSettings settings)
+    /// <param name="packId">Pack to play. Null keeps <see cref="DefaultPackId"/>.</param>
+    /// <param name="saveId">
+    /// Save to play it in. Null follows the pack, which is what you want unless you are
+    /// deliberately keeping two playthroughs of one world apart.
+    /// </param>
+    public static async Task<int> RunAsync(
+        StoryWeaverSettings settings,
+        string? packId = null,
+        string? saveId = null)
     {
+        _packId = string.IsNullOrWhiteSpace(packId) ? DefaultPackId : packId.Trim();
+        _saveId = string.IsNullOrWhiteSpace(saveId) ? _packId : saveId.Trim();
+
         FileLlmLog log = new(settings.Logging);
         using OpenRouterClient client = new(settings, log);
 
         // Authored content, loaded once. Malformed content throws by name and line rather
         // than vanishing — a silently dropped lore entry or an unreadable seed is the failure
         // this genre is worst at, and the one thing worth failing a startup over.
-        WorldPack pack = WorldPack.Load(PackRoot, PackId);
+        WorldPack pack = WorldPack.Load(PackRoot, _packId);
 
         JsonWorldRepository repository = new(SaveRoot);
         int historyTurns = settings.Story.HistoryTurns;
@@ -67,7 +84,7 @@ internal static class PlaySession
         // The built-in seed is the fallback for a pack that ships none. It is a fixture, not
         // content: the eval scenarios need worlds derived by mutating a base, which is a thing
         // C# does well and JSON does not.
-        WorldState? loaded = await repository.LoadAsync(SaveId).ConfigureAwait(false);
+        WorldState? loaded = await repository.LoadAsync(_saveId).ConfigureAwait(false);
         bool resumed = loaded is not null;
         WorldState world = loaded ?? pack.Seed ?? WorldSeeds.Marrow();
 
@@ -82,7 +99,7 @@ internal static class PlaySession
                 CreateCharacter(world);
             }
 
-            await repository.SaveAsync(SaveId, world).ConfigureAwait(false);
+            await repository.SaveAsync(_saveId, world).ConfigureAwait(false);
         }
 
         PrintBanner(log.FilePath, repository.RootDirectory, resumed, world.TurnNumber, historyTurns, pack);
@@ -129,7 +146,7 @@ internal static class PlaySession
                     await RerollAsync(engine, repository, world).ConfigureAwait(false);
                 }
                 else if (!await AuthoringCommands
-                        .TryHandleAsync(input, SaveId, world, repository, pack.Lore)
+                        .TryHandleAsync(input, _saveId, world, repository, pack.Lore)
                         .ConfigureAwait(false))
                 {
                     HandleCommand(input, world, repository, pack.Lore, pack.Sheets);
@@ -142,7 +159,7 @@ internal static class PlaySession
             {
                 Console.WriteLine("\n(thinking...)\n");
                 TurnOutcome outcome = await engine
-                    .RunTurnAsync(SaveId, world, input)
+                    .RunTurnAsync(_saveId, world, input)
                     .ConfigureAwait(false);
 
                 PrintTurn(outcome);
@@ -245,7 +262,7 @@ internal static class PlaySession
         WorldState world)
     {
         IReadOnlyList<TurnRecord> history =
-            await repository.LoadHistoryAsync(SaveId).ConfigureAwait(false);
+            await repository.LoadHistoryAsync(_saveId).ConfigureAwait(false);
 
         if (history.Count == 0)
         {
@@ -258,7 +275,7 @@ internal static class PlaySession
         try
         {
             TurnOutcome outcome = await engine
-                .ReExtractAsync(SaveId, world, history[^1])
+                .ReExtractAsync(_saveId, world, history[^1])
                 .ConfigureAwait(false);
 
             if (outcome.ExtractionFailed)
@@ -292,7 +309,7 @@ internal static class PlaySession
         WorldState world)
     {
         IReadOnlyList<TurnRecord> history =
-            await repository.LoadHistoryAsync(SaveId).ConfigureAwait(false);
+            await repository.LoadHistoryAsync(_saveId).ConfigureAwait(false);
 
         if (history.Count == 0)
         {
@@ -305,7 +322,7 @@ internal static class PlaySession
         try
         {
             RerollOutcome reroll = await engine
-                .RerollAsync(SaveId, world, history[^1])
+                .RerollAsync(_saveId, world, history[^1])
                 .ConfigureAwait(false);
 
             if (reroll.WasRefused)
@@ -525,7 +542,7 @@ internal static class PlaySession
 
     private static void PrintLastRaw(IWorldRepository repo)
     {
-        IReadOnlyList<TurnRecord> history = repo.LoadHistoryAsync(SaveId).GetAwaiter().GetResult();
+        IReadOnlyList<TurnRecord> history = repo.LoadHistoryAsync(_saveId).GetAwaiter().GetResult();
 
         if (history.Count == 0)
         {
@@ -549,7 +566,7 @@ internal static class PlaySession
             return;
         }
 
-        IReadOnlyList<TurnRecord> history = await repo.LoadHistoryAsync(SaveId).ConfigureAwait(false);
+        IReadOnlyList<TurnRecord> history = await repo.LoadHistoryAsync(_saveId).ConfigureAwait(false);
 
         if (history.Count == 0)
         {

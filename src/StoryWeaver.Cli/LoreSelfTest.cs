@@ -438,34 +438,59 @@ internal static class LoreSelfTest
     private static int CheckShippedPackLoads()
     {
         const string root = "worlds";
-        const string id = "marrow";
 
-        if (!Directory.Exists(Path.Combine(root, id)))
+        if (!Directory.Exists(root))
         {
-            Console.WriteLine($"  skip  no {root}/{id} in the working directory");
+            Console.WriteLine($"  skip  no {root}/ in the working directory");
             return 0;
         }
 
-        try
-        {
-            WorldPack pack = WorldPack.Load(root, id);
+        // Every folder, not a named one. A second pack is worthless as a regression guard if
+        // the check only ever opens the first, and "the world in the next folder over" is
+        // precisely the thing this exists to catch.
+        string[] ids =
+        [
+            .. Directory.EnumerateDirectories(root)
+                .Select(Path.GetFileName)
+                .OfType<string>()
+                .OrderBy(n => n, StringComparer.Ordinal),
+        ];
 
-            if (pack.Seed is null)
+        if (ids.Length == 0)
+        {
+            Console.WriteLine($"  skip  {root}/ has no packs in it");
+            return 0;
+        }
+
+        int failures = 0;
+
+        foreach (string id in ids)
+        {
+            try
             {
-                Console.WriteLine($"  FAIL  {root}/{id} loaded without a seed.");
-                return 1;
-            }
+                WorldPack pack = WorldPack.Load(root, id);
 
-            Console.WriteLine(
-                $"  ok    {root}/{id} loads — {pack.Seed.Characters.Count} seated, " +
-                $"{pack.Sheets.Count} with sheets, {pack.Lore.All.Count()} lore");
-            return 0;
+                if (pack.Seed is null)
+                {
+                    Console.WriteLine($"  FAIL  {root}/{id} loaded without a seed.");
+                    failures++;
+                    continue;
+                }
+
+                string authored = pack.AuthorsThePlayer ? "authored player" : "blank slate";
+
+                Console.WriteLine(
+                    $"  ok    {root}/{id} loads — {pack.Seed.Characters.Count} seated, " +
+                    $"{pack.Sheets.Count} with sheets, {pack.Lore.All.Count()} lore, {authored}");
+            }
+            catch (InvalidDataException ex)
+            {
+                Console.WriteLine($"  FAIL  {root}/{id} no longer loads: {ex.Message}");
+                failures++;
+            }
         }
-        catch (InvalidDataException ex)
-        {
-            Console.WriteLine($"  FAIL  {root}/{id} no longer loads: {ex.Message}");
-            return 1;
-        }
+
+        return failures;
     }
 
     /// <summary>
