@@ -96,6 +96,12 @@ public sealed class LlmStateExtractor : IStateExtractor
           property into status. A ring whose status reads "carved with a weeping woman" is
           recorded as having been damaged into that shape, and its real description still says
           nothing about the carving.
+        - A status is a condition, never a whereabouts. Broken, lit, soaked, ground to powder
+          are statuses. On the floor, down the shaft, tied to the gate, back in its case are
+          placements, and a placement is item_moved. If an object ends the turn resting on,
+          inside, or fastened to something in a room, it is in that room: move it there. An
+          item whose status says it is on the ground while canon still has it in somebody's
+          hand is canon contradicting the story, and nothing downstream can notice.
         - Looking closely at something and finding out what it is IS a change worth recording.
           Do not stay silent because the object did not move and nothing happened to it — what
           the world knows about it changed.

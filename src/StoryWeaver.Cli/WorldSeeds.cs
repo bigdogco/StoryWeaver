@@ -376,6 +376,51 @@ internal static class WorldSeeds
     }
 
     /// <summary>
+    /// A cellar with a sluice gate in it, and a coil of chain on the floor.
+    ///
+    /// Rebuilt from turn 44 of the `ashfall` session after two easier versions failed to
+    /// reproduce anything. Throwing a cup across a room scored 10/12 and 12/12 — the model
+    /// handles an object that simply lands somewhere.
+    ///
+    /// What the three real failures had in common was **a fixture**: a cup on "the floor", a
+    /// cable "in the shaft", a chain "around the gate". None of those is a location you can
+    /// move an item to, so the model wrote the destination into the status field, where it
+    /// fits and where nothing checks it. The gate is the whole point of this seed.
+    ///
+    /// The chain starts on the floor rather than in hand, because the real turn had the player
+    /// pick it up and attach it in one move — and it is the ending, not the picking up, that
+    /// goes wrong.
+    /// </summary>
+    public static WorldState Marrow_WithChainAndGate()
+    {
+        WorldState world = Marrow();
+
+        world.Locations["flood-cellar"] = new Location
+        {
+            Id = "flood-cellar",
+            Name = "The flood cellar",
+            Description =
+                "A brick undercroft below the tavern, ankle-deep in cold water. A rusted " +
+                "sluice gate closes off the channel at the far end, its brackets weeping " +
+                "orange down the stone.",
+            Connections = { "marrow-tavern" },
+        };
+
+        world.Locations["marrow-tavern"].Connections.Add("flood-cellar");
+        world.Characters[Character.PlayerId].LocationId = "flood-cellar";
+
+        world.Items["iron-chain"] = new Item
+        {
+            Id = "iron-chain",
+            Name = "Length of iron chain",
+            Description = "A cold, pitted length of iron chain, coiled on the wet brick.",
+            LocationId = "flood-cellar",
+        };
+
+        return world;
+    }
+
+    /// <summary>
     /// Marrow with one plain object in the room, waiting to be looked at closely.
     ///
     /// Deliberately dull: a ring described only by its condition, so anything the prose reveals

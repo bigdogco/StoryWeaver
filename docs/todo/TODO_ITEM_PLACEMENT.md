@@ -2,9 +2,10 @@
 
 Found in the 50-turn `ashfall` session, 2026-08-12. Save: `saves/ashfall/` at turn 50.
 
-**Not started. Needs a reproduction before anything is built** — the well established that the
-lever is the seed, not the prose, and that a category with a structural explanation can still
-refuse to reproduce.
+**Fixed 2026-08-12. `object-leaves-the-hand` 4/12 → 12/12**, no collateral damage across
+`object-examined`, `wrong-object-acted-on` and `second-identical-object` (24/24 clean).
+
+It took three attempts to reproduce, and the two failures are the useful part — see below.
 
 ---
 
@@ -63,13 +64,37 @@ Do not guess between these before a scenario reproduces the failure:
   loose on the floor, and arguably a third placement kind. Real, rare, and the most speculative
   of the three — a chain in a location whose description mentions the gate is probably enough
 
-## Steps
+## Reproducing it took three tries, and that is the finding
 
-- [ ] Scenario: an item held by the player that the prose puts down, throws, or breaks
-      somewhere specific. Scored on the **outcome** — the item ends the turn in the location,
-      not in a hand with a story in its status field
-- [ ] Measure before touching anything, provider pinned, error count read first
-- [ ] Only then choose between the three above
+| attempt | scenario | result |
+|---|---|---|
+| 1 | player hurls a held cup at the hearth, same room | **10/12** — barely fails |
+| 2 | player slings it out the door into the square | **12/12** — does not fail at all |
+| 3 | **player knots a chain around a sluice gate** | **4/12** — reproduces |
+
+Attempts 1 and 2 were written from the summary of the bug rather than from the bug. Going back
+and reading the three real turns showed what they had in common and what I had left out:
+**a fixture.** A cup on "the floor", a cable "in the shaft", a chain "around the gate" — none
+of those is a location you can move an item to, so the model wrote the destination into the
+free-text status field, where it fits and where nothing checks it.
+
+An object that simply lands somewhere is handled correctly, every time. The failure needs
+somewhere that is *not* a place.
+
+Attempt 2 also introduced an ambiguity of its own — the prose had the player kick a door open,
+and every run moved the player through it. **A scenario can fail for reasons the author put
+there**, which is its own argument for reading the real transcript instead of paraphrasing it.
+
+## The fix
+
+- [x] Prompt rule: *a status is a condition, never a whereabouts.* Broken, lit, soaked are
+      statuses; on the floor, down the shaft, tied to the gate are placements, and a placement
+      is `item_moved`. If an object ends the turn resting on, inside, or fastened to something
+      in a room, it is in that room
+- [x] **The other two candidates were not needed.** An `item_lost` for things that leave play,
+      and a third placement kind for fixtures, were both plausible on the evidence and are both
+      unbuilt. The chain ending up in the cellar it is chained inside is correct, and one
+      rejected `item_moved → null/null` in fifty turns does not earn a schema change
 - [ ] Check whether the same shape exists for characters: a `status` reading "fled into the
       tunnel" while `locationId` says otherwise. Not observed, cheap to look for
 

@@ -138,7 +138,61 @@ internal static class EvalScenarios
         ObjectProvesAlive,
         MoveProposed,
         SecondIdenticalObject,
+        ObjectLeavesTheHand,
     ];
+
+    /// <summary>
+    /// <b>Diagnostic — reproduces the failure found in the 50-turn `ashfall` session.</b>
+    /// An object leaves the player's hand, and the leaving is written into its status.
+    ///
+    /// Three times in that session, each identical in shape:
+    ///
+    /// <code>
+    /// item_status_changed  clay-cup-ale     = "shattered on the floor"      still held
+    /// item_status_changed  old-mining-cable = "dropped into the shaft"      still held
+    /// item_status_changed  severed-chain    = "knotted around the gate"     still held
+    /// </code>
+    ///
+    /// Canon ends up with somebody carrying a cup that is lying on the ground.
+    ///
+    /// <b>Third sighting of one pattern.</b> Facts absorbed a location's changing state
+    /// because locations had no status; status is now absorbing placement. Given no slot for
+    /// what the prose keeps saying, the model uses the nearest slot that will take it — and
+    /// the validator cannot object, because the delta is well-formed and the field is free
+    /// text. That is why the session's rejection count (1 in 132) says nothing about this:
+    /// it was found by reading canon, not rejections.
+    ///
+    /// Scored on the outcome. The status is welcome to say "shattered" — that is exactly what
+    /// status is for. What must not survive the turn is the cup still being in a hand.
+    /// </summary>
+    private static EvalScenario ObjectLeavesTheHand => new(
+        "object-leaves-the-hand",
+        "*I drag the chain out of the water and wrap it round the sluice gate.* That will hold a while. *I knot it tight.*",
+        """
+        You reach into the cold and haul the coil up dripping. The links are pitted and they
+        bite into your palms as you heave the slack across and loop it through the rusted
+        brackets of the gate.
+
+        You pull it taut, wrap the last of it around the central hinge, and knot it. The iron
+        cinches down with a harsh scrape, binding the plate hard against its stone frame. The
+        water goes on moving somewhere behind it, but the gate does not.
+        """,
+        Required: [],
+        Forbidden: [],
+        Seed: WorldSeeds.Marrow_WithChainAndGate,
+        Expected:
+        [
+            // After you have knotted something around a gate, you are not carrying it. This is
+            // the assertion the three real cases all failed: the object's new whereabouts went
+            // into the status field and the placement never moved.
+            new("the chain is not in the player's hand",
+                w => w.FindItem("iron-chain")?.HolderId != Character.PlayerId),
+
+            // Not redundant: it guards a "fix" that merely drops the holder. An item held by
+            // nobody and in no location has silently stopped existing.
+            new("the chain is still somewhere",
+                w => w.FindItem("iron-chain")?.LocationId is not null),
+        ]);
 
     /// <summary>
     /// <b>Diagnostic — reproduces a failure from the 51-turn session.</b> A second object
