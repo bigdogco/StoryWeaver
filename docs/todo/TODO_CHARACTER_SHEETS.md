@@ -81,8 +81,13 @@ Devlog: [`2026-08-06_placement-and-ids.md`](../devlog/2026-08-06_placement-and-i
 - [x] `WorldPack.AuthorsThePlayer` — true when the pack ships `characters/player.md`
 - [x] `PlaySession` skips the opening prompts when it is set, and says who you are instead,
       pointing at `/rename` so an authored protagonist does not read as a locked one
-- [x] `worlds/marrow` deliberately ships **no** `player.md` — it is the blank-slate world and
-      the only coverage the prompt path has
+- [x] ~~`worlds/marrow` deliberately ships **no** `player.md`~~ — **changed 2026-08-12**, it
+      now ships one. The first session played against sheets made the case: an authored
+      protagonist with a companion who names them is what `{{player}}` was built for. The
+      branch stays covered by the self-test, which loads the same pack both ways; what is lost
+      is a *shipped world* exercising the opening prompts by hand
+- [ ] A second pack would restore that manual coverage, and is the obvious home for the
+      blank-slate shape
 - [x] Self-test covers **both** branches. The interesting failure is the one that still looks
       like it works, and checking only the sheet branch would pass while the blank-slate path
       silently stopped asking anyone their name

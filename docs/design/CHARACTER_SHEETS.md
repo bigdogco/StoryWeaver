@@ -222,8 +222,16 @@ reads as one that forgot to.
 a pack with `player.md` spans two files exactly as Hald does. That is the cost decision 1
 already accepted, applied consistently rather than waived for one character.
 
-`worlds/marrow` deliberately ships **no** `player.md`: it is the blank-slate world, and the
-only coverage the prompt path has.
+**Changed 2026-08-12: `worlds/marrow` now ships a `player.md`.** It was held back as the
+blank-slate world, and the first session played against sheets made the case for the other
+shape — an authored protagonist with a companion who has an attitude toward them by name is
+what the whole `{{player}}` mechanism was built for, and it reads better than a stranger.
+
+What that costs is small and worth stating: the *manual* path through the opening prompts now
+has no shipped world to exercise it. The branch itself stays covered by
+`CheckAPlayerSheetReplacesCharacterCreation`, which loads the same pack twice, once with the
+sheet and once without — deliberately built to cover both directions for exactly this reason.
+A second pack would restore the manual coverage the day one exists.
 
 ### The original reasoning, unchanged
 

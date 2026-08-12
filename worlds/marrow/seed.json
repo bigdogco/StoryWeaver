@@ -44,6 +44,16 @@
       "lastSeenTurn": null,
       "id": "player",
       "name": "You"
+    },
+    "inspector-mona":
+    {
+        "relationshipToPlayer": {
+        "standing": 100,
+        "summary": "likes and respects player"
+      },
+      "locationId": "marrow-square",
+      "id":"inspector-mona",
+      "name":"Mona"
     }
   },
   "locations": {
