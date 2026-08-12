@@ -109,10 +109,13 @@ forbidden 0.**
       `object-examined`**, which is the legitimate case of revising a known item's description
       after looking closely. The rule that works says only what the new object is and gives an
       example id, and says nothing about the old one
-- [ ] The no-op-pickup tell is **not** acted on. A pickup that changes nothing means the wrong
-      id was chosen, and the validator could see that — but it could only reject, not repair,
-      and rejecting loses the pickup entirely. Logged, not built
-- [ ] Still the mirror of the deduplication problem, and still out of scope
+- [x] **The no-op-pickup tell — measured 2026-08-12, and it is too noisy to use.** All six
+      saves swept: **7 no-op `item_moved` across 250+ turns, and exactly one was this bug.**
+      The other six are the model harmlessly restating that a knife is still in Behn's hand or
+      a coin still with Hald. **One in seven precision** — surfacing it would cry wolf six
+      times out of seven, and the underlying merge is now fixed at 10/10 anyway
+- [x] Its mirror, deduplication, was measured the same day and also declined — see
+      `TODO_FACT_HYGIENE.md`. Seven of ten high-similarity fact pairs must stay separate
 
 ## Verify
 

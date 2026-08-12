@@ -160,9 +160,35 @@ where the real case is a *place* changing.
 
 ## Out of scope, logged
 
-- [ ] **Deduplication.** Three facts describe the cult's location, two describe Shurus
-      preserving followers, two describe the same creature being wounded. The extractor sees
-      no semantic overlap and the validator catches only exact id collisions. This is what
-      makes a fact store degrade slowly rather than visibly
+- [x] **Deduplication — measured 2026-08-12, and the answer is do not build it.**
+
+      All six saves swept for fact pairs above 0.45 token overlap: **10 pairs across 177
+      facts.** Then every pair was read, which is the part that mattered:
+
+      | | pairs | may they be merged? |
+      |---|---|---|
+      | genuine restatements | **3** | yes |
+      | **contradictions** | 1 | **no — that is what `source` exists for** |
+      | before and after | 3 | no, both true at different times |
+      | identifications | 2 | no, the link is the plot |
+      | revelation refining an earlier fact | 1 | no, and it is a `character_renamed` miss |
+
+      **Seven of ten must stay separate**, and a similarity-based pass would have destroyed
+      all seven. The clearest: `blocks-taken-to-bog` and `blocks-taken-to-quarry` are two
+      characters contradicting each other about where the thing went — exactly the case
+      attribution was built to preserve, and 0.45 similar. Also `boy-wore-bronze` and
+      `drowned-figure-bronze-chain`, whose overlap *is* the identification the story turns on.
+
+      **Surface similarity is not identity.** This is the same family as the scoring-rule
+      mistake made four times: judging the shape of a thing rather than what it means.
+
+      The real duplicate rate is **3 in 177 facts, 1.7%** — and two of those three are
+      symptoms of bugs already fixed elsewhere (`well-fluid` / `well-fluid-stopped` is a
+      location's changing state, which `Location.Status` now absorbs; the wounded-creature pair
+      is momentary-events-as-facts). The residue does not pay for a mechanism that can silently
+      merge a disagreement.
+
+      Revisit only with a *semantic* check that can tell restatement from contradiction, which
+      is a model call per pair and a different order of cost.
 - [ ] **Agreements as commitments.** `hald-agrees-to-guide` is durable and knowledge-worthy,
       but a promise is the kind of thing that gets broken, and canon cannot record that

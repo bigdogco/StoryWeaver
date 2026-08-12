@@ -86,8 +86,9 @@ Devlog: [`2026-08-06_placement-and-ids.md`](../devlog/2026-08-06_placement-and-i
       protagonist with a companion who names them is what `{{player}}` was built for. The
       branch stays covered by the self-test, which loads the same pack both ways; what is lost
       is a *shipped world* exercising the opening prompts by hand
-- [ ] A second pack would restore that manual coverage, and is the obvious home for the
-      blank-slate shape
+- [x] A second pack restores that manual coverage — `worlds/ashfall`, built the same day, and
+      the blank-slate shape now lives there. Confirmed in play: `{{player}}` rendered as
+      "Rook", a name no file knew
 - [x] Self-test covers **both** branches. The interesting failure is the one that still looks
       like it works, and checking only the sheet branch would pass while the blank-slate path
       silently stopped asking anyone their name
@@ -101,10 +102,16 @@ Devlog: [`2026-08-06_placement-and-ids.md`](../devlog/2026-08-06_placement-and-i
 
 ### Left open on purpose
 
-- [ ] **Should extraction-proposed ids be held to the same shape?** `Slug()` already produces
-      kebab-case for the authoring commands, so this is only about the model's own
-      `character_introduced`. Refusing there is a rejection cascade rather than a load error —
-      a different cost, and it belongs with `DeltaValidator`
+- [x] **Should extraction-proposed ids be held to the same shape? Measured 2026-08-12: no.**
+      Every id reference in every save swept — **1528 of them, zero malformed.** The model
+      produces kebab-case without being told to, which the schema's own examples
+      (`cellar-poisoning`, `militia-woman`) are quietly doing the work for.
+
+      Adding a validator check would buy nothing and cost a rejection cascade: a refused
+      `character_introduced` takes every delta referencing it down too. **A guard against a
+      failure that has never occurred, whose failure mode is worse than the thing it guards
+      against.** If a future model starts emitting `Bloated_Man`, normalisation across the
+      whole batch is the fix, not rejection — but that is for the day it happens
 
 ## Measure first, per the pattern
 
