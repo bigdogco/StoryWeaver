@@ -122,6 +122,8 @@ internal static class LoreSelfTest
         failures += CheckUnresolvedReferenceIsFound();
         failures += CheckEstablishedTurnMatchesTheTurn();
         failures += CheckSourceIntroducedInSameBatch();
+        failures += CheckWalkingSomewhereConnectsIt();
+        failures += CheckAWalkedRouteIsTwoWay();
         failures += CheckItemBecomesCharacterAndSpeaks();
         failures += CheckALostItemLeavesCanon();
         failures += CheckFactSourceMustExist();
@@ -798,6 +800,77 @@ internal static class LoreSelfTest
     /// `FactEstablished` out of tier 0. The fact was judged before the speaker existed, and
     /// took every `fact_learned` down with it.
     /// </summary>
+    /// <summary>
+    /// <b>Walking from one place to another records that the two are connected.</b>
+    ///
+    /// The failure this exists for, found in the 150-turn ashfall run: nothing in the delta
+    /// set could ever connect two locations. <c>LocationIntroduced</c> carries no connections
+    /// and no other delta touches the field, so every location extraction ever created was an
+    /// orphan — 33 of them across nine saves, in both worlds.
+    ///
+    /// It reads as a narration failure and is not one. <c>ContextAssembler</c> renders
+    /// "Leads to:" from this set, so the narrator was told the player stood in a sealed room
+    /// and narrated exactly that, correctly, for seventy turns.
+    /// </summary>
+    private static int CheckWalkingSomewhereConnectsIt()
+    {
+        WorldState world = WorldSeeds.Marrow();
+
+        DeltaApplier.Apply(
+            world,
+            [
+                new LocationIntroduced("cellar-stair", "cellar stair", "Steps down into the dark."),
+                new PlayerMoved("cellar-stair"),
+            ]);
+
+        Location? from = world.FindLocation("marrow-tavern");
+        Location? to = world.FindLocation("cellar-stair");
+
+        if (from is null || to is null || !from.Connections.Contains("cellar-stair"))
+        {
+            Console.WriteLine(
+                "  FAIL  walking from the tavern to a new place left the tavern with no way there.");
+            return 1;
+        }
+
+        Console.WriteLine("  ok    walking somewhere records the way there");
+        return 0;
+    }
+
+    /// <summary>
+    /// <b>And the way back.</b> The edge that matters is the reverse one.
+    ///
+    /// In the ashfall run the player entered <c>maintenance-shaft</c> from the vent ledge on
+    /// turn 65; the forward edge would have given the shaft nothing. It is the return edge
+    /// that stops a room being a hole someone falls into for seventy turns.
+    ///
+    /// Decided 2026-08-13 to derive both directions, knowingly against the note on
+    /// <see cref="Location.Connections"/> that a one-way drop is a real thing. A one-way drop
+    /// is rare; a sealed room happened 33 times. Canon is hand-editable now, so being
+    /// occasionally wrong about a ledge costs one line in a JSON file.
+    /// </summary>
+    private static int CheckAWalkedRouteIsTwoWay()
+    {
+        WorldState world = WorldSeeds.Marrow();
+
+        DeltaApplier.Apply(
+            world,
+            [
+                new LocationIntroduced("cellar-stair", "cellar stair", "Steps down into the dark."),
+                new PlayerMoved("cellar-stair"),
+            ]);
+
+        if (world.FindLocation("cellar-stair") is not { } arrived
+            || !arrived.Connections.Contains("marrow-tavern"))
+        {
+            Console.WriteLine("  FAIL  the new place has no way back to where the player came from.");
+            return 1;
+        }
+
+        Console.WriteLine("  ok    a walked route leads both ways");
+        return 0;
+    }
+
     private static int CheckSourceIntroducedInSameBatch()
     {
         WorldState world = WorldSeeds.Marrow();

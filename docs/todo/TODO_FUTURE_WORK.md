@@ -788,3 +788,28 @@ every one of them so far.
       `ForNarration` / `ForExtraction` split. Validation should make it impossible; verify
       rather than assume. *(TODO_CHARACTER_SHEETS)*
 - [ ] **Full scored set re-run, provider pinned**, whenever extraction changes. *(TODO_FACT_HYGIENE)*
+
+---
+
+## From the 150-turn run — 2026-08-13
+
+Observed and deliberately not chased. See `devlog/2026-08-13_a-world-with-no-exits.md`.
+
+- [ ] **Status fields have become prose.** The player ended as *"pinned deeper in ash,
+      struggling to breathe, scalded, choking on superheated grit"* and the location carried six
+      clauses. `Character.Status` was designed to hold `"wounded"`. This is the events-in-status
+      problem at scale — previously logged at two occurrences, now the normal case in a long
+      run. Wants a measurement before a prompt rule: **the last four attempts to tell the model
+      what *not* to write into a field broke something else.**
+- [ ] **`location_status_changed` is a third of all output.** 59 of 177 applied deltas, 19 on
+      one location, largely re-describing the same unchanging state. Shipped 2026-08-06 and
+      already the single commonest delta in the system. Related to the above: if status held a
+      condition rather than a paragraph, it would not need rewriting every turn.
+- [ ] **Facts and moods die when the player is alone.** Zero facts established in 150 turns
+      against Marrow's 44 in 51; `mood_changed` once against 46. The whole cast sat untouched in
+      the room they started in from turn 5. Possibly correct — a story with one character in it
+      has little to record — but worth confirming it is the solitude and not a distance effect,
+      which the next multi-character long run answers for free.
+- [ ] **Check the domain model for other seed-only fields.** `Connections` looked populated in
+      every hand-made test and was empty in every real world, because only seeds wrote it.
+      Anything else with that shape has the same latent bug.

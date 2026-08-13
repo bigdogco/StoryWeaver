@@ -145,6 +145,7 @@ public static class DeltaApplier
             case CharacterMoved d:
                 if (world.FindCharacter(d.CharacterId) is { } moved)
                 {
+                    Connect(world, moved.LocationId, d.ToLocationId);
                     moved.LocationId = d.ToLocationId;
                 }
 
@@ -156,6 +157,7 @@ public static class DeltaApplier
             case PlayerMoved d:
                 if (world.Player is { } player)
                 {
+                    Connect(world, player.LocationId, d.ToLocationId);
                     player.LocationId = d.ToLocationId;
                 }
 
@@ -217,6 +219,55 @@ public static class DeltaApplier
                 throw new InvalidOperationException(
                     $"No apply rule for delta type '{delta.GetType().Name}'. A delta kind was " +
                     "added without extending DeltaApplier.");
+        }
+    }
+
+    /// <summary>
+    /// Records that two places are connected, because somebody just walked between them.
+    ///
+    /// <b>Derived rather than asked of the model, and that is the whole point.</b> Nothing in
+    /// the delta set could connect two locations: <see cref="LocationIntroduced"/> carries no
+    /// connections and no other kind touched the field, so every location extraction ever
+    /// created was an orphan — 33 of them across nine saves, in both worlds, human- and
+    /// model-played. The 150-turn ashfall run ended with the player sealed in a shaft with no
+    /// exits for seventy turns, which reads as the narrator looping and is not: the narrator
+    /// renders "Leads to:" from this set and was told, accurately, that there was nowhere to
+    /// go.
+    ///
+    /// Someone who walked from A to B has demonstrated that A connects to B. That is
+    /// entailment, not judgement, so it belongs here for the same reason a character who
+    /// asserts a fact is recorded as knowing it — see <see cref="FactEstablished"/> above.
+    /// It also adds no schema branch, and a schema branch is never free.
+    ///
+    /// <b>Both directions, knowingly.</b> <see cref="Location.Connections"/> notes that a
+    /// one-way drop is a real thing worth representing, and this overrides that for the base
+    /// game: the edge that unseals a room is the return one, a one-way drop is rare, and a
+    /// sealed room happened thirty-three times. Canon is hand-editable, so being wrong about a
+    /// ledge costs one line in a JSON file.
+    ///
+    /// Known imprecision: prose that carries the player through an intermediate space records
+    /// one move, so the edge joins the ends and skips the middle. A slightly wrong graph is
+    /// worth having over no graph at all.
+    /// </summary>
+    private static void Connect(WorldState world, string? from, string? to)
+    {
+        if (from is null
+            || to is null
+            || string.Equals(from, to, StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        // Silent when either end is unknown. The validator has already refused a move to a
+        // location that does not exist, so this only guards a character standing nowhere.
+        if (world.FindLocation(from) is { } origin)
+        {
+            origin.Connections.Add(to);
+        }
+
+        if (world.FindLocation(to) is { } destination)
+        {
+            destination.Connections.Add(from);
         }
     }
 }

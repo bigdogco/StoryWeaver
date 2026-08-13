@@ -754,6 +754,32 @@ properly, in currency rather than tokens, once turns are real.
 
 ---
 
+### The world model could only build dead ends
+
+**Found 2026-08-13 in a 150-turn `ashfall` run; fixed the same day.**
+
+Nothing in the delta set could connect two locations. `LocationIntroduced` carries id, name and
+description, and no other kind touched `Location.Connections`, so **every location extraction
+ever created was an orphan** — 33 of them across nine saves, in both worlds, human- and
+model-played. The only places with exits were the two from a hand-written seed.
+
+It survived that long because the symptom is invisible until a player walks somewhere they
+cannot narratively wander back out of. Then it is total: the player reached a maintenance shaft
+on turn 80 and the last 25 turns produced 4 deltas, 23 of 25 turns changing nothing.
+
+**It reads as the narrator looping and is not.** `ContextAssembler` renders "Leads to:" from
+that set, so the narrator was told the player stood in a sealed room and narrated exactly that,
+correctly, for seventy turns. Canon was telling the truth about a broken world.
+
+**The lesson is about where to look, not about connections.** A field that is written by a seed
+and never by play looks populated in every hand-made test and is empty in every real world. The
+general form: *any field only the seed writes is a field play cannot maintain* — worth checking
+the rest of the domain model against.
+
+Fixed by deriving edges from movement in `DeltaApplier.Connect`, adding no delta kind.
+
+---
+
 ### Running the eval honestly — five rules paid for in wrong conclusions
 
 Moved here from `TODO_FUTURE_WORK.md` 2026-08-13. They had sat as unchecked boxes for weeks,
