@@ -2,14 +2,15 @@ namespace StoryWeaver.Core;
 
 /// <summary>
 /// Persistence for worlds. Deliberately narrow, and deliberately free of any hint about how
-/// the data is stored — the JSON implementation is expected to be replaced by a hybrid
-/// (JSON canon, SQLite turn log) once full-text search over history is wanted, and that
-/// swap is only cheap if nothing here leaks a storage detail.
+/// the data is stored. That is now for testability rather than portability: storage is JSON
+/// permanently (see docs/PROJECT.md — a save is a surface the player edits by hand, and a
+/// database would hide the world from the person who owns it), so the second implementation
+/// this interface has to stay honest for is <see cref="InMemoryWorldRepository"/>.
 ///
 /// Canon and turn history are separate methods rather than one blob. They have opposite
 /// shapes: canon is small, bounded, and rewritten whole; history grows without limit and is
 /// only ever appended to. Storing them together would mean rewriting the entire session
-/// history on every turn, and would block moving the log to a different store later.
+/// history on every turn.
 /// </summary>
 public interface IWorldRepository
 {

@@ -56,9 +56,10 @@ Dependencies point inward. `Core` references nothing.
 - **OpenRouter** for model access, configured **per role** (narration, extraction,
   summarize, worldgen) rather than per call site, since narration and extraction want very
   different models
-- **JSON** storage for now — git-diffable saves are the best debugging tool at this stage.
-  Likely moves to a hybrid (JSON canon + SQLite turn log) once full-text search over
-  history is wanted.
+- **JSON** storage, permanently — a save is meant to be opened and edited by the person
+  playing it. Giving someone an item, fixing a character the model got wrong, adjusting a
+  state: that is authorship, not cheating, and a database would hide the world from its
+  owner. Diffable saves happen to also be the best debugging tool there is.
 
 ## Getting started
 

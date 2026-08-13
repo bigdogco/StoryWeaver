@@ -88,5 +88,7 @@ Rough cost: ~200-300 tokens per remembered turn against the narration role.
 ## Known cost, accepted for now
 
 `TurnEngine` reads the whole `history.jsonl` each turn to take the last N — O(n) per turn.
-Fine at bootstrap scale (50 turns), and the interface already anticipates moving the turn log
-to SQLite when it stops being fine. Logged in TODO_FUTURE_WORK rather than optimized now.
+Fine at bootstrap scale (50 turns). Logged in TODO_FUTURE_WORK rather than optimized now; the
+fix when it stops being fine is a `LoadRecentTurnsAsync(worldId, count)` on the repository, or
+holding the window in memory across a session. (Originally written as "move the turn log to
+SQLite" — that plan was dropped 2026-08-13; storage stays JSON.)

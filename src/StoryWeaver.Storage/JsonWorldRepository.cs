@@ -13,8 +13,11 @@ namespace StoryWeaver.Storage;
 ///
 /// The split mirrors the interface's own reasoning: canon is small and rewritten whole;
 /// history grows without bound and is only appended to. Keeping history as JSONL means a
-/// turn is one file append, never a read-modify-write of the whole log — which also keeps
-/// the eventual move of the log to SQLite an isolated change.
+/// turn is one file append, never a read-modify-write of the whole log.
+///
+/// Both files are human-readable and diffable on purpose, and that is a product requirement
+/// rather than a debugging convenience — the player is expected to open canon.json and edit
+/// it. See docs/PROJECT.md.
 /// </summary>
 public sealed class JsonWorldRepository : IWorldRepository
 {

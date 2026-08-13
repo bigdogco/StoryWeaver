@@ -1,5 +1,11 @@
 # StoryWeaver - Magic Words with LLM
 
+## Read first
+- `docs/PROJECT.md` is the standing reference: what the project is, its layers, the decisions
+  that are locked, and the phase we are in. Read it before proposing work. It changes only on
+  a phase boundary or when a decision is locked or reversed — if a task would contradict
+  something in §3, that is a conversation, not a task.
+
 ## Core Project Guidelines:
 - You must create a timestamped dev log file in `docs/devlog` before each commit
 - Add identified issues and challenges to the 'docs/CHALLENGES.md' document
@@ -16,3 +22,4 @@
 - Currently any testing will be done by me manually, only automatic test that can be done is build of the project
 - Update 'docs/todo/TODO_{TASK}_.md' with any new tasks that you identify during development, and check off completed tasks before committing or pushing
 - Make sure 'docs/todo/TODO_FUTURE_WORK.md' is up to date after finishing a task (all tasks in TODO_{TASK}_.md are completed).
+- When a `TODO_{TASK}_.md` is finished, no unchecked item may be left in it. Each one either moves to `docs/todo/TODO_FUTURE_WORK.md` or is struck out with a reason. A task doc is only done when it has no open boxes.

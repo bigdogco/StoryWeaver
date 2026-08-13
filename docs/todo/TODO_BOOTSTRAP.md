@@ -48,7 +48,7 @@ Recorded so we do not relitigate them later.
 | Language | C# / .NET LTS | Static typing, async, good serialization |
 | UI (later) | Avalonia | Cross-platform, all-C#, no web toolchain |
 | Storage (now) | JSON behind `IWorldRepository` | Git-diffable saves are the best debugging tool for this phase |
-| Storage (later) | Likely hybrid: JSON canon + SQLite turn log | Trigger to switch = wanting full-text search over history |
+| Storage (later) | ~~Likely hybrid: JSON canon + SQLite turn log~~ **Superseded 2026-08-13: JSON permanently** | The save is a surface the player edits by hand, so it stays readable. See `docs/PROJECT.md` §3 |
 | LLM access | OpenRouter | One integration, many models, easy A/B of extraction models |
 | LLM client | Hand-rolled `HttpClient`, ported from AI-Lord | Two endpoints, plain JSON; an OpenAI-shaped SDK would add abstractions we don't need |
 | Model selection | Per **role**, not per call site | Narration and extraction want very different models |

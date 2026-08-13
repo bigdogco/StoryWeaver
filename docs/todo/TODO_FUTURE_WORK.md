@@ -262,12 +262,13 @@ Small things the incumbents mostly don't do, cheap to add once the foundations e
       first thing that will actually hurt in a long world. Two cheap fixes when it does: keep
       the window in memory across a session and only read from disk on resume, or give the
       repository a `LoadRecentTurnsAsync(worldId, count)` that a seekable store can answer
-      properly. The second is the one that survives the SQLite move.
+      properly. The second is the better one either way.
 
-- [ ] **JSON → SQLite for the turn log.** Trigger: wanting full-text search over history.
-      Likely end state is a hybrid — JSON for entity canon (small, diffable,
-      hand-editable), SQLite for the turn log (grows unbounded, needs FTS, wants
-      transactions). Keep `IWorldRepository` honest and this stays a weekend.
+- [x] ~~**JSON → SQLite for the turn log.**~~ **Dropped 2026-08-13.** Storage stays JSON
+      permanently. A save is a surface the player opens and edits, not an implementation
+      detail, and a database hides the world from the person who owns it. Full-text search
+      over history — the only trigger this item ever had — is not worth that. See
+      `docs/PROJECT.md` §3.
 
 ---
 

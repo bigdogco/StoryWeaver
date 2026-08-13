@@ -23,8 +23,7 @@ implementation and wiring it into the harness.
   - `canon.json` — the `WorldState`, rewritten whole each turn (small, bounded).
   - `history.jsonl` — one `TurnRecord` per line, append-only (grows without limit). JSONL
     is chosen over a JSON array so appending a turn is a single file append with no
-    read-modify-write, which matches the interface's stated shape and keeps the later
-    SQLite-turn-log swap honest.
+    read-modify-write, which matches the interface's stated shape.
 - **Atomic canon write:** serialize to `canon.json.tmp`, then `File.Move(..., overwrite)`.
   A crash mid-write leaves the previous save intact, per the interface contract.
 - **Save-only JSON converters** (in `Storage`, not in Core's `StoryJson`):
@@ -73,5 +72,5 @@ implementation and wiring it into the harness.
 
 - Prompt externalization to editable files + optional hot-reload (raised this session;
   distinct concern, logged separately so storage and prompts are not tuned at once).
-- SQLite turn log (trigger: wanting full-text search over history).
+- ~~SQLite turn log~~ — **dropped 2026-08-13**, storage stays JSON permanently.
 - Richer authored character-sheet / lorebook fields (additive to this format later).
