@@ -754,6 +754,43 @@ properly, in currency rather than tokens, once turns are real.
 
 ---
 
+### Running the eval honestly — five rules paid for in wrong conclusions
+
+Moved here from `TODO_FUTURE_WORK.md` 2026-08-13. They had sat as unchecked boxes for weeks,
+which was the wrong shape: they are not things to do, they are things that are true every time
+the eval runs, and they were filed among items nobody intended to build. Each one was learned
+by getting it wrong first.
+
+**Re-run before trusting any extraction change, and before changing the extraction model.**
+Provider routing drifts under the same model id, so the eval measures the model *as actually
+served*, and that can move between one sweep and the next.
+
+**Always read the per-provider breakdown, not just the headline.** A verified sweep showed
+`forbidden 0.02` — traceable to exactly one run served by Google, against StreamLake 53/53.
+Without that line it is an unexplained rounding error and the prompt becomes the suspect.
+Google is flagged, not excluded: n=1 is the evidence threshold that produced three wrong
+conclusions in a single day.
+
+**Sample size is per provider, not per sweep.** A 56-call sweep that lands 53 times on one
+upstream has n=1 or 2 everywhere else, so the headline is really a measurement of whichever
+provider won the routing.
+
+**World size is a variable, and the scored set barely tests it.** Every hand-written scenario
+ran against two locations and one fact until `WorldSeeds.Marrow_Late` existed. A real session
+had seven locations, six characters, forty-four facts and a 10,000-character context.
+Identical prose scored **14/14** in the small world and **2/14** in the large one. Any scenario
+worth scoring is worth running at both sizes.
+
+**n=7 was not enough to be safe.** A movement failure looked solid at n=7 and did not
+reproduce. For anything close, prefer three independent sweeps over one larger one — the
+cross-run spread is the signal, not a single average.
+
+The related rules that are *architectural* rather than operational — score outcomes not routes,
+a measurement without a provider name is not a measurement, a schema branch is not free — live
+in `PROJECT.md` §3.
+
+---
+
 ## Resolved
 
 ### A character could not be renamed

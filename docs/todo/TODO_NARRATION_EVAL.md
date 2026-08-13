@@ -22,22 +22,22 @@ recurrences in 51 turns**. First time that fix has been measured rather than ass
 
 ## Decisions needed
 
-- [ ] Build the lore-knowledge check now? (design argues yes)
-- [ ] Design a judge now, or defer until dice needs one?
-- [ ] If a judge happens — who produces the hand-labelled narration it must be scored against?
+- [x] Build the lore-knowledge check now? (design argues yes) — **moved to TODO_FUTURE_WORK 2026-08-13.** [Phase 1]
+- [x] Design a judge now, or defer until dice needs one? — **moved to TODO_FUTURE_WORK 2026-08-13.** [Phase 1]
+- [x] If a judge happens — who produces the hand-labelled narration it must be scored against? — **moved to TODO_FUTURE_WORK 2026-08-13.** [Phase 1]
 
 ## Build — if approved
 
-- [ ] **Lore-knowledge check.** Does a character reference a lore topic they have not heard
+- [x] **Lore-knowledge check.** Does a character reference a lore topic they have not heard
       of? Deterministic: match entry `keys` against quoted speech, scoped to speakers who lack
       the entry in `Knows`. Narrow, misses paraphrase, costs nothing, and tests the one rule
-      this codebase added with no way to check it
+      this codebase added with no way to check it — **moved to TODO_FUTURE_WORK 2026-08-13.** [Phase 1]
 
 ## Deferred, with reasoning
 
-- [ ] **A judge model.** Everything else worth checking is semantic — did a character
+- [x] **A judge model.** Everything else worth checking is semantic — did a character
       reference lore they lack, did prose reveal an unlearned fact, did the narrator contradict
-      canon or speak for the player. All need a model to judge.
+      canon or speak for the player. All need a model to judge. — **moved to TODO_FUTURE_WORK 2026-08-13.** [Phase 1]
 
       Deferred because a judge is a second model whose variance we do not understand, grading
       a first whose variance we barely do — and this project has been wrong four times this

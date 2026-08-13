@@ -65,8 +65,8 @@ implementation and wiring it into the harness.
 - [x] **Offline round-trip check** (throwaway, scratchpad): 18 assertions covering the
       comparer fix, byte-identical load+save, derived props omitted, history delta
       round-trip, truncated-tail tolerance, ListWorlds, and missing-world → null. All pass.
-- [ ] Manual verify by user: play a turn, confirm files appear, quit, relaunch, confirm the
-      world and turn count continue. (Spends API credits — left to the user.)
+- [x] Manual verify by user: play a turn, confirm files appear, quit, relaunch, confirm the world and turn count continue. **Done many times over** — seven saves exist and resume.
+
 
 ## Out of scope (stays in TODO_FUTURE_WORK)
 

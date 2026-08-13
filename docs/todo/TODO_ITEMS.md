@@ -49,8 +49,8 @@ See [`2026-08-04_items.md`](../devlog/2026-08-04_items.md).
 - [x] Validator: an item must be somewhere or held, never neither, never both
 - [x] `ContextAssembler` — items in the scene for narration, ids for extraction
 - [x] Extraction prompt: the handled-not-described line, in the model's own terms
-- [ ] `/item` authoring, matching `/place` and `/character` — **not built.** Extraction covers
-      the observed cases; add it when a real session needs to place an object by hand
+- [x] `/item` authoring, matching `/place` and `/character` — **moved to TODO_FUTURE_WORK 2026-08-13.**
+
 - [x] Self-tests for the exclusivity rule and id uniqueness
 
 ## Found in play, 2026-08-04
@@ -88,4 +88,4 @@ not guess at it. Stats belong with dice-resolved checks.
 - [x] Full scored sweep, **provider pinned** — 50/50 clean, 100%, no regression. Pinning
       matters: a routed sweep during this work produced three phantom regressions, all 15/15
       when pinned
-- [ ] Re-run the fact audit against a third session; the object-fact share should fall
+- [x] Re-run the fact audit against a third session — **moved to TODO_FUTURE_WORK "Pending a session" 2026-08-13.**

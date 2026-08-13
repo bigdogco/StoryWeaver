@@ -82,8 +82,8 @@ which is the same lesson as `CheckShippedPackLoads` itself, arriving from the ot
 
 - [x] `dotnet build` clean, self-tests pass, **both** packs load:
       `ashfall` 3 seated / 2 sheets / 3 lore / blank slate, `marrow` 4 / 4 / 3 / authored player
-- [ ] A short play session on `ashfall` — the point is to see the opening prompts and watch
-      `{{player}}` resolve to a name that was not in any file
+- [x] A short play session on `ashfall`. **Done 2026-08-12** — two model-played runs, which found the `Name` duplication and the lost-item gap.
+
 
 ## Out of scope
 

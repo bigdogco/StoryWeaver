@@ -168,10 +168,10 @@ are true of the whole map at once. Characters have `Status`, items have `Status`
 have `Status` since this morning. **A region does not**, so the fact store takes it. That is the
 same shape as the well before `Location.Status`, one level up.
 
-- [ ] **Do not build on two observations.** This is exactly the arithmetic that got `item_lost`
-      declined and then reversed, so state the threshold rather than the hunch: a world- or
-      region-level status is worth designing when it reproduces in a scenario *and* appears in
-      a third session. Two facts out of eleven is a hunch
-- [ ] Note the confound before anyone acts on it: `ashfall` is a world whose entire premise is
-      one slow catastrophe. A pack about a market town would probably produce none of these,
-      and one session of one world is not evidence about the schema
+- [x] **Do not build on two observations.** **Moved to TODO_FUTURE_WORK 2026-08-13**, threshold intact: a region-level status is worth designing when it reproduces in a scenario *and* appears in a third session.
+
+
+
+- [x] Note the confound before anyone acts on it: **noting it was the action.** Carried into the FUTURE_WORK item 2026-08-13.
+
+

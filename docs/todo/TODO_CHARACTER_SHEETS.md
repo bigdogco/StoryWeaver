@@ -115,20 +115,20 @@ Devlog: [`2026-08-06_placement-and-ids.md`](../devlog/2026-08-06_placement-and-i
 
 ## Measure first, per the pattern
 
-- [ ] **Does the narrator actually use sheet detail?** The point of prose over fields is
+- [x] **Does the narrator actually use sheet detail?** The point of prose over fields is
       expressiveness; if the body is ignored in favour of the one-line description, the design
-      is wrong. Needs a narration-side check, which does not exist — see `TODO_NARRATION_EVAL.md`
-- [ ] **Does an id ever reach the prose through `{{ }}`?** The failure that forced the
+      is wrong. Needs a narration-side check, which does not exist — see `TODO_NARRATION_EVAL.md` — **moved to TODO_FUTURE_WORK 2026-08-13.** [Phase 1 — narration eval]
+- [x] **Does an id ever reach the prose through `{{ }}`?** The failure that forced the
       `ForNarration` / `ForExtraction` split. Validation should make it impossible; verify
-      rather than assume
-- [ ] Context size with a full cast of sheets — the third contributor to the budgeting problem
-      after lore and loose items, and still unmeasured
+      rather than assume — **moved to TODO_FUTURE_WORK "Pending a session" 2026-08-13.**
+- [x] Context size with a full cast of sheets — the third contributor to the budgeting problem
+      after lore and loose items, and still unmeasured — **moved to TODO_FUTURE_WORK 2026-08-13.**
 
 ## Verify
 
-- [ ] `dotnet build` clean, self-tests for the merge and for `{{ }}` validation
-- [ ] Full scored sweep, **provider pinned**
-- [ ] A play session with sheets authored for Hald, Mabb and the player
+- [x] `dotnet build` clean, self-tests for the merge and for `{{ }}` validation — **done 2026-08-06**, shipped clean.
+- [x] Full scored sweep, **provider pinned** — **done**, run many times since.
+- [x] A play session with sheets authored for Hald, Mabb and the player — **done**, marrow ships sheets and has been played.
 
 ## Explicitly out of scope
 

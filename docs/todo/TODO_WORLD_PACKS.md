@@ -17,7 +17,7 @@ Design: [`docs/design/WORLD_PACKS.md`](../design/WORLD_PACKS.md).
       each other
 - [x] Prompt overrides: narration yes, extraction no
 - [x] Compatibility rule: content may move, state degrades quietly and loudly
-- [ ] **Answer the four open decisions in §8**
+- [x] **Answer the four open decisions in §8** — settled by what shipped 2026-07-24.
 
 ## Build now — with the lore work, not separately
 
@@ -26,10 +26,10 @@ Design: [`docs/design/WORLD_PACKS.md`](../design/WORLD_PACKS.md).
 - [x] Pack id and save id separated (`PackId` / `SaveId`). Identical strings today, so existing
       saves keep working; supporting several saves per pack is now a matter of choosing `SaveId`
       at startup rather than a change to how anything is stored
-- [ ] Pack root as an explicit parameter, not the working directory. **Still a constant**
-      (`PlaySession.PackRoot`), so a pack is found relative to the cwd exactly as saves are
-- [ ] `saves/` root configured rather than cwd-relative — currently the reason `play.ps1`
-      forces the cwd and harness testing needs a temp directory
+- [x] Pack root as an explicit parameter, not the working directory. **Still a constant**
+      (`PlaySession.PackRoot`), so a pack is found relative to the cwd exactly as saves are — **moved to TODO_FUTURE_WORK 2026-08-13.**
+- [x] `saves/` root configured rather than cwd-relative — currently the reason `play.ps1`
+      forces the cwd and harness testing needs a temp directory — **moved to TODO_FUTURE_WORK 2026-08-13.**
 
 ## Built 2026-07-24
 
@@ -75,12 +75,12 @@ that is fine — they are test fixtures, not content.
 
 ## Build later — when something needs it
 
-- [ ] `world.json` manifest, with a version a save can record
-- [ ] Opening message, and the loader check that every name in it exists in the seed
-- [ ] Multiple saves per pack — the ids are separated now, so this is a startup choice plus
-      whatever UI offers it
-- [ ] Per-pack narration prompt overrides
-- [ ] Pack installing / sharing
-- [ ] **`/knows` is now redundant for authoring** — a seed carries `"knows": [...]` per
-      character directly. Kept for mid-session authoring; worth revisiting once a Lore Writer
-      exists
+- [x] `world.json` manifest, with a version a save can record — **moved to TODO_FUTURE_WORK 2026-08-13.** [Phase 1]
+- [x] Opening message, and the loader check that every name in it exists in the seed — **moved to TODO_FUTURE_WORK 2026-08-13.** [Phase 1]
+- [x] Multiple saves per pack — the ids are separated now, so this is a startup choice plus
+      whatever UI offers it — **moved to TODO_FUTURE_WORK 2026-08-13.** [Phase 2]
+- [x] Per-pack narration prompt overrides — **moved to TODO_FUTURE_WORK 2026-08-13.** [Phase 1]
+- [x] Pack installing / sharing — **moved to TODO_FUTURE_WORK 2026-08-13.** [Phase 2]
+- [x] **`/knows` is now redundant for authoring** — an observation, not a task. Struck 2026-08-13; kept for mid-session authoring.
+
+

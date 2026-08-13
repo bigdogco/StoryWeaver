@@ -304,8 +304,8 @@ CHALLENGES. Validation must therefore reject rather than trust:
       (stays neutral, ignored), and every query meaning "the people around you" must now
       exclude the player explicitly — hence `NpcsWithPlayer()` rather than the old
       `CharactersWithPlayer()`.
-- [ ] Surface rejected deltas prominently in the harness. A silently dropped delta is the
-      same failure mode as a silently dropped lorebook entry.
+- [x] Surface rejected deltas prominently in the harness. **Moved to TODO_FUTURE_WORK 2026-08-13 [Phase 2]** — printed today, not prominent; making it prominent is a UI job.
+
 
 Conflict handling for v1: **log and surface, do not auto-resolve.** We need to see how
 often and how badly it goes wrong before deciding what to do about it.

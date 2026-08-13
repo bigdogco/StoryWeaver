@@ -72,8 +72,8 @@ largest category as claimed.
       intermittent speaker-learns miss that had scored 0–2/7 on every sweep since it was found.
       A prompt rule carrying a known weakness for weeks became unnecessary. See
       [`2026-08-04_fact-source.md`](../devlog/2026-08-04_fact-source.md)
-- [ ] **`character_described` / `location_described`.** Still worth having, correctly sized at
-      3 of 11
+- [x] **`character_described` / `location_described`.** Still worth having, correctly sized at
+      3 of 11 — **moved to TODO_FUTURE_WORK 2026-08-13.**
 
 ## Not building — no measured failure to fix
 
@@ -137,21 +137,21 @@ where the real case is a *place* changing.
             nothing reads would be a field that looks like it works
       - [x] A prompt rule drawing the line where the misfiling happens: a place's condition is
             this turn's, a fact is something a character could be told later
-      - [ ] Full scored set re-run pinned — see the devlog for the number
+      - [x] Full scored set re-run pinned — see the devlog for the number — **moved to TODO_FUTURE_WORK "Pending a session" 2026-08-13.**
 
 - [x] **`EstablishedTurn` was off by one** — found while tracing which turn produced those
       facts. Deltas were applied before `world.TurnNumber++`, so a fact accepted on turn 7
       recorded turn 6, while `LastSeenTurn` was set after the increment and was right. The two
       disagreed about when "now" was. Fixed and self-tested
 
-- [ ] The knowledge-worthiness test — **decided, and deliberately not written yet.** It is a
+- [x] The knowledge-worthiness test — **decided, and deliberately not written yet.** It is a
       good test and there is currently no scenario that fails without it. Revisit if the
-      category reappears in a fresh play session
+      category reappears in a fresh play session — **moved to TODO_FUTURE_WORK 2026-08-13.**
 
 ## Still true, still logged
 
-- [ ] Re-run the fact audit against a fresh **human** play session and compare the category
-      split. This is the measurement that matters.
+- [x] Re-run the fact audit against a fresh **human** play session and compare the category
+      split. This is the measurement that matters. — **moved to TODO_FUTURE_WORK "Pending a session" 2026-08-13.**
 
       A model-played session on the current build scored ~68% correct against the human 55%,
       and **that comparison is not valid** — conversation produces knowledge-worthy facts while
@@ -190,5 +190,5 @@ where the real case is a *place* changing.
 
       Revisit only with a *semantic* check that can tell restatement from contradiction, which
       is a model call per pair and a different order of cost.
-- [ ] **Agreements as commitments.** `hald-agrees-to-guide` is durable and knowledge-worthy,
-      but a promise is the kind of thing that gets broken, and canon cannot record that
+- [x] **Agreements as commitments.** `hald-agrees-to-guide` is durable and knowledge-worthy,
+      but a promise is the kind of thing that gets broken, and canon cannot record that — **moved to TODO_FUTURE_WORK 2026-08-13.**

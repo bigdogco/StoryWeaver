@@ -92,16 +92,16 @@ Devlog: [`docs/devlog/2026-07-24_lore-entries.md`](../devlog/2026-07-24_lore-ent
 
 ## Still open
 
-- [ ] **Redundant facts alongside the correct `fact_learned`.** The model still establishes
+- [x] **Redundant facts alongside the correct `fact_learned`.** The model still establishes
       paraphrases of what the entry already says, despite the rule telling it not to. The §9
       fact-store pressure from a fourth direction. Not chased with a second prompt rule —
-      "add another sentence and see" is how this year's four wrong conclusions started.
-- [ ] Measure whether a character refuses to reference lore they have not heard of. The
+      "add another sentence and see" is how this year's four wrong conclusions started. — **moved to TODO_FUTURE_WORK "Pending a session" 2026-08-13.**
+- [x] Measure whether a character refuses to reference lore they have not heard of. The
       premise of the feature, and it needs a *narration* eval, which does not exist — narration
-      has no automated quality control at all.
+      has no automated quality control at all. — **moved to TODO_FUTURE_WORK 2026-08-13.** [Phase 1 — narration eval]
 
 ## Deferred by decision 3
 
-- [ ] Keyword matching against player input and recent narration
-- [ ] Token budget, priority ordering
-- [ ] Report which entries fired and which were cut — **built with the budget, never after**
+- [x] Keyword matching against player input and recent narration — **moved to TODO_FUTURE_WORK 2026-08-13.** Merged into the Lorebook retrieval layer item.
+- [x] Token budget, priority ordering — **moved to TODO_FUTURE_WORK 2026-08-13.** Merged into the Lorebook retrieval layer item.
+- [x] Report which entries fired and which were cut — **built with the budget, never after** — **moved to TODO_FUTURE_WORK 2026-08-13.** Merged into the Lorebook retrieval layer item.

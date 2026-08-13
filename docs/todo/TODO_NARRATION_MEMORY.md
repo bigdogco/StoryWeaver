@@ -82,8 +82,8 @@ Rough cost: ~200-300 tokens per remembered turn against the narration role.
       replayed as raw input with no world-state leak, state only in the final message, tail
       slicing oldest-first, window larger than history, and `0` reverting to the old
       two-message call. All pass.
-- [ ] Manual verify by user: resume a world, confirm the narrator continues the scene rather
-      than restarting it. Tune `historyTurns` by feel.
+- [x] Manual verify by user: resume a world, confirm the narrator continues the scene rather than restarting it. **Done in the 51-turn session.**
+
 
 ## Known cost, accepted for now
 

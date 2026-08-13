@@ -1,9 +1,19 @@
 # Future Work
 
-Ideas and deferred items. Not scheduled. Pull from here when starting a new task.
+**The queue.** Everything that could be done and is not scheduled. Pull from here when
+starting a task.
 
-Anything explicitly out of scope for the current phase lands here rather than being
-forgotten. See `TODO_BOOTSTRAP.md` for what is actually in flight.
+`docs/PROJECT.md` says what we are building and in what order; this says what is available to
+pick up. **Phases live there, items live here, nothing lives in both.** Items owned by a
+named phase are tagged `[Phase N]` so they surface when that phase opens instead of being
+rediscovered by feel.
+
+Reasoning long enough to be a document lives in `docs/design/`. Rules that are true every
+time rather than things to do live in `PROJECT.md` §3 or `CHALLENGES.md` — a rule filed as an
+unchecked box is a rule nobody will find.
+
+Per `CLAUDE.md`: when a task doc closes, its unchecked items land here or are struck out with
+a reason. Nothing is left stranded in a finished doc.
 
 ---
 
@@ -12,18 +22,29 @@ forgotten. See `TODO_BOOTSTRAP.md` for what is actually in flight.
 These were cut from the bootstrap phase deliberately — bootstrap exists to answer "is the
 extraction pass reliable?", and none of these help answer it.
 
-- [ ] **Avalonia UI** — decided as the UI framework, not yet built. Core must stay
-      UI-agnostic so this stays a top-layer swap.
+- [ ] **Avalonia UI** — **[Phase 2]**, and now the whole of that phase rather than a line
+      item. Core must stay UI-agnostic so this stays a top-layer addition.
 - [ ] **Streaming narration** — not implemented, but `ILlmClient` is shaped so the
       incremental form is the primitive and the whole-string call wraps it. Adding real
-      streaming should then be a rendering change, not an architecture change.
+      streaming should then be a rendering change, not an architecture change. **[Phase 2]** —
+      there is nothing to stream into until there is a UI.
 - [ ] **World generation / lazy expansion** — generate a seed, not a world. Player walks
       toward an unnamed village → generate it, its notable NPCs, its tension, then write
       to canon so it is fixed forever after. Worlds get large by being played. Also
       solves the cold-start problem of filling 200 entries before you can start.
 - [ ] **Lorebook retrieval layer** — keyword-triggered injection generated *from* the
-      entity graph, not stored as a flat list.
-- [ ] **Summarization / long-term memory** — see notes below on approaches.
+      entity graph, not stored as a flat list. Three parts, all of them absent today
+      (`ContextAssembler` still dumps every entry into every prompt):
+
+      - keyword matching against player input and recent narration
+      - token budget with priority ordering
+      - **report which entries fired and which were cut — built *with* the budget, never
+        after.** A silent drop is the "why did it forget the Duke?" failure, and adding the
+        report later means shipping the failure first
+
+      Absorbed from `TODO_LORE_ENTRIES.md` 2026-08-13. Also the third contributor to context
+      budgeting, alongside a full cast of sheets and loose items.
+- [ ] **Summarization / long-term memory** — see the section below; gated on a measurement.
 - [ ] **Prompt caching optimization** — relevant once cost matters.
 - [ ] **Packaging and distribution** — may never happen; it's a hobby project.
 
@@ -48,23 +69,16 @@ extraction pass reliable?", and none of these help answer it.
 
 ---
 
-## Long-term memory approaches
+## Long-term memory
 
-Lorebooks handle *world* facts. They do not handle *what happened*, which is harder.
-Options, roughly in order of appeal for this project:
+- [ ] **Summarization / long-term memory.** Four candidate approaches compared in
+      [`design/LONG_TERM_MEMORY.md`](../design/LONG_TERM_MEMORY.md) — structured state,
+      scene-indexed retrieval, rolling summarization, vector recall.
 
-- [ ] **Structured state** — explicit JSON world state updated by a second model call,
-      injected as a compact block. Deterministic, inspectable, user-editable, cheap in
-      tokens. More work to build, needs a genre-fitting schema — which an RPG gives you
-      largely for free. This is the direction with actual leverage.
-- [ ] **Scene-indexed retrieval** — summarize per *scene* rather than per N messages,
-      keep summaries addressable, retrieve whole scenes. Best fidelity-per-token of the
-      options; least common in the wild.
-- [ ] **Rolling summarization** — cheap and lossy; errors compound into permanent canon.
-      Probably a component, not the answer.
-- [ ] **Vector recall over history** — catches what keywords miss, but retrieves
-      semantically-similar-but-irrelevant chunks constantly and returns fragments without
-      temporal context. Mediocre in practice.
+      **Gated on the 200-turn measurement in `PROJECT.md`, not on a decision.** The whole line
+      of work assumes canon degrades over distance, and that has never been observed — 51
+      turns is the longest session that exists. If canon holds, most of this is unnecessary,
+      and the long run tells us *what failed*, which is what actually picks between the four.
 
 ---
 
@@ -197,7 +211,12 @@ storage — the tool writes them, and they stay readable for diffing, sharing an
 Once that window exists it should be the *only* writer, since a strict parser and a
 hand-editor adding unknown keys are a bad combination.
 
-- [ ] **A named topic with a body of prose, the way a DnD lorebook entry works.** Raised by the
+- [x] ~~**A named topic with a body of prose, the way a DnD lorebook entry works.**~~ **Built
+      2026-07-24.** The reasoning below is kept because it is why the feature has the shape it
+      has; the design is in [`design/LORE_ENTRIES.md`](../design/LORE_ENTRIES.md) and the
+      remaining retrieval work is the "Lorebook retrieval layer" item above.
+
+      Raised by the
       user, and it is a better fit than the "faction with a standing toward the player" shape
       that was considered first — an organisation, a war, a religion, a bloodline is *reference
       material*, not a simulated actor.
@@ -390,82 +409,21 @@ Small things the incumbents mostly don't do, cheap to add once the foundations e
 
 ---
 
-## Dice-resolved checks — combat and everything else uncertain
+## Dice-resolved checks
 
 - [ ] **Resolve uncertain actions with a roll the narrator is told about, rather than letting
-      it decide.** Raised as thinking-out-loud; recorded because it fits the architecture
-      unusually well and the reasoning is worth not losing.
+      it decide.** Full design in [`design/DICE_CHECKS.md`](../design/DICE_CHECKS.md): why a
+      die roll is canon, why it should be a general *check* rather than a combat system, the
+      double-counting hazard, and the two open questions (what losing costs, who sets the
+      difficulty).
 
-      **Why it fits.** Canon is the source of truth and prose is a rendering of it. A die roll
-      is canon — a fact the model cannot argue with. The loop becomes:
+      **[Phase 3]** — under the base/plugin split this is not part of the base game. It is the
+      archetypal plugin, and probably the first one designed from scratch rather than
+      extracted, so it waits on Phase 3 saying what a plugin is.
 
-      ```
-      1. roll      code. deterministic, auditable, no API call
-      2. narrate   the LLM renders the verdict as prose
-      3. extract   as today
-      ```
-
-      **The rule the whole thing hinges on:** the roll happens *before* narration and the
-      narrator is **told the outcome, never asked to decide it**. The moment the model decides
-      who wins, the answer is whatever it felt like — which is the chat-log-as-state failure
-      this project exists to avoid.
-
-      It also settles a tension already in the code. `LlmNarrator.SystemPrompt` carries "do not
-      resolve the encounter for them", a rule added because the narrator kept deciding
-      outcomes. Today the answer to "what happens?" is the model's taste; dice make it a fact.
-
-      **Cost is ~zero** — no extra call, just another line in the narration prompt.
-
-      ### Build it as a *check*, not a combat system
-
-      The mechanic is really "an uncertain action with an outcome": picking a lock, lying to a
-      guard, crossing the bog at night, persuading Hald. Combat is one case. A general check
-      gets far more for the same work and avoids a combat subsystem sitting awkwardly beside
-      everything else. Opposed rolls work for all of it.
-
-      ### Prerequisites and hazards
-
-      - **No stats exist.** `Character` has description, location, status, mood, knows,
-        relationship — nothing to roll against. Lightest version: one number per character, or
-        a per-check difficulty the world author sets.
-      - **`Status` is the only mechanical hook**, and `"wounded"` is already a natural
-        consequence. Probably enough for v1. HP is a bigger commitment, easy to add later.
-      - **Items do not exist** (see above). A check system survives that better than a combat
-        system would.
-      - **Double-counting is the real hazard.** If code applies "player is wounded" *and*
-        extraction reads the prose and emits `StatusChanged(wounded)`, two sources are writing
-        one fact — precisely the disagreement the canon store prevents. Roll consequences must
-        be applied by code as deltas, with extraction told not to re-derive them.
-
-      ### The upside hiding in it
-
-      **"Did the narration contradict the dice?" is objectively checkable** — the first
-      property of *narration* that could be evaluated. Prose quality is taste and unscoreable,
-      which is why reroll is currently its only quality control. A verdict gives a hook.
-
-      ### Open questions, to settle before any code
-
-      1. **What happens when you lose?** Death, capture, a wound that persists? Combat without
-         stakes is prose with extra steps, and the answer shapes the domain model more than the
-         dice do.
-      2. **Who sets the difficulty** — the world author, or the LLM proposing a target number
-         that code then rolls against? The second is more flexible and much less predictable.
-
-      **Sequencing:** after §9. Not because it is risky, but because a long session is what
-      tells you how combat should feel in this game, and it touches the domain model — the one
-      place where guessing is expensive.
-
-- [ ] **A way for a world author to *write* rules like this, rather than them being code.**
-      The natural follow-on: if checks are data (what is rolled, against what, what the
-      outcomes are), a world could ship its own. Sits with the "narration style belongs to the
-      world author" and "prompts as editable files" items — all three are the same underlying
-      move of pulling authored content out of `const string`s and C# and into world data.
-
-      Worth resisting the urge to design a rules *language* early. The likely path is a small
-      declarative block covering a handful of check types, and only generalising once several
-      real worlds want something it cannot express.
-
----
+      Carries the one genuinely new thing in it: *did the narration contradict the dice?* is
+      objectively checkable, and would be the first property of **narration** that could be
+      evaluated at all.
 
 ## Prompts as editable files
 
@@ -574,35 +532,17 @@ Keep it honest:
       failure modes are covered on one small world, not that extraction is solved. Every real
       session that produces a wrong delta is a scenario worth adding — the `atmosphere` case
       (verbatim generated narration) already found things the hand-written ones missed.
-- [ ] **Re-run before trusting any extraction change**, and before changing the extraction
-      model. Provider routing drifts under the same model id, so the eval measures the model
-      as actually served, and that can move.
-- [ ] **Always read the per-provider breakdown, not just the headline.** A verified sweep
-      showed `forbidden 0.02` — traceable to exactly one run served by Google, against
-      StreamLake 53/53. Without that line it is an unexplained rounding error and the prompt
-      becomes the suspect. Google is **flagged, not excluded**: n=1 is the evidence threshold
-      that produced three wrong conclusions in a single day.
-- [ ] **Sample size is per provider, not per sweep.** A 56-call sweep that lands 53 times on
-      one upstream has n=1 or 2 everywhere else, so the headline is really a measurement of
-      whichever provider happened to win the routing.
-- [ ] **World size is a variable, and the scored set barely tests it.** Every hand-written
-      scenario ran against two locations and one fact until `WorldSeeds.Marrow_Late` existed;
-      a real session had seven locations, six characters, forty-four facts and a
-      10,000-character context. Identical prose scored **14/14** in the small world and
-      **2/14** in the large one. Any scenario worth scoring is worth running at both sizes.
 - [ ] **`two-stage-entry-large` is still failing at 10/14** — a turn whose prose carries the
       player through an intermediate space into a room beyond. Fixed outright in a small world
       by the end-of-turn movement rule; a large world still gets it wrong 2/7, apparently
       because more plausible existing ids are available to settle on. Open.
-- [ ] **Score outcomes, not only deltas, wherever the outcome is the point.** A delta rule
-      ("a move naming the mill") can pass while the player ends the turn somewhere else, and it
-      penalises a correct two-hop movement as if the intermediate step were an error. `StateRule`
-      checks the world after accepted deltas are applied. Movement was the case that exposed
-      this; anything else where several valid delta sequences reach the same right answer has
-      the same shape.
-- [ ] **n=7 was not enough to be safe.** A movement failure looked solid at n=7 and did not
-      reproduce. For anything close, prefer three independent sweeps over one larger one — the
-      cross-run spread is the signal, not a single average.
+
+**The rules for running it are not tasks and no longer live here.** Five operational ones —
+re-run before trusting a change, read the per-provider breakdown, sample size is per provider,
+world size is a variable, n=7 is not enough — moved to `CHALLENGES.md` 2026-08-13. The three
+architectural ones — score outcomes not routes, a measurement without a provider name is not a
+measurement, a schema branch is not free — are in `PROJECT.md` §3. They sat here as unchecked
+boxes for weeks, which is where a rule goes to be forgotten.
 
 ### Automated provider calibration
 
@@ -748,3 +688,103 @@ Keep it honest:
 - [ ] **Measure cost per turn in currency, not tokens.** The smoke test showed extraction
       at ~35% of turn *tokens* against a design assumption of 5–10%, but the roles are
       priced differently, so the token ratio is not the cost ratio.
+
+---
+
+## Swept in from finished task docs — 2026-08-13
+
+Items stranded in task docs that were marked done. See
+`TODO_BACKLOG_SWEEP.md` for the full triage of all 42.
+
+### Phase 1 — the story layer
+
+These finish the pack design written 2026-07-23, three of whose six components were never
+built.
+
+- [ ] **`world.json` manifest**, with a version a save can record. *(TODO_WORLD_PACKS)*
+- [ ] **Opening message**, and the loader check that every name in it exists in the seed.
+      *(TODO_WORLD_PACKS)*
+- [ ] **Per-pack narration prompt overrides.** *(TODO_WORLD_PACKS)* — narration yes,
+      extraction no; that split was already settled in the design. Overlaps with "Prompts as
+      editable files" above, which is the general form.
+
+### Phase 1 — narration eval
+
+Every number this project has measures extraction. The half the player experiences has no
+quality control at all. Design and open questions: `design/NARRATION_EVAL.md`.
+
+- [ ] **Build the lore-knowledge check.** Does a character reference a lore topic they have
+      not heard of? Deterministic: match entry `keys` against quoted speech, scoped to speakers
+      who lack the entry in `Knows`. Narrow, misses paraphrase, costs nothing, and tests the
+      one rule this codebase added with no way to check it. *(TODO_NARRATION_EVAL)*
+- [ ] **Decide whether a judge model happens, or waits for dice to need one.** Everything else
+      worth checking is semantic — did prose reveal an unlearned fact, did the narrator
+      contradict canon or speak for the player. All need a model to judge, and a judge needs
+      hand-labelled narration to be scored against, which nobody has produced.
+      *(TODO_NARRATION_EVAL)*
+- [ ] **Measure whether a character refuses to reference lore they have not heard of.** The
+      premise of the lore feature, still unverified. *(TODO_LORE_ENTRIES)*
+- [ ] **Does the narrator actually use sheet detail**, or only the one-line description? The
+      point of prose over fields is expressiveness; if the body is ignored, the sheet design is
+      wrong. *(TODO_CHARACTER_SHEETS)*
+
+### Phase 2 — UI
+
+- [ ] **Multiple saves per pack.** The ids are separated already, so this is a startup choice
+      plus whatever the UI offers. *(TODO_WORLD_PACKS)*
+- [ ] **Pack installing / sharing.** *(TODO_WORLD_PACKS)*
+- [ ] **Surface rejected deltas prominently.** The last open box in `TODO_BOOTSTRAP`, and
+      still true: a silently dropped delta is the same failure mode as a silently dropped
+      lorebook entry. They are printed today, not prominent. Pairs with the
+      inspectable-extraction item above.
+
+### Unscheduled
+
+- [ ] **`/item` authoring**, matching `/place` and `/character`. Extraction covers the observed
+      cases; add it when a session needs to place an object by hand. *(TODO_ITEMS)*
+- [ ] **`character_described` / `location_described` deltas.** Correctly sized at 3 of 11
+      description-facts — real, and not the majority. *(TODO_FACT_HYGIENE)*
+- [ ] **The knowledge-worthiness test** — decided and deliberately not written, because no
+      scenario currently fails without it. Revisit if the category reappears in a fresh
+      session. *(TODO_FACT_HYGIENE)*
+- [ ] **Agreements as commitments.** `hald-agrees-to-guide` is durable and knowledge-worthy,
+      but a promise is exactly the kind of thing that gets broken, and canon cannot record
+      that. *(TODO_FACT_HYGIENE)*
+- [ ] **Context size with a full cast of sheets.** Third contributor to the budgeting problem
+      after lore and loose items, still unmeasured. *(TODO_CHARACTER_SHEETS)*
+- [ ] **Record narration's provider.** Needs `INarrator` to return more than a string. Worth
+      doing the day a narration eval exists and prose has a score to attribute — not before.
+      *(TODO_PLAY_51_FIXES)*
+- [ ] **Pack root as an explicit parameter, not the working directory.** Still a constant
+      (`PlaySession.PackRoot`). *(TODO_WORLD_PACKS)*
+- [ ] **`saves/` root configured rather than cwd-relative.** The reason `play.ps1` forces the
+      cwd and harness testing needs a temp directory. *(TODO_WORLD_PACKS)*
+- [ ] **Region- or world-level status.** Two facts out of eleven in one `ashfall` session
+      wanted a condition wider than a room. **Carrying its threshold, not its hunch: build when
+      it reproduces in a scenario *and* appears in a third session.** This is the exact
+      arithmetic that got `item_lost` declined and then reversed. Confound worth stating —
+      `ashfall`'s entire premise is one slow catastrophe, and a market town would probably
+      produce none of these. *(TODO_ITEM_PLACEMENT)*
+
+---
+
+## Pending a session
+
+Measurements blocked on a play session rather than on a decision. They are listed together
+because otherwise each session ends without them being run — which is what has happened to
+every one of them so far.
+
+- [ ] **Re-run the fact audit against a fresh *human* session** and compare the category
+      split. A model-played session scored ~68% correct against the human 55%; the model plays
+      tidier than a person and the gap is the point. This is the measurement that matters.
+      *(TODO_FACT_HYGIENE)*
+- [ ] **Re-run the fact audit against a third session** — the object-fact share should fall now
+      that items exist. *(TODO_ITEMS)*
+- [ ] **Redundant facts alongside a correct `fact_learned`.** The model still establishes
+      paraphrases of what a lore entry already says, despite a rule against it. Deliberately
+      not chased with a second prompt rule — "add another sentence and see" is how this year's
+      wrong conclusions started. *(TODO_LORE_ENTRIES)*
+- [ ] **Does an id ever reach the prose through `{{ }}`?** The failure that forced the
+      `ForNarration` / `ForExtraction` split. Validation should make it impossible; verify
+      rather than assume. *(TODO_CHARACTER_SHEETS)*
+- [ ] **Full scored set re-run, provider pinned**, whenever extraction changes. *(TODO_FACT_HYGIENE)*

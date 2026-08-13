@@ -81,4 +81,4 @@ domain model was built for this and only the delta set had not caught up.
 
 ## Left for the player
 
-- [ ] Run `/rename` on `figure-in-cistern` in `saves/marrow` to fix Nessa in the existing world
+- [x] ~~Run `/rename` on `figure-in-cistern` in `saves/marrow` to fix Nessa~~ — **won't do, 2026-08-13.** A repair to a save superseded by later worlds.

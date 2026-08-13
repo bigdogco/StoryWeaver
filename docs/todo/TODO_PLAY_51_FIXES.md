@@ -175,7 +175,7 @@ StreamLake.** That explanation was invented for an infrastructure symptom.
       design. My retraction cast doubt on the design conclusion; the doubt was misplaced, and
       only the *link* I drew between the eval failure and the play finding was wrong. They
       have different causes: one was a sick provider, the other is structural
-- [ ] Narration's provider is still unrecorded. It needs `INarrator` to return more than a
-      string, and prose has no score to attribute to anyone yet. Worth doing the day a
-      narration eval exists, not before
-- [ ] The 51-turn save, and every turn before today, is permanently provider-unknown
+- [x] Narration's provider is still unrecorded. **Moved to TODO_FUTURE_WORK 2026-08-13** — needs `INarrator` to return more than a string, and prose has no score to attribute until a narration eval exists.
+
+
+- [x] The 51-turn save, and every turn before today, is permanently provider-unknown. **Struck 2026-08-13 — a statement, not a task.**
