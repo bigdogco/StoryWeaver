@@ -754,6 +754,62 @@ properly, in currency rather than tokens, once turns are real.
 
 ---
 
+### A place can be introduced twice, under two ids
+
+**Found 2026-08-14 in a 230-turn `marrow` run. Not fixed — one sighting, logged with a
+threshold.**
+
+`DeltaValidator` rejects `location_introduced` for an id that already exists. It has nothing to
+say about a *place* that already exists under a different id:
+
+```
+t16    stilt-hut               "half-swallowed by the fog... sits a dilapidated hut on stilts"
+t226   dilapidated-stilt-hut   "the faint, looming silhouette of a dilapidated stilt-hut"
+```
+
+Both are named "dilapidated stilt-hut". `stilt-hut` carries six connections and everything that
+happened there; `dilapidated-stilt-hut` has one connection and is empty — **except that the
+peat-creature now stands in it.** Canon says the story's monster is somewhere the player has
+never been, and the place it is actually in still exists beside it.
+
+**Why 210 turns apart matters.** The re-introduction happened long after the original had slid
+out of the narration window. The model was not being careless; it was describing a hut it could
+see across the water, with no reason to believe it was already in canon. Distance is the
+mechanism, so this gets *more* likely as a run gets longer, and it was invisible in every
+50-turn session.
+
+**Threshold before building** — the standing rule, applied honestly. The validator gap is
+provable and deterministic, but *how often a model does this* is model behaviour, which is
+what the rule exists to stop us guessing at. Wanted: a diagnostic scenario that reproduces it,
+and a second sighting in a fresh long run.
+
+**Detection, meanwhile:** two locations sharing a name, one of them nearly empty. Cheap to
+check in any save.
+
+Naming alone cannot be the test — two guards both called "a guard" is a real thing a story
+does, and forbidding it would be worse than this.
+
+---
+
+### Canon can be correct and still unnarratable
+
+**Found 2026-08-14, same run.** The first failure in this project that lives entirely in the
+rendering layer rather than in the store.
+
+Ids are unique and names are not; the narrator is shown names only, deliberately, so that ids
+never leak into prose. At 230 turns those two correct decisions produced a prompt listing six
+different keys, four "stamped lead token"s and an exits list naming one destination twice —
+all of it accurate, none of it usable, because the narrator cannot write about objects it
+cannot tell apart.
+
+Every mechanical measure of that run was healthy. It still read badly. **Delta counts cannot
+see this class of problem**, which is worth remembering the next time a run scores well and
+feels wrong.
+
+Full write-up: `design/NAMES_ARE_NOT_UNIQUE.md`.
+
+---
+
 ### Two engines can open one save, and nothing notices
 
 **Found 2026-08-14 in a 250-turn `ashfall` run; guarded the same day.**

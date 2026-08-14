@@ -46,7 +46,7 @@ Dependencies point inward. `Core` references nothing.
 
 | layer | holds | settled? |
 |---|---|---|
-| **Core** | domain model, turn loop, validation, applier, context assembly | Mostly. The delta set and validator are stable and well-measured. `ContextAssembler` has never been under pressure — see the open measurement in §4. |
+| **Core** | domain model, turn loop, validation, applier, context assembly | Mostly. The delta set and validator are stable and well-measured. `ContextAssembler` held at 230 turns (§4) but its *output* is now the weak point: 8.4KB of state per call, carrying names that collide. |
 | **Llm** | provider client, per-role config, prompt assembly, extraction schema | Yes for the mechanism. The *prompts* are living text and change with every measured failure. |
 | **Storage** | JSON canon + history, pack loading (seed, lore, sheets) | Format settled. **The pack is 60% built** — see Phase 1. |
 | **Cli** | play harness, eval scenarios, self-tests | Throwaway by design. 6,061 lines, of which ~67% is eval scaffolding and 647 is the actual game. |
@@ -137,19 +137,35 @@ applied, 8 rejected, no corruption, no canon/history desync. The headline: a gua
 on turn 13 returned on turn 51 with the right name, armour, weapon, location and status,
 against a 10-turn narration window.
 
-### Open measurement — not a phase
+### Closed measurement ✅ — was not a phase
 
 > Does canon survive 200 turns?
 
-Bootstrap proved it at 51 turns. Every save in the repo is 50–51 turns; nothing has gone
-further. Past that, the binding constraint stops being the extractor and becomes
-`ContextAssembler` — the one piece of the turn loop never under pressure.
+**Yes.** Answered 2026-08-14 by a 230-turn model-played `marrow` run, on the third attempt —
+the first two were invalid (one ended sealed in a room with no exits, one was corrupted by two
+CLI instances sharing a save).
 
-Costs nothing but wall-clock: a model-played long run on an existing pack. **Should happen
-before Phase 1 lands**, so it measures the current engine as a clean baseline. What it
-answers: whether canon accumulates junk, whether the rejection rate drifts with distance,
-and whether summarization is needed at all — which is a whole line of future work currently
-sitting on an assumption.
+| | result |
+|---|---|
+| turns | 230, zero duplicate turn numbers |
+| rejections | 23 total, ~0.1/turn, **flat across all five 50-turn blocks** |
+| turns changing nothing | 9 / 7 / 6 / 7 / 10 per 50 — no collapse |
+| narration | 1478 → 1417 mean chars; still coherent and in-character at t228 |
+| locations | 33, 28 connected; every orphan introduced-but-never-entered, correct |
+
+Canon does not drift, corrupt, or degrade with distance. **This is the thesis, at four and a
+half times the distance bootstrap proved it.**
+
+Two consequences. Summarization and long-term memory rested entirely on the assumption that
+canon decays — it does not, so that whole line stays parked, and
+`design/LONG_TERM_MEMORY.md` records the gate. And the ashfall run's near-total silence (2
+facts in 150 turns) was **solitude, not distance**: this run, with a companion, produced 16
+facts established and 32 learned.
+
+What the run *did* surface is a different class of problem — canon stays correct while
+becoming harder to narrate from. See `CHALLENGES.md`: a place can be introduced twice under
+two ids, and names collide in the narrator's view because ids are deliberately stripped from
+it. Neither is decay. Both get worse with length.
 
 ### Phase 1 — the story layer
 

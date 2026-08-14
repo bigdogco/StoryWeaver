@@ -75,10 +75,14 @@ extraction pass reliable?", and none of these help answer it.
       [`design/LONG_TERM_MEMORY.md`](../design/LONG_TERM_MEMORY.md) — structured state,
       scene-indexed retrieval, rolling summarization, vector recall.
 
-      **Gated on the 200-turn measurement in `PROJECT.md`, not on a decision.** The whole line
-      of work assumes canon degrades over distance, and that has never been observed — 51
-      turns is the longest session that exists. If canon holds, most of this is unnecessary,
-      and the long run tells us *what failed*, which is what actually picks between the four.
+      **The gate came back negative — 2026-08-14.** This line of work assumed canon degrades
+      over distance. A 230-turn run says it does not: rejection rate flat, no drift, no
+      corruption. **So this is parked, not scheduled**, and it needs a fresh reason to exist
+      rather than a longer run.
+
+      What the run *did* surface is unrelated to memory: canon stays correct and becomes
+      harder to narrate from. That is a rendering and relevance problem, and it is the
+      lorebook retrieval item above, not this one.
 
 ---
 
@@ -820,3 +824,29 @@ Observed and deliberately not chased. See `devlog/2026-08-13_a-world-with-no-exi
       without end. Harmless interactively, and a hang for any agent-driven or piped run against
       a blank-slate pack — which is now a normal way this project is exercised. Wants an EOF
       check that exits with a message rather than looping.
+
+---
+
+## From the 230-turn marrow run — 2026-08-14
+
+The run that closed the 200-turn measurement. See
+`devlog/2026-08-14_two-hundred-and-thirty-turns.md`.
+
+- [ ] **A diagnostic scenario for re-introducing a known place under a new id.** The failure is
+      in `CHALLENGES.md` with its threshold: build the fix when it reproduces in a scenario
+      *and* appears in a second long run. The scenario is the half worth writing now, because
+      it is what makes the second sighting recognisable. Needs a large world and a place
+      described from a distance, since 210 turns of separation is the mechanism.
+- [ ] **Detection pass for split entities.** Two locations sharing a name with one nearly
+      empty; the same shape probably exists for characters and items. Would have caught the
+      stilt-hut immediately, and is a natural part of the *check my world* action already
+      planned for **[Phase 2]**.
+- [ ] **Nothing ever leaves inventory.** 31 items carried at t230, including six keys. Canon is
+      accurate and the prompt is unusable. Not an inventory-mechanics item — under the
+      base/plugin split that is **[Phase 3]** — but a *relevance* one: what belongs in the
+      narrator's view of a scene. Shares its answer with lorebook retrieval.
+- [ ] **`relationship_changed` has now had ~480 turns of evidence.** Zero firings across two
+      more long runs; Mona sat at her seeded 100 and Hald at his seeded −10 while moods moved
+      constantly. No longer worth re-testing — the mechanism is understood (mood is visible in
+      one scene, standing is the integral of many) and the answer is a reconciliation pass, not
+      a prompt.

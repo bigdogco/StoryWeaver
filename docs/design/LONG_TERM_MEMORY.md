@@ -5,11 +5,20 @@
 
 Lorebooks handle *world* facts. They do not handle *what happened*, which is harder.
 
-**Gated on a measurement, not on a decision.** `PROJECT.md` carries an open question — does
-canon survive 200 turns? — and this whole line of work rests on the assumption that it does
-not. Bootstrap proved coherence at 51 turns against a 10-turn narration window; nothing has
-run further. If canon holds, most of what follows is unnecessary, and building it first would
-be solving a problem we have never observed.
+> **The measurement came back, 2026-08-14, and it was negative.** A 230-turn `marrow` run
+> showed no decay at all: rejection rate flat across every 50-turn block, no drift, no
+> corruption, narration still coherent and in character at t228.
+>
+> **This whole document rested on the assumption that canon degrades over distance. It does
+> not.** Nothing below is scheduled, and none of it should be built on the old reasoning; it
+> needs a fresh justification, which as of today does not exist.
+>
+> What the long run actually surfaced was the opposite shape — canon staying *correct* while
+> becoming harder to narrate from, because names collide and nothing ever leaves inventory.
+> That is a relevance and rendering problem. See `NAMES_ARE_NOT_UNIQUE.md` and the lorebook
+> retrieval item, not this.
+
+The notes below are kept as the record of what was considered.
 
 ---
 
@@ -41,6 +50,6 @@ context. Mediocre in practice.
 
 ## What to do first
 
-Nothing, until the 200-turn measurement exists. Then the question is not "which of these
-four" but "what did the long run actually fail at" — and the answer decides between them, or
-shows that none is needed yet.
+Nothing. The long run did not fail at memory, so none of these has a problem to solve. Revisit
+only if a future run shows canon actually losing or corrupting what it holds — which two runs
+past 150 turns have now failed to produce.
