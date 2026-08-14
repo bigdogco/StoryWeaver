@@ -813,3 +813,10 @@ Observed and deliberately not chased. See `devlog/2026-08-13_a-world-with-no-exi
 - [ ] **Check the domain model for other seed-only fields.** `Connections` looked populated in
       every hand-made test and was empty in every real world, because only seeds wrote it.
       Anything else with that shape has the same latent bug.
+
+- [ ] **Character creation spins forever on closed stdin.** Found 2026-08-14 while testing the
+      save lock: a pack with no `player.md` prompts for a name, and with stdin at EOF
+      `Console.ReadLine()` returns null immediately and the loop reprints *"A name is required"*
+      without end. Harmless interactively, and a hang for any agent-driven or piped run against
+      a blank-slate pack — which is now a normal way this project is exercised. Wants an EOF
+      check that exits with a message rather than looping.

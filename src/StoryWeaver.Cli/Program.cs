@@ -119,7 +119,11 @@ internal static class Program
             try
             {
                 return await PlaySession
-                    .RunAsync(settings, Value(args, "--pack"), Value(args, "--save"))
+                    .RunAsync(
+                        settings,
+                        Value(args, "--pack"),
+                        Value(args, "--save"),
+                        args.Contains("--force", StringComparer.OrdinalIgnoreCase))
                     .ConfigureAwait(false);
             }
             catch (InvalidDataException ex)
@@ -146,6 +150,7 @@ internal static class Program
         Console.WriteLine("  --play          play a session (saved to disk, two calls per turn)");
         Console.WriteLine("                    --pack id      world to play (default: marrow)");
         Console.WriteLine("                    --save id      playthrough to use (default: the pack's id)");
+        Console.WriteLine("                    --force        open a save another session still holds");
         Console.WriteLine("  --smoke         live API test, two real calls");
         Console.WriteLine("  --probe-schema  live test of the nine-branch delta schema, one real call");
         Console.WriteLine("  --selftest      offline serialization checks, no API");

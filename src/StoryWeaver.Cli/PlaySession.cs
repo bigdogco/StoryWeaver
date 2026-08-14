@@ -55,10 +55,26 @@ internal static class PlaySession
     public static async Task<int> RunAsync(
         StoryWeaverSettings settings,
         string? packId = null,
-        string? saveId = null)
+        string? saveId = null,
+        bool force = false)
     {
         _packId = string.IsNullOrWhiteSpace(packId) ? DefaultPackId : packId.Trim();
         _saveId = string.IsNullOrWhiteSpace(saveId) ? _packId : saveId.Trim();
+
+        // Taken before anything is read, and held for the whole session. Two engines writing
+        // one save corrupts it silently — see SaveLock — so this refuses rather than warns.
+        using SaveLock? sessionLock = SaveLock.Acquire(SaveRoot, _saveId, force, out string? heldBy);
+
+        if (sessionLock is null)
+        {
+            Console.WriteLine($"\nThe save '{_saveId}' is already open in another session.");
+            Console.WriteLine($"  held by: {heldBy}");
+            Console.WriteLine();
+            Console.WriteLine("Two sessions writing one save overwrite each other's world every");
+            Console.WriteLine("turn, and neither reports an error. Close the other session, or");
+            Console.WriteLine("pass --force if you are certain it is gone.");
+            return 1;
+        }
 
         FileLlmLog log = new(settings.Logging);
         using OpenRouterClient client = new(settings, log);

@@ -754,6 +754,39 @@ properly, in currency rather than tokens, once turns are real.
 
 ---
 
+### Two engines can open one save, and nothing notices
+
+**Found 2026-08-14 in a 250-turn `ashfall` run; guarded the same day.**
+
+An agent launched a second CLI against a save that was already open. From the restart at turn
+151 onward, every turn number appears twice in `history.jsonl` — 72 duplicates, 323 lines for
+250 turns. Two processes each loaded canon at N, both wrote N+1, and each overwrote the
+other's world every turn for a hundred turns.
+
+```
+line 151  t152  00:24:59  *I dig around its base for anything metal...*
+line 152  t152  00:25:05  *I brace on the half-buried milestone and keep moving...*
+```
+
+**Nothing errored.** The run completed, the log had the right shape, and the corruption was
+found only because the prose felt wrong and someone read the timestamps. That silence is what
+made it worth code rather than "don't do that": a loud failure gets avoided twice, a silent one
+costs an entire long run.
+
+**It cost a real measurement.** The 200-turn question in `PROJECT.md` stayed open, because a
+contaminated save cannot answer it.
+
+**The tell, for next time:** duplicate `turnNumber` values in `history.jsonl`, adjacent, seconds
+apart, with different player input. Also a lost write that should be impossible —
+`tight-downward-slope` was entered via `player_moved` and ended with no connections, which the
+derivation rule cannot produce.
+
+Guarded by `SaveLock`: a lock file per save recording process id and start time, refused
+outright when the holder is alive, taken silently when it is gone, overridable with `--force`.
+Not a guard against hand-editing — an editor takes no lock, and canon is meant to be edited.
+
+---
+
 ### The world model could only build dead ends
 
 **Found 2026-08-13 in a 150-turn `ashfall` run; fixed the same day.**

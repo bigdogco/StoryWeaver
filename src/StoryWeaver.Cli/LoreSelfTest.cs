@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 using StoryWeaver.Core;
 using StoryWeaver.Storage;
 
@@ -122,6 +124,10 @@ internal static class LoreSelfTest
         failures += CheckUnresolvedReferenceIsFound();
         failures += CheckEstablishedTurnMatchesTheTurn();
         failures += CheckSourceIntroducedInSameBatch();
+        failures += CheckASaveOpenTwiceIsRefused();
+        failures += CheckAStaleLockIsTaken();
+        failures += CheckForceTakesALiveLock();
+        failures += CheckReleasingMakesTheSaveAvailable();
         failures += CheckWalkingSomewhereConnectsIt();
         failures += CheckAWalkedRouteIsTwoWay();
         failures += CheckItemBecomesCharacterAndSpeaks();
@@ -812,6 +818,225 @@ internal static class LoreSelfTest
     /// "Leads to:" from this set, so the narrator was told the player stood in a sealed room
     /// and narrated exactly that, correctly, for seventy turns.
     /// </summary>
+    /// <summary>
+    /// <b>A save already open in a live session is refused.</b>
+    ///
+    /// The failure this exists for: two CLI instances played one save for a hundred turns,
+    /// each overwriting the other's canon every turn, with no error anywhere — 72 duplicated
+    /// turn numbers in a 250-turn log.
+    ///
+    /// Tested against a **real** child process rather than a forged lock file. The whole
+    /// mechanism is "is that other session still running", and a test that fakes the other
+    /// session is not testing the thing that failed.
+    /// </summary>
+    private static int CheckASaveOpenTwiceIsRefused()
+    {
+        using TempDirectory root = new();
+        using Process? other = StartWaitingProcess();
+
+        if (other is null)
+        {
+            Console.WriteLine("  ok    (skipped) no way to start a helper process on this platform");
+            return 0;
+        }
+
+        try
+        {
+            Directory.CreateDirectory(Path.Combine(root.Path, "world"));
+
+            File.WriteAllText(
+                Path.Combine(root.Path, "world", SaveLock.FileName),
+                $$"""
+                {
+                  "processId": {{other.Id}},
+                  "startedUtc": "{{other.StartTime.ToUniversalTime():o}}",
+                  "machine": "{{Environment.MachineName}}",
+                  "openedUtc": "{{DateTime.UtcNow:o}}"
+                }
+                """);
+
+            using SaveLock? refused = SaveLock.Acquire(root.Path, "world", force: false, out string? heldBy);
+
+            if (refused is not null)
+            {
+                Console.WriteLine("  FAIL  a save held by a live session was opened anyway.");
+                return 1;
+            }
+
+            if (heldBy is null || !heldBy.Contains(other.Id.ToString()))
+            {
+                Console.WriteLine($"  FAIL  the refusal did not name the holder (got: {heldBy ?? "null"}).");
+                return 1;
+            }
+
+            Console.WriteLine("  ok    a save open in a live session is refused, and names the holder");
+            return 0;
+        }
+        finally
+        {
+            try
+            {
+                other.Kill();
+            }
+            catch (InvalidOperationException)
+            {
+            }
+        }
+    }
+
+    /// <summary>
+    /// A short-lived child process to stand in for a second session. Returns null rather than
+    /// throwing on a platform with neither shell — a self-test that cannot run should skip,
+    /// not fail.
+    /// </summary>
+    private static Process? StartWaitingProcess()
+    {
+        ProcessStartInfo info = OperatingSystem.IsWindows()
+            ? new ProcessStartInfo("cmd.exe", "/c timeout /t 30 /nobreak")
+            : new ProcessStartInfo("sleep", "30");
+
+        info.CreateNoWindow = true;
+        info.UseShellExecute = false;
+        info.RedirectStandardOutput = true;
+
+        try
+        {
+            return Process.Start(info);
+        }
+        catch (Exception e) when (e is System.ComponentModel.Win32Exception or InvalidOperationException)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// <b>A crash must never brick a save.</b> A lock whose process is gone is stale and taken
+    /// silently — the alternative is a world nobody can open until they find and delete a file
+    /// they were never told about.
+    /// </summary>
+    private static int CheckAStaleLockIsTaken()
+    {
+        using TempDirectory root = new();
+
+        Directory.CreateDirectory(Path.Combine(root.Path, "world"));
+
+        // A process id that cannot be running: ids are positive, so this can never match.
+        File.WriteAllText(
+            Path.Combine(root.Path, "world", SaveLock.FileName),
+            """
+            {
+              "processId": 2147483646,
+              "startedUtc": "2020-01-01T00:00:00Z",
+              "machine": "MACHINE_NAME",
+              "openedUtc": "2020-01-01T00:00:00Z"
+            }
+            """.Replace("MACHINE_NAME", Environment.MachineName));
+
+        using SaveLock? taken = SaveLock.Acquire(root.Path, "world", force: false, out string? heldBy);
+
+        if (taken is null)
+        {
+            Console.WriteLine($"  FAIL  a stale lock blocked the save (held by: {heldBy}).");
+            return 1;
+        }
+
+        Console.WriteLine("  ok    a lock whose process is gone is taken");
+        return 0;
+    }
+
+    /// <summary>
+    /// <b>--force takes a lock held by a process that really is alive.</b> The escape hatch for
+    /// the day the staleness check is wrong, and the only path that overrides a live holder.
+    /// </summary>
+    private static int CheckForceTakesALiveLock()
+    {
+        using TempDirectory root = new();
+
+        Directory.CreateDirectory(Path.Combine(root.Path, "world"));
+
+        // A live process that is not this one, described accurately enough to pass IsAlive.
+        using Process self = Process.GetCurrentProcess();
+
+        File.WriteAllText(
+            Path.Combine(root.Path, "world", SaveLock.FileName),
+            $$"""
+            {
+              "processId": {{Environment.ProcessId}},
+              "startedUtc": "{{self.StartTime.ToUniversalTime():o}}",
+              "machine": "{{Environment.MachineName}}",
+              "openedUtc": "{{DateTime.UtcNow:o}}"
+            }
+            """);
+
+        using SaveLock? forced = SaveLock.Acquire(root.Path, "world", force: true, out _);
+
+        if (forced is null)
+        {
+            Console.WriteLine("  FAIL  --force did not take a live lock.");
+            return 1;
+        }
+
+        Console.WriteLine("  ok    --force takes a live lock");
+        return 0;
+    }
+
+    /// <summary>
+    /// Ending a session gives the save back. Without this the guard would be worse than none:
+    /// every clean quit would leave a world that only --force could reopen.
+    /// </summary>
+    private static int CheckReleasingMakesTheSaveAvailable()
+    {
+        using TempDirectory root = new();
+
+        SaveLock? first = SaveLock.Acquire(root.Path, "world", force: false, out _);
+        first?.Dispose();
+
+        string lockPath = Path.Combine(root.Path, "world", SaveLock.FileName);
+
+        if (File.Exists(lockPath))
+        {
+            Console.WriteLine("  FAIL  ending a session left its lock behind.");
+            return 1;
+        }
+
+        using SaveLock? second = SaveLock.Acquire(root.Path, "world", force: false, out string? heldBy);
+
+        if (second is null)
+        {
+            Console.WriteLine($"  FAIL  a released save would not reopen (held by: {heldBy}).");
+            return 1;
+        }
+
+        Console.WriteLine("  ok    ending a session releases the save");
+        return 0;
+    }
+
+    /// <summary>A scratch directory that removes itself, so lock tests never touch real saves.</summary>
+    private sealed class TempDirectory : IDisposable
+    {
+        public TempDirectory()
+        {
+            Path = System.IO.Path.Combine(
+                System.IO.Path.GetTempPath(),
+                "storyweaver-selftest-" + Guid.NewGuid().ToString("N"));
+
+            Directory.CreateDirectory(Path);
+        }
+
+        public string Path { get; }
+
+        public void Dispose()
+        {
+            try
+            {
+                Directory.Delete(Path, recursive: true);
+            }
+            catch (IOException)
+            {
+            }
+        }
+    }
+
     private static int CheckWalkingSomewhereConnectsIt()
     {
         WorldState world = WorldSeeds.Marrow();
