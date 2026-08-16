@@ -792,6 +792,12 @@ every one of them so far.
       `ForNarration` / `ForExtraction` split. Validation should make it impossible; verify
       rather than assume. *(TODO_CHARACTER_SHEETS)*
 - [ ] **Full scored set re-run, provider pinned**, whenever extraction changes. *(TODO_FACT_HYGIENE)*
+- [ ] **A human play session on `marrow` with its new scenario.** Every session so far has been
+      model-played, and a model with no goal is exactly what the scenario is meant to fix — so a
+      model is the worst available judge of whether it did. The cheap proxies to compute
+      afterwards: movement share of all deltas (**53%** in the goalless 230-turn run) and new
+      locations to new characters (**31 : 2**). Both should move if a scenario does anything.
+      *(TODO_SCENARIOS)*
 
 ---
 

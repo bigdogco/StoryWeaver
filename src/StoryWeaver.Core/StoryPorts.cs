@@ -22,6 +22,15 @@ public sealed record StoryBeat(string PlayerInput, string Narration);
 /// texture of the last few minutes: what an NPC actually just said, the thread of a
 /// conversation, what has already been described. Without it the narrator rewrites the scene
 /// from scratch every turn.
+///
+/// <paramref name="scenario"/> is what the story is <i>about</i> — standing context, unchanged
+/// for the life of the save, empty when the pack ships none. It is passed separately from
+/// <paramref name="context"/> because the two have opposite volatility: world state changes
+/// every turn and belongs in the last message, a scenario never changes and belongs in the
+/// stable prefix. Folding it into the context block would break prompt caching every turn to
+/// resend an identical paragraph.
+///
+/// <b>The extractor is never given it</b> — see <see cref="IStateExtractor"/>.
 /// </summary>
 public interface INarrator
 {
@@ -29,6 +38,7 @@ public interface INarrator
         string context,
         IReadOnlyList<StoryBeat> recent,
         string playerInput,
+        string scenario = "",
         CancellationToken cancellationToken = default);
 }
 
@@ -41,6 +51,12 @@ public interface INarrator
 /// than restate the handover. Extracting from prose alone silently loses everything the
 /// player asserted and the narrator chose not to repeat, including anything they revealed to
 /// an NPC, which is a fact that NPC now knows.
+///
+/// <b>Deliberately not given the scenario.</b> Same reasoning that keeps the narration window
+/// out of extraction: telling it "a child has gone missing and you were sent to investigate"
+/// gives it every reason to emit that premise as a <c>fact_established</c> on turn one, and
+/// again whenever the prose brushes near it. The fact store already absorbs everything the
+/// delta set cannot express; a standing premise in its context is an invitation.
 /// </summary>
 public interface IStateExtractor
 {

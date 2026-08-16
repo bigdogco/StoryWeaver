@@ -92,7 +92,8 @@ internal static class PlaySession
             repository,
             historyTurns,
             pack.Lore,
-            pack.Sheets);
+            pack.Sheets,
+            pack.Scenario);
 
         // Resume the save if it exists, otherwise start from the pack's seed and write the
         // first save so the world is on disk before any turn runs.
@@ -165,7 +166,7 @@ internal static class PlaySession
                         .TryHandleAsync(input, _saveId, world, repository, pack.Lore)
                         .ConfigureAwait(false))
                 {
-                    HandleCommand(input, world, repository, pack.Lore, pack.Sheets);
+                    HandleCommand(input, world, repository, pack.Lore, pack.Sheets, pack.Scenario);
                 }
 
                 continue;
@@ -433,7 +434,8 @@ internal static class PlaySession
         WorldState world,
         IWorldRepository repo,
         LoreBook lore,
-        IReadOnlyDictionary<string, CharacterSheet> sheets)
+        IReadOnlyDictionary<string, CharacterSheet> sheets,
+        string scenario)
     {
         switch (input)
         {
@@ -450,6 +452,22 @@ internal static class PlaySession
             // eyeballing it is the only check that the narrator cannot leak one into prose.
             case "/prose":
                 Console.WriteLine();
+
+                // Printed above the state block because that is where the narrator sees it —
+                // in the system prompt, above everything. A view that showed the state and
+                // hid the standing premise would not be the narrator's view.
+                if (!string.IsNullOrWhiteSpace(scenario))
+                {
+                    Console.WriteLine("## What this story is about");
+                    Console.WriteLine();
+
+                    // Resolved, because this view exists to show what the narrator actually
+                    // receives. Printing the raw {{ }} would hide the bug that printing it
+                    // resolved is meant to catch.
+                    Console.WriteLine(EntityReferences.Resolve(scenario.Trim(), world));
+                    Console.WriteLine();
+                }
+
                 Console.WriteLine(ContextAssembler.ForNarration(world, lore, sheets));
                 break;
 

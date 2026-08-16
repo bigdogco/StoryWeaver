@@ -25,6 +25,7 @@ namespace StoryWeaver.Storage;
 public sealed class WorldPack
 {
     public const string SeedFile = "seed.json";
+    public const string ScenarioFile = "scenario.md";
     public const string LoreDirectory = "lore";
     public const string SheetDirectory = "characters";
 
@@ -33,14 +34,38 @@ public sealed class WorldPack
         string directory,
         WorldState? seed,
         LoreBook lore,
-        IReadOnlyDictionary<string, CharacterSheet> sheets)
+        IReadOnlyDictionary<string, CharacterSheet> sheets,
+        string scenario)
     {
         Id = id;
         Directory = directory;
         Seed = seed;
         Lore = lore;
         Sheets = sheets;
+        Scenario = scenario;
     }
+
+    /// <summary>
+    /// What the story is <i>about</i> — the situation, and what is unresolved. Empty when the
+    /// pack ships none, which is legal and means the engine behaves exactly as it did before
+    /// scenarios existed.
+    ///
+    /// <b>Distinct from the opening message by lifetime, not content.</b> An opening renders
+    /// the seed and is read once, then slides out of the narration window after ten turns; a
+    /// scenario is standing context in every prompt for the life of the save. A premise
+    /// written only into an opening works beautifully for ten turns and is then forgotten —
+    /// the same shape as the Astaria failure that player-authored canon exists to fix.
+    ///
+    /// Deliberately small. Setting belongs in lore, identity in character sheets, the player
+    /// in player.md, prose style in a prompt override. What is left, and has nowhere else to
+    /// live, is the central conflict. See docs/design/SCENARIOS.md.
+    ///
+    /// Never shown to extraction — see <see cref="StoryWeaver.Core.IStateExtractor"/>.
+    /// </summary>
+    public string Scenario { get; }
+
+    /// <summary>Whether this pack says what its story is about.</summary>
+    public bool HasScenario => !string.IsNullOrWhiteSpace(Scenario);
 
     /// <summary>Pack id — the folder name, and the default save id.</summary>
     public string Id { get; }
@@ -94,6 +119,7 @@ public sealed class WorldPack
         string directory = Path.Combine(root, id);
 
         WorldState? seed = LoadSeed(Path.Combine(directory, SeedFile));
+        string scenario = LoadScenario(Path.Combine(directory, ScenarioFile));
         LoreBook lore = MarkdownLoreReader.Load(Path.Combine(directory, LoreDirectory));
 
         Dictionary<string, CharacterSheet> sheets = MarkdownSheetReader
@@ -113,9 +139,45 @@ public sealed class WorldPack
             RequirePlayer(seed, Path.Combine(directory, SeedFile));
             RequireEveryoneIsPlaced(seed, Path.Combine(directory, SeedFile));
             RejectUnresolvedReferences(seed, lore, sheets, directory);
+            RejectUnresolvedScenarioReferences(seed, scenario, Path.Combine(directory, ScenarioFile));
         }
 
-        return new WorldPack(id, directory, seed, lore, sheets);
+        return new WorldPack(id, directory, seed, lore, sheets, scenario);
+    }
+
+    /// <summary>
+    /// A pack without one is the normal case today and stays legal — the alternative would
+    /// break every existing world to add a feature they do not use.
+    /// </summary>
+    private static string LoadScenario(string path) =>
+        File.Exists(path) ? File.ReadAllText(path).Trim() : string.Empty;
+
+    /// <summary>
+    /// <b>Names are not checked, and that is the difference from every other authored file.</b>
+    ///
+    /// An opening message is checked against the seed because it renders state that exists. A
+    /// scenario is the opposite: it legitimately names what does <i>not</i> exist yet — "the
+    /// disappearances at the village" before any village is in canon. That is the story's
+    /// future, not its present, and refusing it would forbid the one thing a scenario is for.
+    ///
+    /// <c>{{ }}</c> references are still checked, because an unresolved one sits in a prompt
+    /// shown every single turn — a bug that would otherwise run for two hundred turns without
+    /// anyone noticing.
+    /// </summary>
+    private static void RejectUnresolvedScenarioReferences(
+        WorldState seed,
+        string scenario,
+        string file)
+    {
+        if (string.IsNullOrWhiteSpace(scenario))
+        {
+            return;
+        }
+
+        foreach (string id in EntityReferences.Unresolved(scenario, seed))
+        {
+            throw new InvalidDataException($"{file}: {{{{{id}}}}} refers to nothing in this world.");
+        }
     }
 
     /// <summary>

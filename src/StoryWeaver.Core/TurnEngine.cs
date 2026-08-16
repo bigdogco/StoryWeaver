@@ -35,13 +35,23 @@ public sealed class TurnEngine
     /// <summary>Authored identity from the pack. Read into prompts, never written.</summary>
     private readonly IReadOnlyDictionary<string, CharacterSheet> _sheets;
 
+    /// <summary>
+    /// What the pack says its story is about. Empty when it says nothing, which is legal.
+    ///
+    /// Held beside the lore and sheets because it is the same kind of thing — authored content
+    /// read into prompts and never written. It reaches the narrator only: see
+    /// <see cref="IStateExtractor"/> for why the bookkeeping half is kept away from it.
+    /// </summary>
+    private readonly string _scenario;
+
     public TurnEngine(
         INarrator narrator,
         IStateExtractor extractor,
         IWorldRepository repository,
         int historyTurns = DefaultHistoryTurns,
         LoreBook? lore = null,
-        IReadOnlyDictionary<string, CharacterSheet>? sheets = null)
+        IReadOnlyDictionary<string, CharacterSheet>? sheets = null,
+        string scenario = "")
     {
         _narrator = narrator;
         _extractor = extractor;
@@ -49,7 +59,22 @@ public sealed class TurnEngine
         _historyTurns = Math.Max(0, historyTurns);
         _lore = lore ?? LoreBook.Empty;
         _sheets = sheets ?? new Dictionary<string, CharacterSheet>(StringComparer.OrdinalIgnoreCase);
+        _scenario = scenario ?? string.Empty;
     }
+
+    /// <summary>
+    /// The scenario as the narrator should see it — <c>{{ }}</c> references resolved to names.
+    ///
+    /// Resolution happens here rather than at load because a reference renders to whatever the
+    /// name is <i>now</i>: a character renamed on turn 40 must read correctly on turn 41. The
+    /// pack loader checks that every reference points at something; this turns it into words.
+    ///
+    /// Skipping this was a real bug caught by eyeballing <c>/prose</c>: the narrator was handed
+    /// a literal <c>{{player}}</c>, which is precisely the token-in-the-prose failure that the
+    /// narration/extraction context split exists to prevent.
+    /// </summary>
+    private string Scenario(WorldState world) =>
+        _scenario.Length == 0 ? _scenario : EntityReferences.Resolve(_scenario, world);
 
     public async Task<TurnOutcome> RunTurnAsync(
         string worldId,
@@ -68,7 +93,7 @@ public sealed class TurnEngine
             .ConfigureAwait(false);
 
         string narration = await _narrator
-            .NarrateAsync(narrationContext, recent, playerInput, cancellationToken)
+            .NarrateAsync(narrationContext, recent, playerInput, Scenario(world), cancellationToken)
             .ConfigureAwait(false);
 
         ExtractionResult extraction;
@@ -225,7 +250,7 @@ public sealed class TurnEngine
         string extractionContext = ContextAssembler.ForExtraction(world, _lore, _sheets);
 
         string narration = await _narrator
-            .NarrateAsync(narrationContext, recent, turn.PlayerInput, cancellationToken)
+            .NarrateAsync(narrationContext, recent, turn.PlayerInput, Scenario(world), cancellationToken)
             .ConfigureAwait(false);
 
         ExtractionResult extraction;

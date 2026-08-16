@@ -128,6 +128,10 @@ internal static class LoreSelfTest
         failures += CheckAStaleLockIsTaken();
         failures += CheckForceTakesALiveLock();
         failures += CheckReleasingMakesTheSaveAvailable();
+        failures += CheckAPackWithNoScenarioStillLoads();
+        failures += CheckScenarioReachesNarratorNotExtractor();
+        failures += CheckScenarioSitsAboveTheVolatileBlock();
+        failures += CheckScenarioReferencesResolveToNames();
         failures += CheckWalkingSomewhereConnectsIt();
         failures += CheckAWalkedRouteIsTwoWay();
         failures += CheckItemBecomesCharacterAndSpeaks();
@@ -576,10 +580,11 @@ internal static class LoreSelfTest
                 }
 
                 string authored = pack.AuthorsThePlayer ? "authored player" : "blank slate";
+                string story = pack.HasScenario ? "has a scenario" : "no scenario";
 
                 Console.WriteLine(
                     $"  ok    {root}/{id} loads — {pack.Seed.Characters.Count} seated, " +
-                    $"{pack.Sheets.Count} with sheets, {pack.Lore.All.Count()} lore, {authored}");
+                    $"{pack.Sheets.Count} with sheets, {pack.Lore.All.Count()} lore, {authored}, {story}");
             }
             catch (InvalidDataException ex)
             {
@@ -1034,6 +1039,208 @@ internal static class LoreSelfTest
             catch (IOException)
             {
             }
+        }
+    }
+
+    /// <summary>
+    /// A pack that says nothing about its story loads and plays exactly as before. Every world
+    /// shipped before 2026-08-15 is in this position, and breaking them to add a feature they
+    /// do not use would be the wrong trade.
+    /// </summary>
+    private static int CheckAPackWithNoScenarioStillLoads()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "sw-noscenario-" + Guid.NewGuid().ToString("N"));
+        string pack = Path.Combine(root, "quiet");
+
+        try
+        {
+            Directory.CreateDirectory(pack);
+            File.WriteAllText(
+                Path.Combine(pack, WorldPack.SeedFile),
+                """
+                {
+                  "turnNumber": 0,
+                  "locations": { "hall": { "id": "hall", "name": "hall", "description": "A hall." } },
+                  "characters": {
+                    "player": { "id": "player", "name": "Someone", "description": "A person.", "locationId": "hall" }
+                  }
+                }
+                """);
+
+            WorldPack loaded = WorldPack.Load(root, "quiet");
+
+            if (loaded.HasScenario || loaded.Scenario.Length != 0)
+            {
+                Console.WriteLine("  FAIL  a pack with no scenario.md reported having one.");
+                return 1;
+            }
+
+            Console.WriteLine("  ok    a pack with no scenario loads unchanged");
+            return 0;
+        }
+        finally
+        {
+            try
+            {
+                Directory.Delete(root, recursive: true);
+            }
+            catch (IOException)
+            {
+            }
+        }
+    }
+
+    /// <summary>
+    /// <b>The narrator is handed the scenario and the extractor is not.</b>
+    ///
+    /// The half of this design most likely to be quietly undone by a later change, and the
+    /// half whose failure would be invisible: an extractor told "a child has gone missing and
+    /// you were sent to investigate" would emit that premise as a <c>fact_established</c> on
+    /// turn one, which reads like a model being helpful rather than like a bug.
+    ///
+    /// Asserted by running a real turn through <see cref="TurnEngine"/> with fakes that record
+    /// what they were given, rather than by reading the code and believing it.
+    /// </summary>
+    private static int CheckScenarioReachesNarratorNotExtractor()
+    {
+        // A sentinel that cannot occur in the seed. The first version of this test searched
+        // the extraction context for "marsh" and failed — because Mabb is described as an old
+        // marsh-hand. A test whose sentinel collides with the world under test proves nothing
+        // either way.
+        const string scenario = "Three people have vanished. ZQXJV-SCENARIO-SENTINEL.";
+
+        RecordingNarrator narrator = new();
+        RecordingExtractor extractor = new();
+        InMemoryWorldRepository repository = new();
+        WorldState world = WorldSeeds.Marrow();
+
+        TurnEngine engine = new(narrator, extractor, repository, historyTurns: 0, scenario: scenario);
+
+        engine.RunTurnAsync("w", world, "*I look around.*").GetAwaiter().GetResult();
+
+        if (narrator.SawScenario != scenario)
+        {
+            Console.WriteLine(
+                $"  FAIL  the narrator was given scenario '{narrator.SawScenario}'.");
+            return 1;
+        }
+
+        if (extractor.SawContext.Contains("ZQXJV-SCENARIO-SENTINEL", StringComparison.Ordinal))
+        {
+            Console.WriteLine("  FAIL  the scenario reached the extraction context.");
+            return 1;
+        }
+
+        Console.WriteLine("  ok    the scenario reaches the narrator and not the extractor");
+        return 0;
+    }
+
+    /// <summary>
+    /// The scenario rides in the system message, above the history and above the world-state
+    /// block that has to stay last.
+    ///
+    /// Not cosmetic: the narration-memory design puts volatile state in the final message so
+    /// everything above it is a stable cacheable prefix. A scenario in the state block would
+    /// break that prefix every turn to resend an identical paragraph.
+    /// </summary>
+    private static int CheckScenarioSitsAboveTheVolatileBlock()
+    {
+        const string scenario = "The pass is shut. WQNBT-VOLATILE-SENTINEL.";
+
+        RecordingNarrator narrator = new();
+        InMemoryWorldRepository repository = new();
+        WorldState world = WorldSeeds.Marrow();
+
+        TurnEngine engine = new(
+            narrator, new RecordingExtractor(), repository, historyTurns: 0, scenario: scenario);
+
+        engine.RunTurnAsync("w", world, "*I wait.*").GetAwaiter().GetResult();
+
+        if (narrator.SawContext.Contains("WQNBT-VOLATILE-SENTINEL", StringComparison.Ordinal))
+        {
+            Console.WriteLine("  FAIL  the scenario was folded into the volatile world-state block.");
+            return 1;
+        }
+
+        Console.WriteLine("  ok    the scenario travels separately from the world-state block");
+        return 0;
+    }
+
+    /// <summary>
+    /// <c>{{player}}</c> in a scenario reaches the narrator as a name, not as a token.
+    ///
+    /// <b>A real bug, caught by eyeballing <c>/prose</c> and not by any test.</b> The loader
+    /// checks that references resolve to something; nothing was turning them into words, so the
+    /// narrator was handed a literal <c>{{player}}</c> in every prompt — the token-in-the-prose
+    /// failure the narration/extraction split exists to prevent, arriving through a new door.
+    ///
+    /// Resolved per turn rather than at load on purpose: a character renamed on turn 40 has to
+    /// read correctly on turn 41.
+    /// </summary>
+    private static int CheckScenarioReferencesResolveToNames()
+    {
+        RecordingNarrator narrator = new();
+        InMemoryWorldRepository repository = new();
+        WorldState world = WorldSeeds.Marrow();
+
+        string playerName = world.Player?.Name ?? "?";
+
+        TurnEngine engine = new(
+            narrator,
+            new RecordingExtractor(),
+            repository,
+            historyTurns: 0,
+            scenario: "{{player}} came to find out what is happening here.");
+
+        engine.RunTurnAsync("w", world, "*I wait.*").GetAwaiter().GetResult();
+
+        if (narrator.SawScenario.Contains("{{", StringComparison.Ordinal))
+        {
+            Console.WriteLine($"  FAIL  the narrator got an unresolved scenario: {narrator.SawScenario}");
+            return 1;
+        }
+
+        if (!narrator.SawScenario.Contains(playerName, StringComparison.Ordinal))
+        {
+            Console.WriteLine($"  FAIL  the scenario did not resolve to the player's name.");
+            return 1;
+        }
+
+        Console.WriteLine("  ok    a scenario reference resolves to a name before narration");
+        return 0;
+    }
+
+    private sealed class RecordingNarrator : INarrator
+    {
+        public string SawScenario { get; private set; } = string.Empty;
+
+        public string SawContext { get; private set; } = string.Empty;
+
+        public Task<string> NarrateAsync(
+            string context,
+            IReadOnlyList<StoryBeat> recent,
+            string playerInput,
+            string scenario = "",
+            CancellationToken cancellationToken = default)
+        {
+            SawScenario = scenario;
+            SawContext = context;
+            return Task.FromResult("Prose.");
+        }
+    }
+
+    private sealed class RecordingExtractor : IStateExtractor
+    {
+        public string SawContext { get; private set; } = string.Empty;
+
+        public Task<ExtractionResult> ExtractAsync(
+            string context,
+            string playerInput,
+            string narration,
+            CancellationToken cancellationToken = default)
+        {
+            SawContext = context;
+            return Task.FromResult(new ExtractionResult([], "{\"deltas\":[]}", null, null));
         }
     }
 

@@ -61,13 +61,14 @@ public sealed class LlmNarrator : INarrator
         string context,
         IReadOnlyList<StoryBeat> recent,
         string playerInput,
+        string scenario = "",
         CancellationToken cancellationToken = default)
     {
         LlmResult result = await _client.CompleteAsync(
             new LlmCall
             {
                 Role = LlmRole.Narration,
-                Messages = BuildMessages(context, recent, playerInput),
+                Messages = BuildMessages(context, recent, playerInput, scenario),
             },
             cancellationToken: cancellationToken).ConfigureAwait(false);
 
@@ -98,9 +99,25 @@ public sealed class LlmNarrator : INarrator
     private static IReadOnlyList<LlmMessage> BuildMessages(
         string context,
         IReadOnlyList<StoryBeat> recent,
-        string playerInput)
+        string playerInput,
+        string scenario)
     {
-        List<LlmMessage> messages = new(2 + (recent.Count * 2)) { LlmMessage.System(SystemPrompt) };
+        // The scenario joins the system prompt rather than the world-state block below.
+        // Both are prompt text, but they differ in volatility: state changes every turn and
+        // has to sit last so everything above it stays a stable cacheable prefix, while a
+        // scenario is identical for the life of the save. Putting it below would invalidate
+        // the prefix every turn to resend the same paragraph.
+        string system = string.IsNullOrWhiteSpace(scenario)
+            ? SystemPrompt
+            : $"""
+              {SystemPrompt}
+
+              ## What this story is about
+
+              {scenario.Trim()}
+              """;
+
+        List<LlmMessage> messages = new(2 + (recent.Count * 2)) { LlmMessage.System(system) };
 
         foreach (StoryBeat beat in recent)
         {

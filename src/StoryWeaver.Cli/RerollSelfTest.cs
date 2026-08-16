@@ -217,13 +217,18 @@ internal static class RerollSelfTest
         /// <summary>Every piece of prose the narrator was shown as history.</summary>
         public List<string> SawNarration { get; } = [];
 
+        /// <summary>The scenario it was handed, so a test can assert it arrived.</summary>
+        public string SawScenario { get; private set; } = string.Empty;
+
         public Task<string> NarrateAsync(
             string context,
             IReadOnlyList<StoryBeat> recent,
             string playerInput,
+            string scenario = "",
             CancellationToken cancellationToken = default)
         {
             SawNarration.AddRange(recent.Select(b => b.Narration));
+            SawScenario = scenario;
             return Task.FromResult("rerolled prose");
         }
     }
