@@ -1,0 +1,178 @@
+{
+  "turnNumber": 0,
+  "characters": {
+    "player": {
+      "description": "A licensed private detective with a small office above the Orpheum cinema.",
+      "locationId": "detective-office",
+      "status": "normal",
+      "mood": "tired",
+      "relationshipToPlayer": {
+        "standing": 0,
+        "summary": "self"
+      },
+      "lastSeenTurn": null,
+      "id": "player"
+    },
+    "vivian-vale": {
+      "description": "A poised woman in a rain-darkened green coat who has come to hire the detective.",
+      "locationId": "detective-office",
+      "status": "normal",
+      "mood": "afraid",
+      "knows": [
+        "julian-vale-missing",
+        "black-ledger-exists",
+        "dawn-arrest-deadline"
+      ],
+      "relationshipToPlayer": {
+        "standing": 15,
+        "summary": "needs help but is testing whether the detective can be bought"
+      },
+      "lastSeenTurn": null,
+      "id": "vivian-vale"
+    },
+    "eddie-mercer": {
+      "description": "The detective's quick-talking assistant, a former copy boy who knows the city's back doors.",
+      "locationId": "detective-office",
+      "status": "normal",
+      "mood": "curious",
+      "knows": [
+        "julian-vale-missing"
+      ],
+      "relationshipToPlayer": {
+        "standing": 70,
+        "summary": "loyal assistant and friend"
+      },
+      "lastSeenTurn": null,
+      "id": "eddie-mercer"
+    },
+    "sergeant-clara-doyle": {
+      "description": "A detective sergeant at Central Police Station, sharp-eyed and unimpressed by private detectives.",
+      "locationId": "central-police-station",
+      "status": "normal",
+      "mood": "impatient",
+      "knows": [
+        "julian-vale-missing",
+        "dawn-arrest-deadline"
+      ],
+      "relationshipToPlayer": {
+        "standing": 10,
+        "summary": "professional respect complicated by rivalry"
+      },
+      "lastSeenTurn": null,
+      "id": "sergeant-clara-doyle"
+    },
+    "julian-vale": {
+      "description": "Vivian Vale's missing husband, a city contractor whose black ledger has made him a target.",
+      "locationId": "hotel-argent",
+      "status": "hidden",
+      "mood": "desperate",
+      "knows": [
+        "black-ledger-exists",
+        "julian-vale-missing"
+      ],
+      "relationshipToPlayer": {
+        "standing": 0,
+        "summary": "does not yet know the detective"
+      },
+      "lastSeenTurn": null,
+      "id": "julian-vale"
+    }
+  },
+  "locations": {
+    "detective-office": {
+      "description": "A narrow private detective's office above the shuttered Orpheum cinema. Venetian blinds, a scarred desk, a filing cabinet, and a window looking down on a blacked-out street. Rain ticks against the glass.",
+      "status": "after midnight",
+      "connections": [
+        "orpheum-stairwell",
+        "blackout-street"
+      ],
+      "id": "detective-office",
+      "name": "The Detective's Office"
+    },
+    "orpheum-stairwell": {
+      "description": "A dim stairwell smelling of dust, wet wool, and old cinema smoke. A service door leads behind the Orpheum's locked auditorium.",
+      "status": "dark",
+      "connections": [
+        "detective-office",
+        "orpheum-auditorium"
+      ],
+      "id": "orpheum-stairwell",
+      "name": "The Orpheum Stairwell"
+    },
+    "orpheum-auditorium": {
+      "description": "A closed cinema auditorium with rows of empty seats and a silver screen gone grey in the blackout. The projection booth overlooks the room.",
+      "status": "closed",
+      "connections": [
+        "orpheum-stairwell",
+        "blackout-street"
+      ],
+      "id": "orpheum-auditorium",
+      "name": "The Orpheum Auditorium"
+    },
+    "blackout-street": {
+      "description": "A rain-slick city street under blackout orders. Shop fronts are shuttered, lamps hooded, and every passing car seems to be carrying a secret.",
+      "status": "blackout",
+      "connections": [
+        "detective-office",
+        "orpheum-auditorium",
+        "central-police-station",
+        "hotel-argent"
+      ],
+      "id": "blackout-street",
+      "name": "Blackout Street"
+    },
+    "central-police-station": {
+      "description": "Central Police Station: tiled corridors, ringing telephones, cigarette smoke, and a charge room where the night shift has stopped pretending to be tired.",
+      "status": "busy",
+      "connections": [
+        "blackout-street"
+      ],
+      "id": "central-police-station",
+      "name": "Central Police Station"
+    },
+    "hotel-argent": {
+      "description": "A fashionable hotel whose brass doors and expensive carpets conceal a back entrance, a silent lift, and too many guests with reasons to lie.",
+      "status": "open",
+      "connections": [
+        "blackout-street"
+      ],
+      "id": "hotel-argent",
+      "name": "The Hotel Argent"
+    }
+  },
+  "items": {
+    "black-ledger": {
+      "description": "A small black ledger containing coded payments from businessmen, police officers, and a government contractor. Its pages are written in Julian Vale's hand.",
+      "locationId": null,
+      "holderId": "vivian-vale",
+      "status": "hidden",
+      "id": "black-ledger",
+      "name": "The Black Ledger"
+    },
+    "vivians-cigarette-case": {
+      "description": "A silver cigarette case engraved with the initials V.V. One cigarette is missing, and the hinge carries a smear of dark red lipstick.",
+      "locationId": null,
+      "holderId": "vivian-vale",
+      "status": "intact",
+      "id": "vivians-cigarette-case",
+      "name": "Vivian's Silver Cigarette Case"
+    }
+  },
+  "facts": {
+    "julian-vale-missing": {
+      "id": "julian-vale-missing",
+      "text": "Julian Vale, a city contractor and Vivian Vale's husband, has been missing since the previous evening.",
+      "establishedTurn": 0
+    },
+    "black-ledger-exists": {
+      "id": "black-ledger-exists",
+      "text": "A black ledger records secret payments made by powerful people in the city.",
+      "establishedTurn": 0
+    },
+    "dawn-arrest-deadline": {
+      "id": "dawn-arrest-deadline",
+      "text": "Detective Sergeant Clara Doyle intends to charge Vivian Vale with Julian's murder at six o'clock in the morning.",
+      "establishedTurn": 0
+    }
+  }
+}

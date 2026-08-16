@@ -121,7 +121,14 @@ public sealed class LlmNarrator : INarrator
 
         foreach (StoryBeat beat in recent)
         {
-            messages.Add(LlmMessage.User(beat.PlayerInput));
+            // The opening message is prose nobody prompted — it arrives as a beat with no
+            // player input, and inventing an empty user turn for it would put a blank message
+            // in the conversation the model is reading.
+            if (beat.PlayerInput.Length > 0)
+            {
+                messages.Add(LlmMessage.User(beat.PlayerInput));
+            }
+
             messages.Add(LlmMessage.Assistant(beat.Narration));
         }
 

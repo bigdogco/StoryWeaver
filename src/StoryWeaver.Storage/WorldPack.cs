@@ -1,4 +1,6 @@
 using System.Text.Json;
+using System.Text.RegularExpressions;
+
 using StoryWeaver.Core;
 
 namespace StoryWeaver.Storage;
@@ -22,10 +24,11 @@ namespace StoryWeaver.Storage;
 /// canon, so the two can never drift. A save file is a valid seed, which makes "start a new
 /// world from where that one got to" free.
 /// </summary>
-public sealed class WorldPack
+public sealed partial class WorldPack
 {
     public const string SeedFile = "seed.json";
     public const string ScenarioFile = "scenario.md";
+    public const string OpeningFile = "opening.md";
     public const string LoreDirectory = "lore";
     public const string SheetDirectory = "characters";
 
@@ -35,7 +38,8 @@ public sealed class WorldPack
         WorldState? seed,
         LoreBook lore,
         IReadOnlyDictionary<string, CharacterSheet> sheets,
-        string scenario)
+        string scenario,
+        string opening)
     {
         Id = id;
         Directory = directory;
@@ -43,6 +47,7 @@ public sealed class WorldPack
         Lore = lore;
         Sheets = sheets;
         Scenario = scenario;
+        Opening = opening;
     }
 
     /// <summary>
@@ -66,6 +71,28 @@ public sealed class WorldPack
 
     /// <summary>Whether this pack says what its story is about.</summary>
     public bool HasScenario => !string.IsNullOrWhiteSpace(Scenario);
+
+    /// <summary>
+    /// The first thing the player reads — <b>a rendering of the seed</b>, exactly as every
+    /// later turn is a rendering of canon. Empty when the pack ships none, which falls back to
+    /// printing the starting location's description.
+    ///
+    /// The character-card ecosystem calls this <c>first_mes</c>, and theirs is prose with no
+    /// state behind it: it describes a tavern and a person, none of which exists anywhere, and
+    /// the model improvises the rest. Ours is the opposite — everyone it names is in the seed,
+    /// and the loader is what keeps that true. <b>Their opening is a promise the world cannot
+    /// keep; ours is a promise the world is checked against.</b>
+    ///
+    /// <b>Not a turn.</b> It is content, so it never enters <c>history.jsonl</c> — writing it
+    /// there would bake today's text into every existing save, and editing the file between
+    /// sessions would leave old prose behind in old worlds. It rides in the narration window as
+    /// the oldest beat and slides out after ten turns like any other prose, which is precisely
+    /// the lifetime that distinguishes it from <see cref="Scenario"/>.
+    /// </summary>
+    public string Opening { get; }
+
+    /// <summary>Whether this pack writes the first thing the player reads.</summary>
+    public bool HasOpening => !string.IsNullOrWhiteSpace(Opening);
 
     /// <summary>Pack id — the folder name, and the default save id.</summary>
     public string Id { get; }
@@ -120,6 +147,7 @@ public sealed class WorldPack
 
         WorldState? seed = LoadSeed(Path.Combine(directory, SeedFile));
         string scenario = LoadScenario(Path.Combine(directory, ScenarioFile));
+        string opening = LoadScenario(Path.Combine(directory, OpeningFile));
         LoreBook lore = MarkdownLoreReader.Load(Path.Combine(directory, LoreDirectory));
 
         Dictionary<string, CharacterSheet> sheets = MarkdownSheetReader
@@ -140,9 +168,11 @@ public sealed class WorldPack
             RequireEveryoneIsPlaced(seed, Path.Combine(directory, SeedFile));
             RejectUnresolvedReferences(seed, lore, sheets, directory);
             RejectUnresolvedScenarioReferences(seed, scenario, Path.Combine(directory, ScenarioFile));
+            RejectUnresolvedScenarioReferences(seed, opening, Path.Combine(directory, OpeningFile));
+            WarnAboutStrangersInTheOpening(seed, opening, Path.Combine(directory, OpeningFile));
         }
 
-        return new WorldPack(id, directory, seed, lore, sheets, scenario);
+        return new WorldPack(id, directory, seed, lore, sheets, scenario, opening);
     }
 
     /// <summary>
@@ -179,6 +209,70 @@ public sealed class WorldPack
             throw new InvalidDataException($"{file}: {{{{{id}}}}} refers to nothing in this world.");
         }
     }
+
+    /// <summary>
+    /// Warns when the opening names somebody the seed has never heard of.
+    ///
+    /// <b>Warns rather than refuses, and the difference is not timidity.</b> Natural language
+    /// does not surrender its entity list on demand: "a heavyset man" is Hald and matches
+    /// nothing, while "Venetian" and "October" are capitalised and are nobody. A check this
+    /// fuzzy must not be able to stop a world loading.
+    ///
+    /// What it catches is the failure the design was written for — an author writing *"a
+    /// militia officer waits by the fire"* puts an officer in the story and nobody in canon.
+    /// The narrator keeps referring to them, the player talks to them, and extraction has to
+    /// invent them mid-scene.
+    ///
+    /// Deliberately narrow to keep the false-positive rate survivable: multi-word capitalised
+    /// runs only, so a title-cased "The" or a capitalised adjective is not a suspect, and
+    /// anything already appearing as a character or location name is fine.
+    /// </summary>
+    private static void WarnAboutStrangersInTheOpening(WorldState seed, string opening, string file)
+    {
+        if (string.IsNullOrWhiteSpace(opening))
+        {
+            return;
+        }
+
+        HashSet<string> known = new(StringComparer.OrdinalIgnoreCase);
+
+        foreach (Character character in seed.Characters.Values)
+        {
+            foreach (string word in character.Name.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+            {
+                known.Add(word);
+            }
+        }
+
+        foreach (Location location in seed.Locations.Values)
+        {
+            foreach (string word in location.Name.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+            {
+                known.Add(word);
+            }
+        }
+
+        foreach (Match match in ProperNoun().Matches(opening))
+        {
+            string phrase = match.Value.Trim();
+
+            if (phrase.Split(' ').Any(w => known.Contains(w.Trim('.', ',', '\'', '"', ';', ':'))))
+            {
+                continue;
+            }
+
+            Console.WriteLine(
+                $"  warning  {file}: '{phrase}' is named in the opening but is nobody and " +
+                "nowhere in the seed.");
+        }
+    }
+
+    /// <summary>
+    /// Two or more capitalised words in a row, which is what a person or a place usually looks
+    /// like and what a stray capitalised adjective usually does not.
+    /// </summary>
+    [GeneratedRegex(@"\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)+\b")]
+    private static partial Regex ProperNoun();
 
     /// <summary>
     /// Filenames are ids, so a mistyped filename is a mistyped id — see <see cref="EntityId"/>

@@ -44,6 +44,20 @@ public sealed class TurnEngine
     /// </summary>
     private readonly string _scenario;
 
+    /// <summary>
+    /// The pack's opening prose — the first thing the player read.
+    ///
+    /// <b>Held here rather than written to history, because it is content and history is what
+    /// happened.</b> Storing it as a turn would bake today's text into every existing save, so
+    /// editing the file between sessions would leave old prose in old worlds — the pack/save
+    /// split, broken in the one place it is easiest to break it.
+    ///
+    /// It enters the narration window as the oldest beat while there is room, and falls out
+    /// after <see cref="_historyTurns"/> real turns like any other prose. That lifetime is the
+    /// whole difference between an opening and a scenario.
+    /// </summary>
+    private readonly string _opening;
+
     public TurnEngine(
         INarrator narrator,
         IStateExtractor extractor,
@@ -51,7 +65,8 @@ public sealed class TurnEngine
         int historyTurns = DefaultHistoryTurns,
         LoreBook? lore = null,
         IReadOnlyDictionary<string, CharacterSheet>? sheets = null,
-        string scenario = "")
+        string scenario = "",
+        string opening = "")
     {
         _narrator = narrator;
         _extractor = extractor;
@@ -60,6 +75,7 @@ public sealed class TurnEngine
         _lore = lore ?? LoreBook.Empty;
         _sheets = sheets ?? new Dictionary<string, CharacterSheet>(StringComparer.OrdinalIgnoreCase);
         _scenario = scenario ?? string.Empty;
+        _opening = opening ?? string.Empty;
     }
 
     /// <summary>
@@ -320,13 +336,23 @@ public sealed class TurnEngine
 
         int available = Math.Max(0, history.Count - skipLast);
 
-        return
+        List<StoryBeat> beats =
         [
             .. history
                 .Take(available)
                 .Skip(Math.Max(0, available - _historyTurns))
                 .Select(t => new StoryBeat(t.PlayerInput, t.Narration)),
         ];
+
+        // The opening is the oldest thing the narrator remembers, and only while the window has
+        // not yet filled with real turns. An empty player input marks it as prose nobody
+        // prompted: the narrator emits no user message for it.
+        if (_opening.Length > 0 && beats.Count < _historyTurns)
+        {
+            beats.Insert(0, new StoryBeat(string.Empty, _opening));
+        }
+
+        return beats;
     }
 
     /// <summary>

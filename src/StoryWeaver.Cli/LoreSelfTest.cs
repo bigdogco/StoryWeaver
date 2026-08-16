@@ -132,6 +132,8 @@ internal static class LoreSelfTest
         failures += CheckScenarioReachesNarratorNotExtractor();
         failures += CheckScenarioSitsAboveTheVolatileBlock();
         failures += CheckScenarioReferencesResolveToNames();
+        failures += CheckOpeningIsRememberedButNotRecorded();
+        failures += CheckOpeningLeavesTheWindow();
         failures += CheckWalkingSomewhereConnectsIt();
         failures += CheckAWalkedRouteIsTwoWay();
         failures += CheckItemBecomesCharacterAndSpeaks();
@@ -1210,11 +1212,95 @@ internal static class LoreSelfTest
         return 0;
     }
 
+    /// <summary>
+    /// <b>The opening is the oldest beat the narrator remembers, and is never a turn.</b>
+    ///
+    /// Both halves matter. Without it in the window, the narrator answers turn one having never
+    /// seen the scene the player just read, and re-establishes it from canon — contradicting
+    /// details the player is looking at.
+    ///
+    /// And it must stay out of <c>history.jsonl</c>, because it is content rather than state.
+    /// Writing it as a turn would bake today's prose into every save, so editing
+    /// <c>opening.md</c> between sessions would leave the old text in old worlds — the pack/save
+    /// split broken in the easiest place to break it.
+    /// </summary>
+    private static int CheckOpeningIsRememberedButNotRecorded()
+    {
+        const string opening = "The rain has not stopped. QKZRP-OPENING-SENTINEL.";
+
+        RecordingNarrator narrator = new();
+        InMemoryWorldRepository repository = new();
+        WorldState world = WorldSeeds.Marrow();
+
+        TurnEngine engine = new(
+            narrator, new RecordingExtractor(), repository, historyTurns: 10, opening: opening);
+
+        engine.RunTurnAsync("w", world, "*I look up.*").GetAwaiter().GetResult();
+
+        if (narrator.SawBeats.Count != 1
+            || narrator.SawBeats[0].Narration != opening
+            || narrator.SawBeats[0].PlayerInput.Length != 0)
+        {
+            Console.WriteLine(
+                $"  FAIL  the narrator saw {narrator.SawBeats.Count} beat(s); expected the opening, unprompted.");
+            return 1;
+        }
+
+        IReadOnlyList<TurnRecord> history = repository.LoadHistoryAsync("w").GetAwaiter().GetResult();
+
+        if (history.Count != 1)
+        {
+            Console.WriteLine($"  FAIL  one turn produced {history.Count} history records.");
+            return 1;
+        }
+
+        if (history[0].Narration.Contains("QKZRP-OPENING-SENTINEL", StringComparison.Ordinal))
+        {
+            Console.WriteLine("  FAIL  the opening was written into history.");
+            return 1;
+        }
+
+        Console.WriteLine("  ok    the opening enters the window as a beat and never the history");
+        return 0;
+    }
+
+    /// <summary>
+    /// Once the window is full of real turns, the opening falls out of it — the same lifetime
+    /// any other prose has, and the whole difference between an opening and a scenario.
+    /// </summary>
+    private static int CheckOpeningLeavesTheWindow()
+    {
+        RecordingNarrator narrator = new();
+        InMemoryWorldRepository repository = new();
+        WorldState world = WorldSeeds.Marrow();
+
+        // A window of two, so three turns is enough to push the opening out.
+        TurnEngine engine = new(
+            narrator, new RecordingExtractor(), repository, historyTurns: 2, opening: "First light.");
+
+        for (int i = 0; i < 3; i++)
+        {
+            engine.RunTurnAsync("w", world, $"*Turn {i}.*").GetAwaiter().GetResult();
+        }
+
+        if (narrator.SawBeats.Any(b => b.Narration == "First light."))
+        {
+            Console.WriteLine("  FAIL  the opening was still in the window after the turns filled it.");
+            return 1;
+        }
+
+        Console.WriteLine("  ok    the opening leaves the window once real turns fill it");
+        return 0;
+    }
+
     private sealed class RecordingNarrator : INarrator
     {
         public string SawScenario { get; private set; } = string.Empty;
 
         public string SawContext { get; private set; } = string.Empty;
+
+        /// <summary>The window as handed over on the most recent call.</summary>
+        public IReadOnlyList<StoryBeat> SawBeats { get; private set; } = [];
 
         public Task<string> NarrateAsync(
             string context,
@@ -1225,6 +1311,7 @@ internal static class LoreSelfTest
         {
             SawScenario = scenario;
             SawContext = context;
+            SawBeats = recent;
             return Task.FromResult("Prose.");
         }
     }

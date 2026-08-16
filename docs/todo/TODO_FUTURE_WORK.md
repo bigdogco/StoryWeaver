@@ -706,8 +706,9 @@ These finish the pack design written 2026-07-23, three of whose six components w
 built.
 
 - [ ] **`world.json` manifest**, with a version a save can record. *(TODO_WORLD_PACKS)*
-- [ ] **Opening message**, and the loader check that every name in it exists in the seed.
-      *(TODO_WORLD_PACKS)*
+- [x] ~~**Opening message**, and the loader check that every name in it exists in the seed.~~
+      **Built 2026-08-16** — see `TODO_OPENING_MESSAGE.md`. The check is a warning rather than a
+      refusal, and was measured for noise on three real packs before being kept.
 - [ ] **Per-pack narration prompt overrides.** *(TODO_WORLD_PACKS)* — narration yes,
       extraction no; that split was already settled in the design. Overlaps with "Prompts as
       editable files" above, which is the general form.

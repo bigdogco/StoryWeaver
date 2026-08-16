@@ -93,7 +93,8 @@ internal static class PlaySession
             historyTurns,
             pack.Lore,
             pack.Sheets,
-            pack.Scenario);
+            pack.Scenario,
+            pack.Opening);
 
         // Resume the save if it exists, otherwise start from the pack's seed and write the
         // first save so the world is on disk before any turn runs.
@@ -131,7 +132,7 @@ internal static class PlaySession
         }
         else
         {
-            PrintOpeningScene(world);
+            PrintOpeningScene(world, pack);
         }
 
         while (true)
@@ -661,20 +662,32 @@ internal static class PlaySession
         Console.WriteLine();
     }
 
-    private static void PrintOpeningScene(WorldState world)
+    /// <summary>
+    /// The first thing a new player reads.
+    ///
+    /// The pack's authored opening when it has one — prose, written by a human, naming people
+    /// who are really in the seed. Otherwise the starting location's description, which is what
+    /// every pack got before openings existed: accurate, and no substitute. A room description
+    /// tells a player where the furniture is while the story is already happening around them.
+    /// </summary>
+    private static void PrintOpeningScene(WorldState world, WorldPack pack)
     {
-        // Wherever the player currently stands — the tavern in a fresh world, but possibly
-        // elsewhere in a resumed one.
+        // No Marrow fallback. A pack-specific id sat here since bootstrap, harmless only
+        // because every pack seats its player — and silently wrong for any world that did not
+        // happen to contain a tavern in a marsh.
         Location? here = world.PlayerLocationId is { } id ? world.FindLocation(id) : null;
-        here ??= world.Locations.GetValueOrDefault("marrow-tavern");
 
-        if (here is null)
+        string? text = pack.HasOpening
+            ? EntityReferences.Resolve(pack.Opening, world)
+            : here?.Description;
+
+        if (string.IsNullOrWhiteSpace(text))
         {
             return;
         }
 
         Console.WriteLine(new string('-', 70));
-        Console.WriteLine(here.Description);
+        Console.WriteLine(text);
         Console.WriteLine(new string('-', 70));
     }
 
