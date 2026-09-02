@@ -167,7 +167,15 @@ internal static class PlaySession
 
             if (input.StartsWith('/'))
             {
-                if (string.Equals(input, "/retry", StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(input, "/reload", StringComparison.OrdinalIgnoreCase))
+                {
+                    // Reassigns the session's canon, which is why this cannot live in
+                    // HandleCommand with the other verbs — that takes the world by value, and
+                    // a reload that only updated a copy would be worse than none.
+                    world = await ReloadAsync(_saveId, world, repository, pack.Lore)
+                        .ConfigureAwait(false);
+                }
+                else if (string.Equals(input, "/retry", StringComparison.OrdinalIgnoreCase))
                 {
                     await RetryExtractionAsync(engine, repository, world).ConfigureAwait(false);
                 }
@@ -442,6 +450,58 @@ internal static class PlaySession
         _ => delta.GetType().Name,
     };
 
+    /// <summary>
+    /// Update State, on the console. Re-reads canon from disk and returns what the session
+    /// should hold from here on — the edited world if the read produced one, otherwise the
+    /// world it already had.
+    ///
+    /// The report is printed rather than acted on. Warnings are advice about a file the player
+    /// owns; refusing to load their edit because an item is in an odd state would be the
+    /// validator's posture toward a cheap model applied to a person, which is wrong.
+    /// </summary>
+    private static async Task<WorldState> ReloadAsync(
+        string saveId,
+        WorldState world,
+        IWorldRepository repository,
+        LoreBook lore)
+    {
+        RefreshReport report = await CanonRefresh
+            .ReadAsync(saveId, world, repository, lore)
+            .ConfigureAwait(false);
+
+        if (report.NothingOnDisk)
+        {
+            Console.WriteLine("  Nothing saved yet — canon is only in this session.");
+            return world;
+        }
+
+        if (report.Unchanged)
+        {
+            Console.WriteLine("  Canon on disk matches this session. Nothing to update.");
+        }
+        else
+        {
+            Console.WriteLine($"  Re-read canon — {report.Changes.Count} change(s):");
+
+            foreach (string change in report.Changes)
+            {
+                Console.WriteLine($"    {change}");
+            }
+        }
+
+        foreach (string warning in report.Warnings)
+        {
+            Console.WriteLine($"  CHECK: {warning}");
+        }
+
+        if (report.Warnings.Count > 0)
+        {
+            Console.WriteLine("  Reported, not refused — it is your world. Fix and /reload again.");
+        }
+
+        return report.World ?? world;
+    }
+
     private static void HandleCommand(
         string input,
         WorldState world,
@@ -498,6 +558,7 @@ internal static class PlaySession
                 Console.WriteLine("  /raw    last raw extraction response");
                 Console.WriteLine("  /retry  extract the last turn again, same prose");
                 Console.WriteLine("  /reroll narrate the last turn again — new prose");
+                Console.WriteLine("  /reload re-read canon from disk after editing it yourself");
                 Console.WriteLine("  /quit   end the session");
                 Console.WriteLine();
                 Console.WriteLine("  Write to canon yourself — extraction only records what is");

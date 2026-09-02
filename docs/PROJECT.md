@@ -111,8 +111,16 @@ Two consequences to design for, not to solve here:
 
 - **Validation becomes on-demand, not a gate.** `DeltaValidator` exists to be suspicious of a
   cheap model that confidently invents things; a person editing their own canon does not need
-  to be argued with. Same structural invariants (no dangling fact ids, no item both held and
-  placed, no character without a location), reported rather than refused.
+  to be argued with. Same structural invariants, reported rather than refused. Built as
+  `Core/CanonRefresh.Check` 2026-09-02: dangling fact ids, an item both held and placed or
+  neither, a location or holder naming nothing, a connection to a place that is not there, and
+  an entity filed under a key that disagrees with its own id.
+
+  **Corrected 2026-09-02.** This list previously read *"no character without a location"*, which
+  is wrong: `Character.LocationId` is nullable precisely so a person can exist offstage, and the
+  authoring path offers it as *blank = unknown / offstage*. Implemented as written it would have
+  warned about every correctly-authored offstage character. The real rule is *a location, when
+  set, names a real place.*
 - **A running session holds canon in memory and would overwrite an external edit.** Resolved:
   the UI owns this, as an **Update State** action — re-read canon from disk, run the
   invariants, report. Edit the file, press it, keep playing. No file watching, no merge, no
@@ -257,7 +265,19 @@ This is also where player editing becomes real. The CLI has a narrow version alr
 (`/place`, `/character`, `/fact`, `/reroll`); the UI is what makes canon editable as a matter
 of course rather than as a repair command.
 
-**Open question:** whether **Update State** also exists as a CLI command, or is UI-only.
+**Answered 2026-09-02: both, and the argument is not symmetry.** The parity rule rejected the
+same day says a UI feature need not have a `/command` — but that argument is about *UI-shaped*
+features, and Update State is a verb with no arguments. The rejection makes UI-only permissible,
+not correct.
+
+What tipped it: **the bug is in the CLI today, before any UI exists**, and the CLI is where the
+long runs happen. Measured rather than argued — a session with an externally added location,
+one turn taken without `/reload`, and the edit was gone; the same sequence with `/reload` and it
+survived. Deciding it now also fixed the return type, which built after a UI would have come
+back shaped for a panel.
+
+`Core/CanonRefresh` re-reads, diffs and checks; `/reload` renders it and a button will call the
+same function.
 
 **Done when:** create a world, author characters and lore, place them, play, save, resume,
 and correct any of it after the fact — all without touching a terminal.

@@ -771,6 +771,10 @@ completeness.
 
 ### Phase 2 — UI
 
+**Update State is built (2026-09-02)** — `Core/CanonRefresh` plus `/reload`, answering the
+phase's open question with *both surfaces*. Re-read canon after editing it by hand; the session
+no longer overwrites the edit. See [`TODO_UPDATE_STATE.md`](TODO_UPDATE_STATE.md).
+
 **The boundary is locked (2026-09-02).** A UI is a thin layer, never a driver: no gameplay,
 narration or authoring logic in a UI project. Authoring policy was pulled into
 `Core/Authoring.cs` so the console and an editor window call one implementation — see
@@ -778,12 +782,15 @@ narration or authoring logic in a UI project. Authoring policy was pulled into
 rejected**: it taxes every future feature and drags the UI down to what a text prompt can
 express. The CLI is the first client, not the API.
 
-- [ ] **Move `EntityId` into Core, or decide not to.** Raised by the boundary work and
-      deliberately left alone inside it. `Authoring.Slug` (Core) must always produce ids that
-      `EntityId.IsWellFormed` (Storage) accepts, and dependencies point inward, so Core cannot
-      reference the check. A self-test bridges them today. Moving it is a structural change and
-      wants its own decision — **revisit when a second Core caller needs to validate an id**,
-      which the pack-creation UI probably will.
+- [ ] **Move `EntityId` into Core, or decide not to. — the trigger has fired.** Raised by the
+      boundary work and deliberately left alone inside it. `Authoring.Slug` (Core) must always
+      produce ids that `EntityId.IsWellFormed` (Storage) accepts, and dependencies point inward,
+      so Core cannot reference the check. A self-test bridges them.
+
+      The stated trigger was *a second Core caller needing to validate an id*.
+      **`CanonRefresh` is it** (2026-09-02): a hand-edited id of `Warrior_Mike` is precisely
+      what a reload should warn about, and it cannot. Still a structural change, so it wants a
+      decision rather than riding inside the next feature that notices.
 - [ ] **Multiple saves per pack.** The ids are separated already, so this is a startup choice
       plus whatever the UI offers. *(TODO_WORLD_PACKS)*
 - [ ] **Pack installing / sharing.** *(TODO_WORLD_PACKS)*
