@@ -3,21 +3,17 @@ using StoryWeaver.Core;
 namespace StoryWeaver.Cli;
 
 /// <summary>
-/// Player-authored canon: <c>/place</c>, <c>/character</c>, <c>/fact</c>, <c>/rename</c>,
-/// <c>/knows</c>.
+/// The console's authoring commands: <c>/place</c>, <c>/character</c>, <c>/fact</c>,
+/// <c>/rename</c>, <c>/knows</c>.
 ///
-/// Extraction deliberately never records a merely *mentioned* entity — measured at 0/7 for a
-/// place the player names, a person they name, and a place the narrator names in passing. The
-/// dividing line is presence, not authorship, and that is the right rule: a character saying
-/// something is not the same as it being true, or every boast and lie would enter canon.
+/// <b>Prompting and printing only.</b> What an id may be, when one collides, which deltas an
+/// authoring act produces and what committing them does all live in <see cref="Authoring"/>,
+/// because a UI needs the same answers and two copies of them would drift. This file owns the
+/// conversation — the order questions are asked in, what is listed before each one, how a
+/// rejection reads on a terminal — and nothing else.
 ///
-/// This is the door that rule does not apply to. The player is the world's author, so their
-/// assertion is authoritative in a way an NPC's speech is not.
-///
-/// <b>Everything goes through the ordinary delta path</b> — build a <see cref="StateDelta"/>,
-/// run it through <see cref="DeltaValidator"/>, apply it with <see cref="DeltaApplier"/>, save.
-/// Writing to canon directly would be less code and a second way for the world to change,
-/// which is how two paths start disagreeing about ids, collisions, and what was persisted.
+/// The split is the point: a form with three text boxes asks these questions in no particular
+/// order and calls exactly the same builders.
 /// </summary>
 internal static class AuthoringCommands
 {
@@ -66,14 +62,14 @@ internal static class AuthoringCommands
             return null;
         }
 
-        string? id = AskId("Id", Slug(name), world);
+        string? id = AskId("Id", Authoring.Slug(name), world);
         if (id is null)
         {
             return null;
         }
 
         string? description = Ask("Description");
-        return description is null ? null : [new LocationIntroduced(id, name, description)];
+        return description is null ? null : Authoring.Place(id, name, description);
     }
 
     private static IReadOnlyList<StateDelta>? PromptCharacter(WorldState world)
@@ -84,7 +80,7 @@ internal static class AuthoringCommands
             return null;
         }
 
-        string? id = AskId("Id", Slug(name), world);
+        string? id = AskId("Id", Authoring.Slug(name), world);
         if (id is null)
         {
             return null;
@@ -96,13 +92,10 @@ internal static class AuthoringCommands
             return null;
         }
 
-        // Blank means offstage. A person you have only spoken about — a brother back home, a
-        // name from a rumour — exists without being anywhere yet, and Character.LocationId is
-        // nullable exactly for that. They get placed when they actually turn up.
         Console.WriteLine($"  Known places: {string.Join(", ", world.Locations.Keys.OrderBy(k => k, StringComparer.Ordinal))}");
         string? locationId = AskOptional("Location id (blank = unknown / offstage)");
 
-        return [new CharacterIntroduced(id, name, description, locationId)];
+        return Authoring.Person(id, name, description, locationId);
     }
 
     private static IReadOnlyList<StateDelta>? PromptFact(WorldState world)
@@ -116,41 +109,18 @@ internal static class AuthoringCommands
             return null;
         }
 
-        string? id = AskId("Id", Slug(text), world);
+        string? id = AskId("Id", Authoring.Slug(text), world);
         if (id is null)
         {
             return null;
         }
 
-        List<StateDelta> deltas = [new FactEstablished(id, text)];
-
-        // Establishing a fact says nothing about who knows it — that separation is the whole
-        // point of the knowledge model. An author may well write down a truth their own
-        // character has not discovered.
-        if (AskYesNo("Does your character know this?", defaultYes: true))
-        {
-            deltas.Add(new FactLearned(Character.PlayerId, id));
-        }
-
-        return deltas;
+        return Authoring.Fact(id, text, AskYesNo("Does your character know this?", defaultYes: true));
     }
 
-    /// <summary>
-    /// Rename someone already in canon — the manual counterpart to the extractor's
-    /// <see cref="CharacterRenamed"/>, and the repair tool for worlds played before it existed.
-    ///
-    /// The id is shown but not offered for editing. It is permanent by design, and a prompt
-    /// that displays it without a way to change it is clearer than one that hides it: the
-    /// player sees that <c>figure-in-cistern</c> is now Nessa, and that this is fine.
-    /// </summary>
     private static IReadOnlyList<StateDelta>? PromptRename(WorldState world)
     {
-        Console.WriteLine("  Characters:");
-
-        foreach (Character existing in world.Characters.Values.OrderBy(c => c.Id, StringComparer.Ordinal))
-        {
-            Console.WriteLine($"    {existing.Id} — {existing.Name}");
-        }
+        ListCharacters(world);
 
         string? id = Ask("Character id");
         if (id is null)
@@ -173,28 +143,11 @@ internal static class AuthoringCommands
             return null;
         }
 
-        // Blank keeps the existing description. A reveal often rewrites it — "a shivering
-        // figure in rags" is no longer who she is once she has a name — but not always, and
-        // making it mandatory would mean retyping a good description to change a name.
         string? description = AskOptional("New description (blank = keep current)");
 
-        return [new CharacterRenamed(id, name, description)
-        {
-            Evidence = "Renamed by the player.",
-        }];
+        return Authoring.Rename(id, name, description);
     }
 
-    /// <summary>
-    /// Grant a character knowledge of a lore entry — "Hald has heard of the Investigators".
-    ///
-    /// The authoring counterpart to learning one in play. It emits <see cref="FactLearned"/>
-    /// against a lore id, which works because facts and lore share one id namespace; that is
-    /// the same property that saves the extractor from needing a delta kind of its own.
-    ///
-    /// A seeded world starts with nobody having heard of anything, which is correct but
-    /// unusable — an author needs to say that the innkeeper knows what the cult is without
-    /// waiting for a scene to establish it.
-    /// </summary>
     private static IReadOnlyList<StateDelta>? PromptKnows(WorldState world, LoreBook lore)
     {
         if (lore.Count == 0)
@@ -203,12 +156,7 @@ internal static class AuthoringCommands
             return null;
         }
 
-        Console.WriteLine("  Characters:");
-
-        foreach (Character existing in world.Characters.Values.OrderBy(c => c.Id, StringComparer.Ordinal))
-        {
-            Console.WriteLine($"    {existing.Id} — {existing.Name}");
-        }
+        ListCharacters(world);
 
         string? characterId = Ask("Character id");
         if (characterId is null)
@@ -242,7 +190,7 @@ internal static class AuthoringCommands
             return null;
         }
 
-        return [new FactLearned(characterId, loreId) { Evidence = "Authored by the player." }];
+        return Authoring.Knows(characterId, loreId);
     }
 
     private static async Task CommitAsync(
@@ -252,7 +200,9 @@ internal static class AuthoringCommands
         IWorldRepository repository,
         LoreBook lore)
     {
-        ValidationOutcome validation = DeltaValidator.Validate(world, deltas, lore, authored: true);
+        ValidationOutcome validation = await Authoring
+            .CommitAsync(deltas, worldId, world, repository, lore)
+            .ConfigureAwait(false);
 
         foreach (RejectedDelta rejected in validation.Rejected)
         {
@@ -261,7 +211,7 @@ internal static class AuthoringCommands
 
         foreach (StateDelta noOp in validation.NoOps)
         {
-            Console.WriteLine($"  no change: {Summarize(noOp)}");
+            Console.WriteLine($"  no change: {Authoring.Summarize(noOp)}");
         }
 
         if (validation.Accepted.Count == 0)
@@ -270,28 +220,23 @@ internal static class AuthoringCommands
             return;
         }
 
-        DeltaApplier.Apply(world, validation.Accepted);
-        await repository.SaveAsync(worldId, world).ConfigureAwait(false);
-
         foreach (StateDelta delta in validation.Accepted)
         {
-            Console.WriteLine($"  {Summarize(delta)}");
+            Console.WriteLine($"  {Authoring.Summarize(delta)}");
         }
 
         Console.WriteLine("  Saved to canon.");
     }
 
-    private static string Summarize(StateDelta delta) => delta switch
+    private static void ListCharacters(WorldState world)
     {
-        LocationIntroduced d => $"added place {d.LocationId} ({d.Name})",
-        CharacterIntroduced d => $"added character {d.CharacterId} ({d.Name})"
-                                 + (d.LocationId is null ? " — offstage" : $" @ {d.LocationId}"),
-        CharacterRenamed d => $"renamed {d.CharacterId} to {d.Name}"
-                              + (d.Description is null ? string.Empty : ", description revised"),
-        FactEstablished d => $"added fact {d.FactId}: {d.Text}",
-        FactLearned d => $"{d.CharacterId} knows {d.FactId}",
-        _ => delta.GetType().Name,
-    };
+        Console.WriteLine("  Characters:");
+
+        foreach (Character existing in world.Characters.Values.OrderBy(c => c.Id, StringComparer.Ordinal))
+        {
+            Console.WriteLine($"    {existing.Id} — {existing.Name}");
+        }
+    }
 
     /// <summary>Prompt for required text. Null means the player gave up.</summary>
     private static string? Ask(string label)
@@ -313,6 +258,10 @@ internal static class AuthoringCommands
     ///
     /// Shown rather than silently generated because ids are permanent, appear in every prompt
     /// the model sees, and are what a human reads when debugging a save.
+    ///
+    /// The collision check is <see cref="Authoring.IdConflict"/> — asked here, while the author
+    /// can still choose another, rather than left to the validator after they have typed a
+    /// description and lost it.
     /// </summary>
     private static string? AskId(string label, string suggestion, WorldState world)
     {
@@ -320,19 +269,11 @@ internal static class AuthoringCommands
         {
             Console.Write($"  {label} [{suggestion}]: ");
             string? typed = Console.ReadLine()?.Trim();
-            string id = string.IsNullOrWhiteSpace(typed) ? suggestion : Slug(typed);
+            string id = string.IsNullOrWhiteSpace(typed) ? suggestion : Authoring.Slug(typed);
 
-            if (id.Length == 0)
+            if (Authoring.IdConflict(world, id) is { } reason)
             {
-                Console.WriteLine("  An id is required.");
-                continue;
-            }
-
-            // The validator would catch this, but saying so now lets them pick another id
-            // instead of losing everything they have typed so far.
-            if (world.Characters.ContainsKey(id) || world.Locations.ContainsKey(id) || world.Facts.ContainsKey(id))
-            {
-                Console.WriteLine($"  '{id}' is already used by something in this world. Choose another.");
+                Console.WriteLine($"  {reason}");
                 continue;
             }
 
@@ -348,41 +289,5 @@ internal static class AuthoringCommands
         return string.IsNullOrWhiteSpace(value)
             ? defaultYes
             : value.StartsWith('y') || value.StartsWith('Y');
-    }
-
-    /// <summary>
-    /// Human-readable slug, matching the ids the rest of the world uses
-    /// (<c>marrow-tavern</c>, <c>innkeeper-hald</c>) rather than GUIDs.
-    /// </summary>
-    private static string Slug(string text)
-    {
-        System.Text.StringBuilder builder = new(text.Length);
-        bool lastWasDash = false;
-
-        foreach (char c in text.Trim().ToLowerInvariant())
-        {
-            if (char.IsLetterOrDigit(c))
-            {
-                builder.Append(c);
-                lastWasDash = false;
-            }
-            else if (c is '\'' or '’')
-            {
-                // Dropped, not treated as a separator. Apostrophes sit *inside* words —
-                // "King's Investigators" must not become "king-s-investigators", and fantasy
-                // names are full of them.
-            }
-            else if (!lastWasDash && builder.Length > 0)
-            {
-                builder.Append('-');
-                lastWasDash = true;
-            }
-        }
-
-        // Facts are slugged from a whole sentence, which would otherwise produce an
-        // unreadable id. Four words is enough to recognise one in a save file.
-        string slug = builder.ToString().Trim('-');
-        string[] words = slug.Split('-', StringSplitOptions.RemoveEmptyEntries);
-        return words.Length <= 4 ? slug : string.Join('-', words[..4]);
     }
 }

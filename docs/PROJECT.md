@@ -79,6 +79,28 @@ task-sized one.
 | Per-character knowledge holds fact *ids*, never text | Two characters cannot end up knowing different versions of the same fact. |
 | **The player owns their world and can edit it directly.** Canon and seed are plain JSON, opened in any editor or through the UI; the next turn simply runs on what is there | It is the repair path when the model writes something wrong — without it, one bad extraction is permanent. And it is a *roleplay* feature: giving someone an item, fixing who a character is, adjusting a state is authorship, not cheating. A single-player world has no one to cheat. |
 | **Storage stays JSON. Permanently** | Formerly "JSON now, likely SQLite later." Reversed 2026-08-13: the save format is a user-facing surface, not an implementation detail, and a database hides the world from the person who owns it. Full-text search over history — the original trigger for the switch — is not worth that. |
+| **A UI is a thin layer, never a driver.** No gameplay, narration or authoring logic lives in a UI project. It collects input, calls Core, renders what comes back | Locked 2026-09-02, before any Avalonia existed, so that abandoning Avalonia costs a shell rewrite and nothing else. The turn loop already satisfied it; authoring did not, and that was found by looking rather than assumed — see below. |
+
+### The UI boundary, and the parity rule that was rejected
+
+Settled 2026-09-02, entering Phase 2. The question asked was whether the UI could be swapped
+without touching the engine. Two different commitments were merged in it, and only one is worth
+making.
+
+**Locked: thin layer.** As above. `TurnEngine` already had it — three public methods, no console
+anywhere, `INarrator` and `IStateExtractor` written in Core's own vocabulary rather than a
+provider SDK's. `AuthoringCommands` did not: the id convention, the collision check, and
+validate-apply-save all had `Console.WriteLine` threaded through them, so a UI would have
+reimplemented them and the two copies would have drifted. Pulled into `Core/Authoring.cs`.
+
+**Rejected: CLI/UI feature parity.** *"Everything the UI can do can be done through a
+`/command`"* sounds like the same idea and is not. It is a tax on every future feature, and it
+drags the UI down to what a text prompt can express. Dragging a character onto a location has no
+honest slash-command form; the attempt produces `/place`, which is exactly the interface that
+made a sound design read as a bug on 2026-08-06.
+
+**The CLI is not the API — Core is.** The CLI is the first client, and it is allowed to be a
+worse one.
 
 **What editable canon means in practice.** Simple JSON modding: open the file, add an item to
 a character, change a status, save. Nothing special happens; the state is just different when

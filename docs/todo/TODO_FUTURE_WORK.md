@@ -771,6 +771,19 @@ completeness.
 
 ### Phase 2 — UI
 
+**The boundary is locked (2026-09-02).** A UI is a thin layer, never a driver: no gameplay,
+narration or authoring logic in a UI project. Authoring policy was pulled into
+`Core/Authoring.cs` so the console and an editor window call one implementation — see
+[`TODO_UI_BOUNDARY.md`](TODO_UI_BOUNDARY.md). **CLI/UI feature parity was considered and
+rejected**: it taxes every future feature and drags the UI down to what a text prompt can
+express. The CLI is the first client, not the API.
+
+- [ ] **Move `EntityId` into Core, or decide not to.** Raised by the boundary work and
+      deliberately left alone inside it. `Authoring.Slug` (Core) must always produce ids that
+      `EntityId.IsWellFormed` (Storage) accepts, and dependencies point inward, so Core cannot
+      reference the check. A self-test bridges them today. Moving it is a structural change and
+      wants its own decision — **revisit when a second Core caller needs to validate an id**,
+      which the pack-creation UI probably will.
 - [ ] **Multiple saves per pack.** The ids are separated already, so this is a startup choice
       plus whatever the UI offers. *(TODO_WORLD_PACKS)*
 - [ ] **Pack installing / sharing.** *(TODO_WORLD_PACKS)*

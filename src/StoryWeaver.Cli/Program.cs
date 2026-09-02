@@ -22,8 +22,8 @@ internal static class Program
         // for an API key.
         if (args.Contains("--selftest", StringComparer.OrdinalIgnoreCase))
         {
-            // Both suites run; the exit code is the worse of the two, so a lore failure
-            // cannot be hidden by serialization passing.
+            // Every suite runs; the exit code is the worst of them, so one failure
+            // cannot be hidden by the others passing.
             int json = JsonSelfTest.Run();
             Console.WriteLine();
             int lore = LoreSelfTest.Run();
@@ -31,7 +31,9 @@ internal static class Program
             int wire = StoryWeaver.Llm.OpenRouter.ResponseSelfTest.Run();
             Console.WriteLine();
             int reroll = RerollSelfTest.Run();
-            return new[] { json, lore, wire, reroll }.Max();
+            Console.WriteLine();
+            int authoring = AuthoringSelfTest.Run();
+            return new[] { json, lore, wire, reroll, authoring }.Max();
         }
 
         // Writes the built-in seed out as a pack file. One-shot authoring aid: it guarantees
