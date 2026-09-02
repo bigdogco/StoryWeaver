@@ -40,6 +40,13 @@ public sealed class OpenRouterClient : ILlmClient, IDisposable
 
     private readonly StoryWeaverSettings _settings;
     private readonly ILlmLog _log;
+
+    /// <summary>
+    /// The engine's prompts. Only the repair instructions are used here — the narrator and
+    /// extractor own theirs — but the client is where a failed response is corrected, so this is
+    /// where that text has to be reachable.
+    /// </summary>
+    private readonly PromptLibrary _prompts;
     private readonly HttpClient _http;
     private readonly bool _ownsHttpClient;
 
@@ -47,6 +54,7 @@ public sealed class OpenRouterClient : ILlmClient, IDisposable
     {
         _settings = settings;
         _log = log ?? NullLlmLog.Instance;
+        _prompts = PromptLibrary.Load();
 
         _ownsHttpClient = httpClient is null;
         _http = httpClient ?? new HttpClient();
@@ -265,7 +273,7 @@ public sealed class OpenRouterClient : ILlmClient, IDisposable
     /// Build a follow-up that shows the model its own bad output and asks for a conversion.
     /// Temperature is dropped to zero — this is a mechanical reformat, not a creative task.
     /// </summary>
-    private static OpenRouterRequest BuildRepairRequest(OpenRouterRequest original, string badContent)
+    private OpenRouterRequest BuildRepairRequest(OpenRouterRequest original, string badContent)
     {
         List<WireMessage> messages = [.. original.Messages];
         messages.Add(new WireMessage { Role = "assistant", Content = Truncate(badContent) });
@@ -282,22 +290,18 @@ public sealed class OpenRouterClient : ILlmClient, IDisposable
         };
     }
 
-    private static string RepairInstruction(string badContent)
-    {
-        if (string.IsNullOrWhiteSpace(badContent))
-        {
-            return
-                "Your previous response was empty. Do not continue the scene, do not add new " +
-                "narration, and do not explain the mistake. Return the required JSON object now. " +
-                "The first character must be `{` and the last must be `}`. Return JSON only.";
-        }
-
-        return
-            "Your previous response failed validation because it was not in the required JSON " +
-            "shape. Do not continue the scene, do not add new narration, and do not explain the " +
-            "mistake. Convert your previous answer into the requested JSON object now. " +
-            "The first character must be `{` and the last must be `}`. Return JSON only.";
-    }
+    /// <summary>
+    /// The corrective message for a repair round-trip, read from <c>prompts/repair.md</c>.
+    ///
+    /// Two variants because the two failures need different verbs: an empty response has nothing
+    /// to convert, so it is asked to produce; a malformed one has its own words above it, so it
+    /// is asked to convert them. Both live in the file beside the reasoning for each line, which
+    /// is for a human and is deliberately not sent to a model.
+    /// </summary>
+    private string RepairInstruction(string badContent) =>
+        PromptLibrary.Section(
+            _prompts.Repair,
+            string.IsNullOrWhiteSpace(badContent) ? "empty" : "malformed");
 
     private static string Truncate(string content)
     {

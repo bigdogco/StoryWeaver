@@ -1,4 +1,5 @@
 using StoryWeaver.Core;
+using StoryWeaver.Llm;
 using StoryWeaver.Llm.Configuration;
 using StoryWeaver.Llm.Logging;
 using StoryWeaver.Llm.OpenRouter;
@@ -84,11 +85,15 @@ internal static class PlaySession
         // this genre is worst at, and the one thing worth failing a startup over.
         WorldPack pack = WorldPack.Load(PackRoot, _packId);
 
+        // Prompts are files now, not const strings. Loaded once, and loudly if absent — a
+        // narrator with no prompt is unpredictable rather than merely plain.
+        PromptLibrary prompts = PromptLibrary.Load();
+
         JsonWorldRepository repository = new(SaveRoot);
         int historyTurns = settings.Story.HistoryTurns;
         TurnEngine engine = new(
-            new LlmNarrator(client),
-            new LlmStateExtractor(client),
+            new LlmNarrator(client, prompts, pack.Voice),
+            new LlmStateExtractor(client, prompts),
             repository,
             historyTurns,
             pack.Lore,
@@ -125,7 +130,9 @@ internal static class PlaySession
         SaveOrigin.WriteIfAbsent(Path.Combine(SaveRoot, _saveId), pack.Id, pack.Version);
         WarnIfThePackHasMoved(pack, Path.Combine(SaveRoot, _saveId));
 
-        PrintBanner(log.FilePath, repository.RootDirectory, resumed, world.TurnNumber, historyTurns, pack);
+        PrintBanner(
+            log.FilePath, repository.RootDirectory, resumed, world.TurnNumber, historyTurns,
+            pack, prompts);
 
         if (resumed)
         {
@@ -658,7 +665,8 @@ internal static class PlaySession
         bool resumed,
         int turnNumber,
         int historyTurns,
-        WorldPack pack)
+        WorldPack pack,
+        PromptLibrary prompts)
     {
         Console.WriteLine();
         Console.WriteLine(resumed
@@ -670,6 +678,7 @@ internal static class PlaySession
             : $" by {pack.Manifest!.Author}";
 
         Console.WriteLine($"Pack       {pack.Name}{version}{author}");
+        Console.WriteLine($"Prompts    {prompts.Directory}  [{prompts.Fingerprint}]");
         Console.WriteLine($"           {pack.Directory}");
         Console.WriteLine($"Saving to  {saveRoot}");
         Console.WriteLine($"Logging to {logPath}");

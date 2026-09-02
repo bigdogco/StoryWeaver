@@ -431,30 +431,19 @@ Small things the incumbents mostly don't do, cheap to add once the foundations e
 
 ## Prompts as editable files
 
-- [ ] **No prompt string lives in code.** Every prompt — narrator system prompt, extractor
-      system prompt, the fact definition and NEVER-list, any corrective/repair instruction —
-      must be an editable file the user can change without a rebuild. Code ships defaults
-      (either embedded resources or files written on first run); the load path reads from
-      disk and overrides them. This is the general form of the narration-style item below and
-      of "the narrator prompt should be data, not a `const string`" — but it covers *all*
-      roles, not just narration.
+- [x] ~~**No prompt string lives in code.**~~ **Built 2026-08-16** — see
+      `TODO_PROMPTS_AS_FILES.md`. `prompts/narration.md`, `extraction.md` and `repair.md` at the
+      repo root, found by walking up from the executable, so an edit needs no rebuild. A pack may
+      add a narration voice and may not override extraction, enforced at load.
 
-      **Hot-reload, at least optionally.** Once prompts are files, watch them and re-read on
-      change (or re-read per turn behind a flag), so tuning a prompt does not mean restarting
-      a session. Cheap once the load path exists; a `FileSystemWatcher` over the prompt
-      directory is enough.
+      `DeltaSchema` deliberately stays in code: its descriptions are prompt engineering, but they
+      are welded to a structure that must move in lockstep with `DeltaApplier` and the C# delta
+      types, and on disk that desync becomes possible.
 
-      Current violators to migrate: `LlmNarrator.SystemPrompt` and the extractor's system
-      prompt, both `const string` today. Left as code for bootstrap deliberately — they were
-      being tuned *as* code and `--eval` measures the version in the binary — but that reason
-      expires once extraction is settled, which it now is.
-
-      **Interaction with prompt caching:** prompts becoming per-world/per-session data is
-      fine for caching as long as they are stable *within* a session; hot-reload
-      deliberately breaks the prefix cache on change, which is the correct trade while
-      tuning and should be off by default in normal play.
-
----
+- [ ] **Hot-reload prompts.** Cheap now that the load path exists — a `FileSystemWatcher` over
+      the prompt directory, or re-reading per turn behind a flag. Deliberately not built with the
+      rest: it breaks the prefix cache on every change, which is the right trade while tuning and
+      the wrong one in normal play, so it wants to be off by default and is its own decision.
 
 ## Presentation
 

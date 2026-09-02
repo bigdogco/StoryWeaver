@@ -1,6 +1,9 @@
 using System.Diagnostics;
 
 using StoryWeaver.Core;
+using StoryWeaver.Llm;
+using StoryWeaver.Llm.Configuration;
+using StoryWeaver.Llm.Story;
 using StoryWeaver.Storage;
 
 namespace StoryWeaver.Cli;
@@ -137,6 +140,11 @@ internal static class LoreSelfTest
         failures += CheckAPackWithNoManifestIsNamedAfterItsFolder();
         failures += CheckAManifestMustAgreeWithItsFolder();
         failures += CheckSaveOriginIsWrittenOnceAndNotRewritten();
+        failures += CheckRepairSectionsAreReadable();
+        failures += CheckAMissingPromptFileFailsLoudly();
+        failures += CheckTheFingerprintFollowsThePrompts();
+        failures += CheckAPackMayNotOverrideExtraction();
+        failures += CheckAPackVoiceIsAddedNotSubstituted();
         failures += CheckWalkingSomewhereConnectsIt();
         failures += CheckAWalkedRouteIsTwoWay();
         failures += CheckItemBecomesCharacterAndSpeaks();
@@ -1418,6 +1426,203 @@ internal static class LoreSelfTest
             catch (IOException)
             {
             }
+        }
+    }
+
+    /// <summary>
+    /// The repair prompt file holds two variants plus the prose explaining why each line is
+    /// there. That reasoning is for a human reading the file and <b>must not reach a model</b>,
+    /// so the sections are extracted by heading rather than the file being sent whole.
+    /// </summary>
+    private static int CheckRepairSectionsAreReadable()
+    {
+        PromptLibrary prompts = PromptLibrary.Load();
+
+        string empty = PromptLibrary.Section(prompts.Repair, "empty");
+        string malformed = PromptLibrary.Section(prompts.Repair, "malformed");
+
+        if (!empty.Contains("was empty", StringComparison.OrdinalIgnoreCase)
+            || !malformed.Contains("failed validation", StringComparison.OrdinalIgnoreCase))
+        {
+            Console.WriteLine("  FAIL  the repair prompt sections did not read back as expected.");
+            return 1;
+        }
+
+        if (empty.Contains("# Repair", StringComparison.Ordinal)
+            || malformed.Contains("earned", StringComparison.OrdinalIgnoreCase))
+        {
+            Console.WriteLine("  FAIL  a repair section carried the file's explanatory prose with it.");
+            return 1;
+        }
+
+        Console.WriteLine("  ok    repair instructions read back by section, without the commentary");
+        return 0;
+    }
+
+    /// <summary>
+    /// A missing prompt file stops the engine rather than degrading it.
+    ///
+    /// A narrator with no prompt is not a plainer narrator; it is an unpredictable one, and the
+    /// failure would surface as strange prose many turns later rather than at the moment the
+    /// file went missing.
+    /// </summary>
+    private static int CheckAMissingPromptFileFailsLoudly()
+    {
+        string empty = Path.Combine(Path.GetTempPath(), "sw-noprompts-" + Guid.NewGuid().ToString("N"));
+
+        try
+        {
+            Directory.CreateDirectory(empty);
+            PromptLibrary.Load(empty);
+        }
+        catch (InvalidOperationException)
+        {
+            Console.WriteLine("  ok    a missing prompt file fails loudly at load");
+            return 0;
+        }
+        finally
+        {
+            try
+            {
+                Directory.Delete(empty, recursive: true);
+            }
+            catch (IOException)
+            {
+            }
+        }
+
+        Console.WriteLine("  FAIL  a prompt directory with no files loaded anyway.");
+        return 1;
+    }
+
+    /// <summary>
+    /// The fingerprint tracks the prompts, or it is worse than not having one.
+    ///
+    /// It exists because prompts are editable files now: a score without knowing which prompt
+    /// produced it is not a measurement, and unlike a <c>const</c> in a commit a file can change
+    /// between two runs leaving no trace in the result. A fingerprint that did not actually
+    /// follow the text would give exactly the false confidence it was added to prevent.
+    /// </summary>
+    private static int CheckTheFingerprintFollowsThePrompts()
+    {
+        string dir = Path.Combine(Path.GetTempPath(), "sw-fingerprint-" + Guid.NewGuid().ToString("N"));
+
+        try
+        {
+            Directory.CreateDirectory(dir);
+            File.WriteAllText(Path.Combine(dir, "narration.md"), "Narrate.");
+            File.WriteAllText(Path.Combine(dir, "extraction.md"), "Extract.");
+            File.WriteAllText(
+                Path.Combine(dir, "repair.md"),
+                """
+                ## empty
+
+                Repair.
+                """);
+
+            string before = PromptLibrary.Load(dir).Fingerprint;
+
+            File.WriteAllText(Path.Combine(dir, "narration.md"), "Narrate, but differently.");
+            string after = PromptLibrary.Load(dir).Fingerprint;
+
+            if (string.Equals(before, after, StringComparison.Ordinal))
+            {
+                Console.WriteLine($"  FAIL  the fingerprint did not move when a prompt changed ({before}).");
+                return 1;
+            }
+
+            Console.WriteLine("  ok    the prompt fingerprint follows the prompt files");
+            return 0;
+        }
+        finally
+        {
+            try
+            {
+                Directory.Delete(dir, recursive: true);
+            }
+            catch (IOException)
+            {
+            }
+        }
+    }
+
+    /// <summary>
+    /// A pack shipping <c>prompts/extraction.md</c> is refused by name.
+    ///
+    /// <b>Refused rather than ignored.</b> A silently dropped override is worse than a refused
+    /// one: the author sees a file they wrote having no effect, with nothing saying why, and
+    /// concludes the feature is broken. Narration is taste and belongs to the world; extraction
+    /// is correctness and is measured.
+    /// </summary>
+    private static int CheckAPackMayNotOverrideExtraction()
+    {
+        return InTempPack("extoverride", (root, id) =>
+        {
+            string prompts = Path.Combine(root, id, WorldPack.PromptDirectory);
+            Directory.CreateDirectory(prompts);
+            File.WriteAllText(Path.Combine(prompts, "extraction.md"), "Report everything, always.");
+
+            try
+            {
+                WorldPack.Load(root, id);
+            }
+            catch (InvalidDataException e) when (e.Message.Contains("may not override extraction"))
+            {
+                Console.WriteLine("  ok    a pack overriding extraction is refused, by name");
+                return 0;
+            }
+
+            Console.WriteLine("  FAIL  a pack was allowed to override the extraction prompt.");
+            return 1;
+        });
+    }
+
+    /// <summary>
+    /// A pack's voice is <b>added to</b> the engine's narration prompt, never substituted for it.
+    ///
+    /// The engine's prompt carries correctness rules beside taste — never speak for the player,
+    /// never write an internal id. Replacement would let an author drop one by omission, and it
+    /// would look like a content change rather than a bug.
+    /// </summary>
+    private static int CheckAPackVoiceIsAddedNotSubstituted()
+    {
+        PromptLibrary prompts = PromptLibrary.Load();
+        RecordingClient client = new();
+
+        LlmNarrator narrator = new(client, prompts, "Write like a 1940 detective novel.");
+
+        narrator.NarrateAsync("World state: a room.", [], "*I wait.*").GetAwaiter().GetResult();
+
+        string system = client.SawSystem;
+
+        if (!system.Contains("1940 detective novel", StringComparison.Ordinal))
+        {
+            Console.WriteLine("  FAIL  the pack's voice did not reach the narrator.");
+            return 1;
+        }
+
+        if (!system.Contains("Never write an internal identifier", StringComparison.Ordinal))
+        {
+            Console.WriteLine("  FAIL  a pack voice replaced the engine's rules instead of adding to them.");
+            return 1;
+        }
+
+        Console.WriteLine("  ok    a pack's voice is added to the engine's rules, not substituted");
+        return 0;
+    }
+
+    /// <summary>Captures the system message of the last call, without spending anything.</summary>
+    private sealed class RecordingClient : ILlmClient
+    {
+        public string SawSystem { get; private set; } = string.Empty;
+
+        public Task<LlmResult> CompleteAsync(
+            LlmCall call,
+            Action<string>? onChunk = null,
+            CancellationToken cancellationToken = default)
+        {
+            SawSystem = call.Messages.FirstOrDefault(m => m.Role == "system")?.Content ?? "";
+            return Task.FromResult(LlmResult.Success("Prose.", "test", null, 0));
         }
     }
 

@@ -1,4 +1,5 @@
 using StoryWeaver.Core;
+using StoryWeaver.Llm;
 using StoryWeaver.Llm.Configuration;
 using StoryWeaver.Llm.Logging;
 using StoryWeaver.Llm.OpenRouter;
@@ -72,7 +73,7 @@ internal static class ExtractionEval
 
         StoryWeaverSettings scoped = WithExtractionModel(settings, model, provider);
         using OpenRouterClient client = new(scoped, log);
-        IStateExtractor extractor = new LlmStateExtractor(client);
+        IStateExtractor extractor = new LlmStateExtractor(client, PromptLibrary.Load());
 
         ModelReport report = new(label);
 
@@ -253,6 +254,11 @@ internal static class ExtractionEval
         Console.WriteLine(new string('=', 78));
         Console.WriteLine("SUMMARY");
         Console.WriteLine(new string('=', 78));
+
+        // Printed beside the score for the same reason the provider is. Prompts live in files
+        // now, and a file can be edited between two runs leaving no trace in the result — so a
+        // number without the prompt it was measured against is not a measurement.
+        Console.WriteLine($"prompts   {PromptLibrary.Load().Fingerprint}");
         Console.WriteLine();
         Console.WriteLine($"{"model",-34} {"required",9} {"forbidden",10} {"rejects",8} {"tokens",8}");
         Console.WriteLine(new string('-', 78));

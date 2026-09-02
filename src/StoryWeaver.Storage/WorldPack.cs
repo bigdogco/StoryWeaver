@@ -30,6 +30,7 @@ public sealed partial class WorldPack
     public const string ScenarioFile = "scenario.md";
     public const string OpeningFile = "opening.md";
     public const string ManifestFile = "world.json";
+    public const string PromptDirectory = "prompts";
     public const string LoreDirectory = "lore";
     public const string SheetDirectory = "characters";
 
@@ -41,7 +42,8 @@ public sealed partial class WorldPack
         IReadOnlyDictionary<string, CharacterSheet> sheets,
         string scenario,
         string opening,
-        WorldManifest? manifest)
+        WorldManifest? manifest,
+        string voice)
     {
         Id = id;
         Directory = directory;
@@ -51,6 +53,7 @@ public sealed partial class WorldPack
         Scenario = scenario;
         Opening = opening;
         Manifest = manifest;
+        Voice = voice;
     }
 
     /// <summary>
@@ -96,6 +99,26 @@ public sealed partial class WorldPack
 
     /// <summary>Whether this pack writes the first thing the player reads.</summary>
     public bool HasOpening => !string.IsNullOrWhiteSpace(Opening);
+
+    /// <summary>
+    /// This world's own narration prompt, from <c>prompts/narration.md</c>. Empty when the pack
+    /// ships none, which is every pack before 2026-08-16.
+    ///
+    /// <b>Added to the engine's prompt, never substituted for it.</b> The engine's narration
+    /// prompt carries taste and correctness in one blob — genre and paragraph count beside
+    /// "never speak for the player" and "never write an internal id". Those rules exist because
+    /// they broke first, and an author writing a voice must not be able to drop one by
+    /// omission.
+    ///
+    /// A pack may not touch extraction at all: narration is taste, extraction is correctness
+    /// measured across the scored set, and a pack quietly replacing it would invalidate every
+    /// measurement while looking like a content change. That is enforced at load, not merely
+    /// documented — see <see cref="RejectAnExtractionOverride"/>.
+    /// </summary>
+    public string Voice { get; }
+
+    /// <summary>Whether this pack brings its own narrating voice.</summary>
+    public bool HasVoice => !string.IsNullOrWhiteSpace(Voice);
 
     /// <summary>
     /// The pack's declared identity, or null when it ships no <c>world.json</c>. Optional by
@@ -169,6 +192,9 @@ public sealed partial class WorldPack
         string scenario = LoadScenario(Path.Combine(directory, ScenarioFile));
         string opening = LoadScenario(Path.Combine(directory, OpeningFile));
         WorldManifest? manifest = LoadManifest(Path.Combine(directory, ManifestFile), id);
+
+        RejectAnExtractionOverride(directory);
+        string voice = LoadScenario(Path.Combine(directory, PromptDirectory, "narration.md"));
         LoreBook lore = MarkdownLoreReader.Load(Path.Combine(directory, LoreDirectory));
 
         Dictionary<string, CharacterSheet> sheets = MarkdownSheetReader
@@ -193,7 +219,33 @@ public sealed partial class WorldPack
             WarnAboutStrangersInTheOpening(seed, opening, Path.Combine(directory, OpeningFile));
         }
 
-        return new WorldPack(id, directory, seed, lore, sheets, scenario, opening, manifest);
+        return new WorldPack(
+            id, directory, seed, lore, sheets, scenario, opening, manifest, voice);
+    }
+
+    /// <summary>
+    /// A pack may bring a narrating voice; it may not bring extraction rules.
+    ///
+    /// <b>Refused at load rather than ignored.</b> An override that is silently dropped is worse
+    /// than one that is refused: the author sees a file they wrote having no effect, with
+    /// nothing saying why, and the natural conclusion is that the feature is broken. The rule is
+    /// worth stating out loud at the moment it is broken.
+    ///
+    /// Narration is taste and belongs to the world. Extraction is correctness, measured at 100%
+    /// across the scored set, and a pack replacing it would invalidate every number this project
+    /// has while looking like a content change.
+    /// </summary>
+    private static void RejectAnExtractionOverride(string directory)
+    {
+        string path = Path.Combine(directory, PromptDirectory, "extraction.md");
+
+        if (File.Exists(path))
+        {
+            throw new InvalidDataException(
+                $"{path}: a pack may not override extraction. Narration is taste and is yours to " +
+                "set; extraction is correctness and is measured. Delete this file, or move what " +
+                "it says into prompts/narration.md if it was about voice.");
+        }
     }
 
     /// <summary>

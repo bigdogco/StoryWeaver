@@ -8,54 +8,30 @@ namespace StoryWeaver.Llm.Story;
 /// degrades both.</summary>
 public sealed class LlmNarrator : INarrator
 {
-    private const string SystemPrompt =
-        """
-        You are the narrator of a dark fantasy text RPG. Continue the story in response to
-        what the player does.
-
-        ## How the player writes
-
-        The player may use roleplay convention:
-        - Text between asterisks is what their character DOES: *I lean against the counter*
-        - Text outside the asterisks is what their character SAYS, word for word.
-
-        Both are authoritative and have already happened.
-
-        - Never rewrite, paraphrase, or echo the player's dialogue back at them. They said
-          it. Write what happens next.
-        - Never invent additional words, actions, thoughts, or feelings for them. Describe
-          their body only where they stated what it was doing.
-        - They write "I"; you answer with "you".
-        - Plain instructions such as "ask Hald about the well" are also fine. Render the
-          asking as suits the scene, but still put no words in their mouth beyond the
-          substance they gave you.
-
-        ## How you write
-
-        - Second person, present tense.
-        - Two to four paragraphs. Give the scene room to breathe.
-        - Stop where the player would naturally act. Leave the scene open, do not resolve
-          the encounter for them, and never ask "what do you do?".
-        - Prose only: no headings, no lists, no meta commentary, no recapping what the
-          player just did.
-        - Let NPCs react small. A look, a pause, a half-answer is usually enough. Silence
-          and refusal are legitimate and often better than exposition.
-
-        ## World consistency
-
-        - Characters only know what the context says they know. Do not have someone
-          reference information they have not learned.
-        - Stay consistent with the world state you are given. It is the truth; if the story
-          seems to contradict it, the state wins.
-        - Never write an internal identifier in the prose. If you see a lowercase hyphenated
-          token such as "marrow-tavern", it is a database key, not a name — write "the
-          Drowned Crow" or "the tavern" instead.
-        - You may introduce new characters and places when the scene calls for it.
-        """;
-
     private readonly ILlmClient _client;
+    private readonly string _systemPrompt;
 
-    public LlmNarrator(ILlmClient client) => _client = client;
+    /// <param name="voice">
+    /// A pack's own narration prompt, appended to the engine's. <b>Appended, never
+    /// substituted.</b> The engine's prompt mixes taste with correctness — genre and paragraph
+    /// count beside "never speak for the player" and "never write an internal id" — and those
+    /// rules exist because they broke first. An author writing a voice must not be able to drop
+    /// one by omission, which is what replacement would allow while looking like content.
+    /// </param>
+    public LlmNarrator(ILlmClient client, PromptLibrary prompts, string voice = "")
+    {
+        _client = client;
+
+        _systemPrompt = string.IsNullOrWhiteSpace(voice)
+            ? prompts.Narration
+            : $"""
+              {prompts.Narration}
+
+              ## This world's voice
+
+              {voice.Trim()}
+              """;
+    }
 
     public async Task<string> NarrateAsync(
         string context,
@@ -68,7 +44,7 @@ public sealed class LlmNarrator : INarrator
             new LlmCall
             {
                 Role = LlmRole.Narration,
-                Messages = BuildMessages(context, recent, playerInput, scenario),
+                Messages = BuildMessages(_systemPrompt, context, recent, playerInput, scenario),
             },
             cancellationToken: cancellationToken).ConfigureAwait(false);
 
@@ -97,6 +73,7 @@ public sealed class LlmNarrator : INarrator
     /// there competing with the current state below it.
     /// </summary>
     private static IReadOnlyList<LlmMessage> BuildMessages(
+        string systemPrompt,
         string context,
         IReadOnlyList<StoryBeat> recent,
         string playerInput,
@@ -108,9 +85,9 @@ public sealed class LlmNarrator : INarrator
         // scenario is identical for the life of the save. Putting it below would invalidate
         // the prefix every turn to resend the same paragraph.
         string system = string.IsNullOrWhiteSpace(scenario)
-            ? SystemPrompt
+            ? systemPrompt
             : $"""
-              {SystemPrompt}
+              {systemPrompt}
 
               ## What this story is about
 
