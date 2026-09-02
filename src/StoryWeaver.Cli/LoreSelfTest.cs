@@ -134,6 +134,9 @@ internal static class LoreSelfTest
         failures += CheckScenarioReferencesResolveToNames();
         failures += CheckOpeningIsRememberedButNotRecorded();
         failures += CheckOpeningLeavesTheWindow();
+        failures += CheckAPackWithNoManifestIsNamedAfterItsFolder();
+        failures += CheckAManifestMustAgreeWithItsFolder();
+        failures += CheckSaveOriginIsWrittenOnceAndNotRewritten();
         failures += CheckWalkingSomewhereConnectsIt();
         failures += CheckAWalkedRouteIsTwoWay();
         failures += CheckItemBecomesCharacterAndSpeaks();
@@ -1291,6 +1294,131 @@ internal static class LoreSelfTest
 
         Console.WriteLine("  ok    the opening leaves the window once real turns fill it");
         return 0;
+    }
+
+    /// <summary>
+    /// A pack with no <c>world.json</c> loads and is named after its folder. Every pack that
+    /// existed before manifests is in that position.
+    /// </summary>
+    private static int CheckAPackWithNoManifestIsNamedAfterItsFolder()
+    {
+        return InTempPack("nomanifest", (root, id) =>
+        {
+            WorldPack pack = WorldPack.Load(root, id);
+
+            if (pack.Manifest is not null || pack.Name != id || pack.Version.Length != 0)
+            {
+                Console.WriteLine($"  FAIL  a pack with no manifest reported name '{pack.Name}'.");
+                return 1;
+            }
+
+            Console.WriteLine("  ok    a pack with no manifest is named after its folder");
+            return 0;
+        });
+    }
+
+    /// <summary>
+    /// A manifest whose id disagrees with its folder is refused.
+    ///
+    /// The folder <i>is</i> the id, so a mismatch means a pack was copied and the directory
+    /// renamed without touching the file — leaving a world that answers to two names, which is
+    /// the confusion opaque permanent ids exist to prevent.
+    /// </summary>
+    private static int CheckAManifestMustAgreeWithItsFolder()
+    {
+        return InTempPack("mismatch", (root, id) =>
+        {
+            File.WriteAllText(
+                Path.Combine(root, id, WorldPack.ManifestFile),
+                """{ "id": "somebody-elses-world", "name": "Wrong" }""");
+
+            try
+            {
+                WorldPack.Load(root, id);
+            }
+            catch (InvalidDataException)
+            {
+                Console.WriteLine("  ok    a manifest that disagrees with its folder is refused");
+                return 0;
+            }
+
+            Console.WriteLine("  FAIL  a manifest declaring another pack's id was accepted.");
+            return 1;
+        });
+    }
+
+    /// <summary>
+    /// A save records where it came from, once. <b>Resuming must not rewrite it</b> — the record
+    /// is a fact about the past, and refreshing it on every session would quietly erase the only
+    /// evidence that the pack has moved since.
+    /// </summary>
+    private static int CheckSaveOriginIsWrittenOnceAndNotRewritten()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "sw-origin-" + Guid.NewGuid().ToString("N"));
+        string save = Path.Combine(root, "world");
+
+        try
+        {
+            SaveOrigin.WriteIfAbsent(save, "the-pack", "1.0");
+            SaveOrigin.WriteIfAbsent(save, "the-pack", "2.0");
+
+            SaveOrigin? origin = SaveOrigin.Read(save);
+
+            if (origin?.PackVersion != "1.0")
+            {
+                Console.WriteLine(
+                    $"  FAIL  the save origin says version '{origin?.PackVersion}'; expected the first.");
+                return 1;
+            }
+
+            Console.WriteLine("  ok    a save records its origin once and resuming does not rewrite it");
+            return 0;
+        }
+        finally
+        {
+            try
+            {
+                Directory.Delete(root, recursive: true);
+            }
+            catch (IOException)
+            {
+            }
+        }
+    }
+
+    /// <summary>Builds a minimal valid pack in a temp directory and cleans up either way.</summary>
+    private static int InTempPack(string label, Func<string, string, int> check)
+    {
+        string root = Path.Combine(Path.GetTempPath(), $"sw-{label}-" + Guid.NewGuid().ToString("N"));
+        const string id = "quiet";
+
+        try
+        {
+            Directory.CreateDirectory(Path.Combine(root, id));
+            File.WriteAllText(
+                Path.Combine(root, id, WorldPack.SeedFile),
+                """
+                {
+                  "turnNumber": 0,
+                  "locations": { "hall": { "id": "hall", "name": "hall", "description": "A hall." } },
+                  "characters": {
+                    "player": { "id": "player", "name": "Someone", "description": "A person.", "locationId": "hall" }
+                  }
+                }
+                """);
+
+            return check(root, id);
+        }
+        finally
+        {
+            try
+            {
+                Directory.Delete(root, recursive: true);
+            }
+            catch (IOException)
+            {
+            }
+        }
     }
 
     private sealed class RecordingNarrator : INarrator

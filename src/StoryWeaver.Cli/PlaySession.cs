@@ -120,6 +120,11 @@ internal static class PlaySession
             await repository.SaveAsync(_saveId, world).ConfigureAwait(false);
         }
 
+        // After the save exists, so the directory is there to write into. Absent on every save
+        // made before manifests, which is why the resume check tolerates a missing origin.
+        SaveOrigin.WriteIfAbsent(Path.Combine(SaveRoot, _saveId), pack.Id, pack.Version);
+        WarnIfThePackHasMoved(pack, Path.Combine(SaveRoot, _saveId));
+
         PrintBanner(log.FilePath, repository.RootDirectory, resumed, world.TurnNumber, historyTurns, pack);
 
         if (resumed)
@@ -621,6 +626,32 @@ internal static class PlaySession
         }
     }
 
+    /// <summary>
+    /// Says so when the pack has been edited since this playthrough began.
+    ///
+    /// Reporting only. A pack changing under a live save is normal rather than exceptional, and
+    /// the point is that the player is told which version they started on rather than meeting
+    /// the difference at turn thirty as an inexplicably broken world.
+    /// </summary>
+    private static void WarnIfThePackHasMoved(WorldPack pack, string saveDirectory)
+    {
+        if (SaveOrigin.Read(saveDirectory) is not { } origin
+            || string.IsNullOrWhiteSpace(origin.PackVersion)
+            || string.IsNullOrWhiteSpace(pack.Version)
+            || string.Equals(origin.PackVersion, pack.Version, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        Console.WriteLine();
+        Console.WriteLine(
+            $"  note  this save was started against {pack.Name} v{origin.PackVersion}; " +
+            $"the pack is now v{pack.Version}.");
+        Console.WriteLine(
+            "        content may have moved. Anything the pack no longer defines stays in your");
+        Console.WriteLine("        world; nothing is removed.");
+    }
+
     private static void PrintBanner(
         string logPath,
         string saveRoot,
@@ -633,7 +664,13 @@ internal static class PlaySession
         Console.WriteLine(resumed
             ? $"StoryWeaver — play session (resumed at turn {turnNumber})"
             : "StoryWeaver — play session (new world)");
-        Console.WriteLine($"Pack       {pack.Directory}");
+        string version = string.IsNullOrWhiteSpace(pack.Version) ? "" : $" v{pack.Version}";
+        string author = string.IsNullOrWhiteSpace(pack.Manifest?.Author)
+            ? ""
+            : $" by {pack.Manifest!.Author}";
+
+        Console.WriteLine($"Pack       {pack.Name}{version}{author}");
+        Console.WriteLine($"           {pack.Directory}");
         Console.WriteLine($"Saving to  {saveRoot}");
         Console.WriteLine($"Logging to {logPath}");
         Console.WriteLine($"Narrator remembers the last {historyTurns} turns");

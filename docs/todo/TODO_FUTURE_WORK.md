@@ -705,7 +705,13 @@ Items stranded in task docs that were marked done. See
 These finish the pack design written 2026-07-23, three of whose six components were never
 built.
 
-- [ ] **`world.json` manifest**, with a version a save can record. *(TODO_WORLD_PACKS)*
+- [x] ~~**`world.json` manifest**, with a version a save can record.~~ **Built 2026-08-16** —
+      see `TODO_WORLD_MANIFEST.md`. Optional; a save records its origin in `save.json` and a
+      later session reports when the pack has moved. Acting on a mismatch is still open, below.
+- [ ] **Act on a pack version mismatch**, rather than only reporting it. The design's §6 rule:
+      *content may move; state degrades quietly and loudly.* A save referencing something the
+      pack no longer defines should drop the reference with a warning — never crash, never
+      corrupt. `save.json` now carries the information needed to make that specific.
 - [x] ~~**Opening message**, and the loader check that every name in it exists in the seed.~~
       **Built 2026-08-16** — see `TODO_OPENING_MESSAGE.md`. The check is a warning rather than a
       refusal, and was measured for noise on three real packs before being kept.

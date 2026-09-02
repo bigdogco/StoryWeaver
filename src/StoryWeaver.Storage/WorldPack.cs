@@ -29,6 +29,7 @@ public sealed partial class WorldPack
     public const string SeedFile = "seed.json";
     public const string ScenarioFile = "scenario.md";
     public const string OpeningFile = "opening.md";
+    public const string ManifestFile = "world.json";
     public const string LoreDirectory = "lore";
     public const string SheetDirectory = "characters";
 
@@ -39,7 +40,8 @@ public sealed partial class WorldPack
         LoreBook lore,
         IReadOnlyDictionary<string, CharacterSheet> sheets,
         string scenario,
-        string opening)
+        string opening,
+        WorldManifest? manifest)
     {
         Id = id;
         Directory = directory;
@@ -48,6 +50,7 @@ public sealed partial class WorldPack
         Sheets = sheets;
         Scenario = scenario;
         Opening = opening;
+        Manifest = manifest;
     }
 
     /// <summary>
@@ -93,6 +96,23 @@ public sealed partial class WorldPack
 
     /// <summary>Whether this pack writes the first thing the player reads.</summary>
     public bool HasOpening => !string.IsNullOrWhiteSpace(Opening);
+
+    /// <summary>
+    /// The pack's declared identity, or null when it ships no <c>world.json</c>. Optional by
+    /// design: a pack without one is named after its folder and plays identically.
+    /// </summary>
+    public WorldManifest? Manifest { get; }
+
+    /// <summary>
+    /// What to call this world in front of a person — the manifest's name when it has one, the
+    /// folder id otherwise. <c>the-last-lantern</c> is a folder; <i>The Last Lantern</i> is a
+    /// title.
+    /// </summary>
+    public string Name =>
+        string.IsNullOrWhiteSpace(Manifest?.Name) ? Id : Manifest!.Name;
+
+    /// <summary>The version a save records, or empty for a pack that declares none.</summary>
+    public string Version => Manifest?.Version ?? string.Empty;
 
     /// <summary>Pack id — the folder name, and the default save id.</summary>
     public string Id { get; }
@@ -148,6 +168,7 @@ public sealed partial class WorldPack
         WorldState? seed = LoadSeed(Path.Combine(directory, SeedFile));
         string scenario = LoadScenario(Path.Combine(directory, ScenarioFile));
         string opening = LoadScenario(Path.Combine(directory, OpeningFile));
+        WorldManifest? manifest = LoadManifest(Path.Combine(directory, ManifestFile), id);
         LoreBook lore = MarkdownLoreReader.Load(Path.Combine(directory, LoreDirectory));
 
         Dictionary<string, CharacterSheet> sheets = MarkdownSheetReader
@@ -172,7 +193,53 @@ public sealed partial class WorldPack
             WarnAboutStrangersInTheOpening(seed, opening, Path.Combine(directory, OpeningFile));
         }
 
-        return new WorldPack(id, directory, seed, lore, sheets, scenario, opening);
+        return new WorldPack(id, directory, seed, lore, sheets, scenario, opening, manifest);
+    }
+
+    /// <summary>
+    /// Reads <c>world.json</c>, or null when the pack ships none.
+    ///
+    /// A manifest whose id disagrees with the folder is refused rather than ignored. The folder
+    /// <i>is</i> the id, so a mismatch means somebody copied a pack and renamed the directory
+    /// without touching the file — and the resulting world would answer to two names, which is
+    /// the confusion ids exist to prevent.
+    ///
+    /// An unreadable manifest throws for the same reason an unreadable seed does: an author who
+    /// wrote one and silently got no manifest has no way to tell.
+    /// </summary>
+    private static WorldManifest? LoadManifest(string path, string id)
+    {
+        if (!File.Exists(path))
+        {
+            return null;
+        }
+
+        WorldManifest? manifest;
+
+        try
+        {
+            manifest = JsonSerializer.Deserialize<WorldManifest>(
+                File.ReadAllText(path), SaveJson.Canon);
+        }
+        catch (JsonException e)
+        {
+            throw new InvalidDataException($"{path}: {e.Message}", e);
+        }
+
+        if (manifest is null)
+        {
+            throw new InvalidDataException($"{path}: empty manifest.");
+        }
+
+        if (!string.IsNullOrWhiteSpace(manifest.Id)
+            && !string.Equals(manifest.Id, id, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidDataException(
+                $"{path}: declares id '{manifest.Id}' but lives in a folder named '{id}'. " +
+                "The folder is the id; rename one to match the other.");
+        }
+
+        return manifest;
     }
 
     /// <summary>
