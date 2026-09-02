@@ -7,6 +7,34 @@ ones that turn out to be non-issues, with the resolution noted.
 
 ## Open
 
+### A slash command typed inside an authoring prompt is stored as content
+
+**Severity: Low, and it is a papercut rather than a bug.** Found 2026-09-02 while verifying the
+five authoring commands by hand after the policy moved into Core. Pre-existing — the refactor
+did not introduce it, and reproducing it took a deliberately malformed input.
+
+Once `/place` has started asking questions, every line is answer text. Typing `/quit` at the
+description prompt does not abort; it creates a location whose description is the literal
+string `/quit`. The same applies to `/help` and to a mistyped command at any authoring prompt.
+
+```
+  Name (blank to cancel): Cancelled Place
+  Id [cancelled-place]:
+  Description (blank to cancel): /quit
+  added place cancelled-place (Cancelled Place)
+```
+
+Blank already means cancel and is documented in every prompt label, so there *is* an escape —
+it is just not the one a person reaches for after typing commands all session.
+
+**Why it is filed rather than fixed.** Rejecting any answer beginning with `/` is three lines
+and would refuse a legitimate one roughly never, but a rule invented against a self-inflicted
+test input is exactly the kind of fix `PROJECT.md` §3 warns about. Fix it when a real session
+produces the junk entry, which will be obvious in canon.
+
+**It also dissolves rather than transfers.** A form with a Cancel button cannot have this
+failure, and authoring is where the UI arrives first.
+
 ### Providers differ in semantic quality, not just parameter support
 
 **Severity: High.** The one that invalidates measurements rather than breaking a call.

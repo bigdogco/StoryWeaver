@@ -73,5 +73,28 @@ change that did not happen is how a tool eats an edit.
 `dotnet build` clean, 0 warnings. Self-tests **98 pass, 0 fail** — up from 85, all thirteen new
 ones covering the policy that just stopped having a single caller.
 
-No live calls made. The five commands still need a pass by hand, which is the player's, and the
-last open box in `TODO_UI_BOUNDARY.md` says so.
+**Verified by hand the same day**, against a scratch save and at **zero API cost** — none of the
+five commands touches a model. Canon on disk carried every change: the new place, a character
+seated at `marrow-square`, the fact with the player knowing it, Mabb renamed with her
+description preserved, Hald knowing the cult. The lock released and `save.json` recorded the
+origin.
+
+The error paths are the half worth reporting, because they are where a refactor of this shape
+actually breaks. An id colliding with an existing location, then colliding again with a place
+added ninety seconds earlier — re-prompted both times, nothing typed lost. Unknown character id
+and unknown lore id both refused. And `/knows` listed `cult-of-the-blind (already knows)` on the
+second run, which is the listing reading live canon rather than the seed.
+
+## A papercut found, and deliberately not fixed
+
+Once an authoring prompt has started, every line is answer text. Typing `/quit` at a description
+prompt does not abort — it creates a location described as the literal string `/quit`.
+
+Pre-existing, not a regression, and it took a malformed test input to hit. The fix is three
+lines and it is still filed in `CHALLENGES.md` rather than written: a rule invented against a
+self-inflicted input is precisely what `PROJECT.md` §3 warns about, and blank already cancels at
+every prompt that says so.
+
+It also **dissolves rather than transfers**. A form with a Cancel button cannot have this
+failure, and authoring is where the UI arrives first — which is a small argument that the
+boundary work was pointed the right way.

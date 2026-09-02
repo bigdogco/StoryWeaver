@@ -1,6 +1,6 @@
 # TODO: The UI boundary, and pulling authoring policy into Core
 
-**Status:** built 2026-09-02 — one box open, awaiting the player's pass by hand
+**Status:** DONE 2026-09-02
 **Created:** 2026-09-02
 
 First piece of **Phase 2**, and deliberately not a line of Avalonia. The question that prompted
@@ -74,9 +74,15 @@ one.
 
 - [x] `dotnet build` clean, 0 warnings
 - [x] Existing self-tests still pass
-- [ ] `/place`, `/character`, `/fact`, `/rename`, `/knows` behave identically by hand
-      **— awaiting the player; manual testing is theirs and this refactor is exactly the kind
-      that a build cannot vouch for.**
+- [x] `/place`, `/character`, `/fact`, `/rename`, `/knows` behave identically by hand —
+      driven against a scratch save (`marrow-authoring-test`), **zero API calls**, since none of
+      the five touches a model. Canon on disk carried every change: the new place, Warrior Mike
+      seated at `marrow-square`, the fact with the player knowing it, Mabb renamed with her
+      description preserved, Hald knowing the cult.
+- [x] The error paths, which is where a refactor of this shape actually breaks — an id
+      colliding with a location and then with a place added minutes earlier (re-prompted, not
+      lost), an unknown character id, an unknown lore id, and the `already knows` marker in the
+      lore listing. All correct. The lock released cleanly and `save.json` recorded the origin.
 
 ## Close out
 
