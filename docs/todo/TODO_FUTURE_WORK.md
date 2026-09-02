@@ -708,25 +708,66 @@ built.
       extraction no; that split was already settled in the design. Overlaps with "Prompts as
       editable files" above, which is the general form.
 
-### Phase 1 — narration eval
+### Narration eval — deferred 2026-08-16, and not by omission
 
-Every number this project has measures extraction. The half the player experiences has no
-quality control at all. Design and open questions: `design/NARRATION_EVAL.md`.
+**Phase 1 closed without it, deliberately.** Recorded here rather than left as an open box,
+because the reasoning is the point.
 
-- [ ] **Build the lore-knowledge check.** Does a character reference a lore topic they have
-      not heard of? Deterministic: match entry `keys` against quoted speech, scoped to speakers
-      who lack the entry in `Knows`. Narrow, misses paraphrase, costs nothing, and tests the
-      one rule this codebase added with no way to check it. *(TODO_NARRATION_EVAL)*
-- [ ] **Decide whether a judge model happens, or waits for dice to need one.** Everything else
-      worth checking is semantic — did prose reveal an unlearned fact, did the narrator
-      contradict canon or speak for the player. All need a model to judge, and a judge needs
-      hand-labelled narration to be scored against, which nobody has produced.
-      *(TODO_NARRATION_EVAL)*
-- [ ] **Measure whether a character refuses to reference lore they have not heard of.** The
-      premise of the lore feature, still unverified. *(TODO_LORE_ENTRIES)*
-- [ ] **Does the narrator actually use sheet detail**, or only the one-line description? The
-      point of prose over fields is expressiveness; if the body is ignored, the sheet design is
-      wrong. *(TODO_CHARACTER_SHEETS)*
+`design/NARRATION_EVAL.md` audited all 51 turns of the first real session against every
+mechanically checkable property. **Everything cheap already passes** — zero id leaks, zero
+repeated sentences, stable length, no real naming violations. A rules-based eval would score
+100% on day one and say nothing.
+
+Everything actually worth checking is semantic and needs a judge model: a second model's
+unaudited variance grading a first model's, in a project that misattributed provider noise to
+its own code four times, and needing hand-labelled prose as its own control — which is most of
+the work and cannot be automated.
+
+**And a narration eval is a feature built in a vacuum.** Nobody has complained about the prose.
+The audit found nothing wrong. See `PROJECT.md` §3: build for observed failures, not for
+completeness.
+
+- [ ] **A judge model, when something needs it.** Sequence it against dice, where *"did the
+      narration contradict the roll?"* is the first objectively checkable property of prose —
+      not against the general principle that prose ought to be measured.
+- [x] ~~**The lore-knowledge check.**~~ **Investigated and dropped 2026-08-16.** Run by hand
+      across all eleven saves before building anything, and it does not work as designed:
+
+      - **Lore `keys` are retrieval keys** — broad on purpose, so an entry fires when relevant.
+        Detection needs the opposite. Real hits included *"take the tube down"* (key `tube`) and
+        *"couriers don't stop to ask"* (key `couriers`), and a key of `blind` would fire on the
+        Venetian blinds in a noir opening.
+      - **Attributing quoted speech to a speaker is not a string match**, and you cannot judge
+        whether a character knew something without knowing who spoke.
+      - **The one clean hit was not a narrator bug.** Hald saying *"take Shurus from us"* on
+        marrow-old t25 is correct — he is a cult member — but canon never recorded him knowing
+        the cult, because `Knows` tracks what a character *learned in play*, never what they
+        always knew.
+
+      That last point is the durable finding: **a seed can under-declare what its characters
+      know, and nothing notices.** If this is ever revisited it is a content-authoring check,
+      not a narration check.
+
+- [x] ~~**Measure whether a character refuses to reference lore they have not heard of.**~~
+      Same investigation, same conclusion.
+- [ ] **Does the narrator actually use sheet detail**, or only the one-line description? Still
+      unanswered, still needs a judge or a human reading two sessions side by side.
+
+### An audit command — considered and declined 2026-08-16
+
+- [ ] **`--audit <save>`: integrity, narration and direction checks over any save, offline.**
+      Proposed and declined the same day, under the rule that closed Phase 1.
+
+      The case for it is real and worth keeping: seven throwaway scripts were written over three
+      days to compute the same things — delta kinds by bucket, orphan locations, duplicate turn
+      numbers, movement share, locations-per-character, status length, duplicate entity names —
+      and all seven are gone. `CHALLENGES.md` contains detection recipes written in prose that
+      nothing implements.
+
+      The case against, which won: it is tooling, not game, and the project had just decided to
+      stop building tooling in a vacuum. **Revisit when analysing a save by hand becomes the
+      bottleneck again** — which will be obvious when it happens, because it will be the third
+      time in a week.
 
 ### Phase 2 — UI
 

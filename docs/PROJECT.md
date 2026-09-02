@@ -114,6 +114,8 @@ Two consequences to design for, not to solve here:
 | **A schema branch is not free** | Branches compete for model attention, and prompt rules compete with each other — position matters more than wording. Adding a branch has twice wrecked an unrelated scenario. |
 | Before adding a delta kind, check whether the model already emits something that means it | Rewriting an existing output is free; teaching a new one is not. |
 | Do not build for a gap until it reproduces in a scenario **and** appears in a second session | The stopping rule that keeps the extraction loop from running forever. |
+| **Build for observed failures, never for completeness.** A design doc listing six components is not six reasons to build | Added 2026-08-16, from the player: *"we are starting to go into a mode where we make features and not the game."* The rule above governs gaps seen in play. This governs the other direction — work chosen because a layer looks unfinished or a plan has an empty box. The last item of Phase 1 was going to be a narration eval, measuring prose nobody had complained about, which an audit had already found nothing wrong with. That is the same mistake one level up: building measurement in a vacuum. |
+| **Playing is how features get chosen.** When the queue and the play sessions disagree, the sessions win | Every finding worth having in this project came from a long run: the world with no exits, two engines on one save, a place introduced twice, the story with no direction. None came from the backlog. |
 | Testing is manual; `dotnet build` is the only automated check | Per CLAUDE.md. Eval scenarios measure the model, not the code. |
 
 **Stack**
@@ -167,48 +169,65 @@ becoming harder to narrate from. See `CHALLENGES.md`: a place can be introduced 
 two ids, and names collide in the narrator's view because ids are deliberately stripped from
 it. Neither is decay. Both get worse with length.
 
-### Phase 1 — the story layer
+### Phase 1 — the story layer ✅
 
 > Can an author say what a story is *about*, and does the engine hold to it?
 
-Today a pack describes a world and nothing describes a story. There is no premise, no
-stakes, no dramatic question, no ending. Marrow is a tavern with people in it; nothing says
-what the game is for. Sessions end at 50 turns because the player gets bored, not because
-anything concludes.
-
-This also finishes the pack design written 2026-07-23, of which three of six components were
-never built:
+**Closed 2026-08-16.** A pack could describe a world; nothing could describe a story in it.
+Four pieces, all of them finishing the pack design written 2026-07-23:
 
 | designed | built |
 |---|---|
-| `seed.json`, `lore/*.md`, `characters/*.md` | ✅ |
-| `world.json` manifest | ❌ |
-| `opening.md` | ❌ |
-| `prompts/*.md` overrides | ❌ |
+| `seed.json`, `lore/*.md`, `characters/*.md` | ✅ (before this phase) |
+| `scenario.md` — what the story is about | ✅ |
+| `opening.md` — the first thing the player reads | ✅ |
+| `world.json` manifest, and `save.json` recording what a playthrough began against | ✅ |
+| `prompts/*.md` overrides, and every engine prompt out of code | ✅ |
 
-The opening message is the first paragraph of the missing layer, not a separate feature.
+The scenario and the opening are separated by **lifetime, not content**: an opening renders the
+seed and slides out of the narration window after ten turns, a scenario is standing context
+forever. That distinction is the phase's real result — a premise written only into an opening
+works beautifully for ten turns and is then forgotten.
 
-Narration eval belongs alongside this. Every number in this project measures the
-bookkeeping; the half the player actually experiences has no quality control at all, and
-shipping a story layer with no way to tell whether the prose got better repeats the
-extraction trap in a new place.
+### What this phase did not answer, stated plainly
 
-**Open questions:** what a scenario consists of (premise? goal? ending conditions? a clock?)
-· whether an ending is engine-enforced or narrated · whether narration is measurable at all
-(see `design/NARRATION_EVAL.md`, an audit with no design committed).
+**Whether the prose is better.** The original "done when" asked for that with evidence, and we
+cannot supply it. Recorded as unanswered rather than quietly rewritten to match what was built.
 
-**Done when:** a pack can state its premise and opening; the engine carries both into
-narration; a session demonstrably plays toward the stated premise rather than drifting; and
-we can say whether the prose is better than before, with evidence.
+Two reasons, and the second is the one that matters.
 
-### Phase 2 — Avalonia UI
+`design/NARRATION_EVAL.md` audited all 51 turns of the first real session against every
+mechanically checkable property — id leaks, repetition, naming before canon knew, facts
+established without being learned. **Everything cheap already passes.** A rules-based narration
+eval would score 100% on day one and say nothing. Everything actually worth checking is semantic
+and needs a judge model, which is a second model's unaudited variance grading a first model's,
+in a project that misattributed provider noise to its own code four times — and which needs
+hand-labelled prose as its own control, which cannot be automated.
+
+**And a narration eval is itself a feature built in a vacuum.** Nobody has complained about the
+prose. The audit found nothing wrong. Building measurement for a problem no session has produced
+is the same mistake as building features for one — see §3.
+
+So it is deferred, and it should be sequenced against something that actually needs it: dice,
+where *"did the narration contradict the roll?"* is the first objectively checkable property of
+prose.
+
+### Phase 2 — Avalonia UI — **next**
 
 > Can someone who did not write the engine author a pack and play it, without the CLI?
 
-The UI is largely a pack editor, which is why it comes after the pack format is settled —
-building an editor for a format that is 60% unbuilt means building it twice. Several
-problems already solved in validator code (placement, sheet management) are more honestly UI
-problems.
+**The pack format is now settled**, which is what Phase 1 was for: seed, lore, sheets,
+scenario, opening, manifest, prompts. An editor built now is built once.
+
+**And this is where the project stops adding to the engine and starts making the game
+playable.** The CLI works and the base is right — a long session is coherent, canon holds at
+230 turns, and a world can say what it is about. What it is not is pleasant to play or to
+author, and that is the thing standing between here and the play sessions that pick every
+feature after this. Under the rule in §3, that makes it the only sensible next phase.
+
+The UI is largely a pack editor. Several problems already solved in validator code —
+placement, sheet management — are more honestly UI problems, and the player said so at the
+time: *"with proper UI it will be much clearer."*
 
 `Core` is UI-agnostic by construction, so this is a top-layer addition, not a rework.
 

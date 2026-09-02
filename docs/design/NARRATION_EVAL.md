@@ -1,6 +1,7 @@
 # Design — can narration be measured?
 
 **Status:** audit, no design committed. Written 2026-07-24.
+**Decisions answered 2026-08-16 — see §7.** Deferred out of Phase 1, deliberately.
 
 Every measurement this project has is about extraction. The half of the system that writes the
 story has **no automated quality control at all** — reroll is the only lever, and it is manual.
@@ -116,3 +117,45 @@ measured.
 2. **Does a judge get designed now or deferred until dice?** (§5 leans defer.)
 3. **If a judge happens: who produces the labelled narration?** It cannot be generated, and it
    is the bulk of the work.
+
+---
+
+## 7. The decisions, answered 2026-08-16
+
+**1. Build the lore-knowledge check?** **No.** Run by hand across all eleven saves before
+building anything, and §4's proposal does not survive contact:
+
+- `keys` are *retrieval* keys — broad on purpose so an entry fires when relevant. Detection
+  wants precision. Real hits: *"take the tube down"* (`tube`), *"couriers don't stop to ask"*
+  (`couriers`). A key of `blind` would fire on the Venetian blinds in a noir opening.
+- Attributing quoted speech to a speaker is not a string match, and without the speaker there is
+  no knowledge to check against.
+- **The cleanest hit was not a narrator bug.** Hald saying *"take Shurus from us"* on marrow-old
+  t25 is correct — he is a cult member — but canon never recorded him knowing the cult, because
+  `Knows` tracks what a character *learned in play*, never what they always knew.
+
+That last point is the finding worth keeping: **a seed can under-declare what its characters
+know and nothing notices.** If revisited, this is a content-authoring check, not a narration
+check.
+
+Note that §1 predicted this shape exactly — its row 4 produced five false positives from name
+prefixes, and warned that *"a check that cries wolf gets ignored, which is worse than no
+check."* The same trap, one feature later.
+
+**2. Judge now or deferred?** **Deferred**, as §5 leaned. Sequence it against dice, where *"did
+the narration contradict the roll?"* is the first objectively checkable property of prose.
+
+**3. Who produces the labelled narration?** Moot while deferred.
+
+## 8. The reason above all three
+
+§5 called this honestly: *the reason to build a narration eval is that half the product is
+unmeasured; the reason not to is that the audit found nothing wrong.*
+
+What settled it was noticing that **a narration eval is a feature built in a vacuum.** Nobody
+has complained about the prose. Building measurement for a problem no session has produced is
+the same mistake as building features for one — and harder to see, because measurement feels
+virtuous.
+
+`PROJECT.md` §3 now carries that as a rule: *build for observed failures, never for
+completeness.*
