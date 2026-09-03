@@ -7,10 +7,24 @@ ones that turn out to be non-issues, with the resolution noted.
 
 ## Open
 
-### A turn holds canon for 20–60 seconds, and nothing guards it
+### A turn holds canon for 20–60 seconds — guarded 2026-09-04, with one limit left
 
-**Severity: High, and entirely latent — the console cannot reach it.** Identified 2026-09-04
-while designing the windowed UI. Not observed, because it is currently unobservable.
+**Severity: was High and entirely latent.** Identified 2026-09-04 while designing the windowed
+UI, and closed the same day by `StorySession`, which owns canon behind a single-writer guard:
+every operation that can change canon takes it, and takes it without waiting, so a second one is
+refused rather than run against a half-changed world.
+
+**What remains, found by the test that was written to prove the fix.** The guard stops canon
+being half-updated. It does **not** preserve an external edit made *while* a turn is running: the
+turn saves the session's canon at the end and overwrites the file the edit was made in, so the
+edit is gone before any later Update State can read it. That is the same consequence as editing
+without `/reload` at all, and it is asserted in `StorySessionSelfTest` so it stays a known trade.
+
+Closing it properly means the turn noticing the file changed underneath it before writing, which
+is file-watching's neighbour — a class of solution `PROJECT.md` §3 rejects. **Revisit if someone
+actually loses an edit this way**, which will be visible when it happens.
+
+The original hazard, kept because the reasoning is why the session exists:
 
 `TurnEngine.RunTurnAsync` reads `WorldState` to build its two context strings, then awaits
 narration and extraction — 20 to 60 seconds of network — and only then mutates and saves. Nothing

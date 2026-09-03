@@ -1,6 +1,7 @@
 # Design — who owns canon, and how it is allowed to change
 
-**Status:** design. One decision made, the rest proposed. Nothing built.
+**Status:** §4 and §5 **built 2026-09-04** — see `todo/TODO_STORY_SESSION.md`. §5's
+second-tier delta proposal is still undecided; §6's session-lifecycle gap is still open.
 **Written:** 2026-09-04, entering the UI half of Phase 2.
 
 Started as a discussion about UI separation and turned into one subject with three layers. The
@@ -23,9 +24,9 @@ relocating `EvalScenarios`.
 
 ---
 
-## 2. Who owns `WorldState` today
+## 2. Who owned `WorldState` — the finding this all came from
 
-**A local variable in the console**, [`PlaySession.cs:112`](../../src/StoryWeaver.Cli/PlaySession.cs):
+**A local variable in the console** — as it stood on 2026-09-04, before §4 was built:
 
 ```csharp
 WorldState world = loaded ?? pack.Seed ?? WorldSeeds.Marrow();
@@ -91,51 +92,81 @@ The concurrency question and the ownership question are the same question.
 
 ---
 
-## 4. Sketch: `StorySession`
+## 4. `StorySession` — **built 2026-09-04**
 
-Lives in Core. Owns canon, and is the only thing that can change it.
+Lives in Core. Owns canon, and is the only thing that can change it. The sketch below is what
+was built, with the three open questions answered underneath it.
 
 ```csharp
-public sealed class StorySession
+public sealed class StorySession : IDisposable
 {
-    private readonly TurnEngine _engine;
     private readonly SemaphoreSlim _oneWriter = new(1, 1);
     private WorldState _world;          // the local that used to live in PlaySession
 
     public string SaveId { get; }
+    public string PackId { get; }
     public WorldState World => _world;  // reads: /state, /prose, a UI panel
     public bool IsBusy { get; }
 
-    Task<TurnResult>      TakeTurnAsync(string input, CancellationToken ct);
-    Task<TurnResult>      ReExtractAsync(CancellationToken ct);
-    Task<RerollResult>    RerollAsync(CancellationToken ct);
-    Task<RefreshResult>   UpdateStateAsync(CancellationToken ct);   // swaps _world internally
-    Task<AuthoringResult> AuthorAsync(IReadOnlyList<StateDelta> deltas, CancellationToken ct);
+    Task<SessionResult<TurnOutcome>>       TakeTurnAsync(string input, ct);
+    Task<SessionResult<TurnOutcome>>       ReExtractLastAsync(ct);
+    Task<SessionResult<TurnOutcome>>       RerollLastAsync(ct);
+    Task<SessionResult<RefreshReport>>     UpdateStateAsync(ct);   // swaps _world inside the guard
+    Task<SessionResult<ValidationOutcome>> AuthorAsync(deltas, ct);
+    Task<SessionResult<EditReport>>        EditAsync(Action<WorldState> edit, ct);
 }
 ```
 
-Five mutating operations, one door, one guard. The race disappears because `UpdateStateAsync`
+Six mutating operations, one door, one guard. The race disappears because `UpdateStateAsync`
 swaps `_world` **inside the same guard a turn holds** — a reload can no longer land mid-turn.
 
 **Refuse rather than queue**, with precedent already in the codebase: `RerollOutcome.Refused(reason)`
-exists for "you asked for something that is not valid right now." A busy session returns *"a turn
+existed for "you asked for something that is not valid right now." A busy session returns *"a turn
 is in progress"* rather than throwing, or silently queueing a click the player has forgotten
 making.
 
-`PlaySession` then drops to rendering and prompting and owns nothing. The window gets the same
-five methods plus an `IsBusy` to bind a spinner to.
+**One refusal concept.** `SessionResult<T>` carries a value or a reason. Reroll's own refusals and
+"there are no turns yet" — previously a `RerollOutcome` field and a caller-side history check —
+both fold into it, so a caller has one kind of no rather than three.
 
-### Open questions on the sketch
+**Two operations lost their arguments.** `ReExtractLastAsync` and `RerollLastAsync` take no turn:
+*the last turn* is a session concept, and both clients were loading history themselves to find
+it. It is now read inside the guard, because "the last turn" is only stable while nothing else
+can append one.
 
-1. **Does the session own the save lock?** `SaveLock` is in Storage and is inherently
-   filesystem; Core cannot hold it without dragging file layout inward. Likely: whoever opens a
-   session acquires and disposes the lock, and the session owns canon but not the file's
-   lifetime. This is the *session lifecycle* question arriving early — see §6.
-2. **May a client mutate `World` directly?** As sketched it is a mutable graph and nothing stops
-   a panel setting `character.Mood`. Either documented as read-only by convention (weak), or
-   reads return something immutable (a real cost — `WorldState` is mutable for good reasons).
-3. **One session per process, or several?** *Multiple saves per pack* is already queued; a
-   session object makes it nearly free, and it removes the two `static` fields in `PlaySession`.
+`PlaySession` dropped to rendering and prompting and owns nothing. The window gets the same six
+methods plus an `IsBusy` to bind a spinner to.
+
+### The open questions, answered when it was built
+
+1. **Does the session own the save lock? — Yes.** *"This save is mine for now"* and *"I hold
+   canon for this save"* are one lifetime, and splitting them was avoidance rather than design.
+   `SaveLock` stays in Storage; the session takes an acquired `IDisposable`, so Core gains the
+   ownership without learning that the mechanism is a file. The console keeps its own `using` as
+   well, because pack and prompt loading sit between acquiring the lock and constructing the
+   session and both throw on malformed content — `SaveLock.Dispose` is documented idempotent, so
+   the second call is a no-op rather than a bug.
+2. **May a client mutate `World` directly? — Yes, and it is labelled rather than prevented.**
+   Reads go through `World`; writes go through `AuthorAsync` or `EditAsync`. That is convention,
+   not types. An immutable projection contradicts `WorldState`'s "mutable by design" rationale
+   and is its own decision.
+3. **One session per process, or several? — Several.** The two `static` fields in `PlaySession`
+   are gone, which is what had made multiple saves per pack awkward.
+
+### What the guard does not do
+
+Found by the test written to prove it worked, which failed on its last assertion — and the
+assertion was wrong, not the code.
+
+**The guard stops canon being half-updated. It does not preserve an external edit made while a
+turn is running.** The turn saves the session's canon at the end and overwrites the file the edit
+was in, so the edit is gone before any later update can read it — the same consequence as editing
+without asking for an update at all.
+
+Still better than what it replaced, where the update appeared to succeed and was then silently
+discarded. But it is a limit rather than a fix, it is asserted in the self-test so it stays
+known, and closing it properly means the turn noticing the file changed underneath it, which is
+the file-watching family §5 and §3 both reject.
 
 ---
 

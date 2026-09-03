@@ -20,12 +20,11 @@ internal static class AuthoringCommands
     /// <summary>Handles the command if it is one of ours. Returns false if it is not.</summary>
     public static async Task<bool> TryHandleAsync(
         string input,
-        string worldId,
-        WorldState world,
-        IWorldRepository repository,
+        StorySession session,
         LoreBook? lore = null)
     {
         LoreBook book = lore ?? LoreBook.Empty;
+        WorldState world = session.World;
 
         Func<WorldState, LoreBook, IReadOnlyList<StateDelta>?>? prompt = input.ToLowerInvariant() switch
         {
@@ -50,7 +49,7 @@ internal static class AuthoringCommands
             return true;
         }
 
-        await CommitAsync(deltas, worldId, world, repository, book).ConfigureAwait(false);
+        await CommitAsync(deltas, session).ConfigureAwait(false);
         return true;
     }
 
@@ -193,16 +192,22 @@ internal static class AuthoringCommands
         return Authoring.Knows(characterId, loreId);
     }
 
-    private static async Task CommitAsync(
-        IReadOnlyList<StateDelta> deltas,
-        string worldId,
-        WorldState world,
-        IWorldRepository repository,
-        LoreBook lore)
+    private static async Task CommitAsync(IReadOnlyList<StateDelta> deltas, StorySession session)
     {
-        ValidationOutcome validation = await Authoring
-            .CommitAsync(deltas, worldId, world, repository, lore)
+        // Through the session rather than straight to Authoring: authoring is a write, and
+        // every write goes through the one guard. Without this an authored delta could land
+        // in the middle of a turn, which is the case the guard exists for.
+        SessionResult<ValidationOutcome> result = await session
+            .AuthorAsync(deltas)
             .ConfigureAwait(false);
+
+        if (result.WasRefused)
+        {
+            Console.WriteLine($"  Cannot author right now: {result.RefusedBecause}.");
+            return;
+        }
+
+        ValidationOutcome validation = result.Value!;
 
         foreach (RejectedDelta rejected in validation.Rejected)
         {

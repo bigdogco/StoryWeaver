@@ -35,7 +35,9 @@ internal static class Program
             int authoring = AuthoringSelfTest.Run();
             Console.WriteLine();
             int refresh = CanonRefreshSelfTest.Run();
-            return new[] { json, lore, wire, reroll, authoring, refresh }.Max();
+            Console.WriteLine();
+            int session = StorySessionSelfTest.Run();
+            return new[] { json, lore, wire, reroll, authoring, refresh, session }.Max();
         }
 
         // Writes the built-in seed out as a pack file. One-shot authoring aid: it guarantees

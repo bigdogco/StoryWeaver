@@ -21,24 +21,6 @@ internal static class PlaySession
     /// <summary>Pack played when <c>--pack</c> is not given.</summary>
     private const string DefaultPackId = "marrow";
 
-    /// <summary>
-    /// Which pack to play, and which save to play it in — content and state, and always two
-    /// identifiers even when they hold the same string.
-    ///
-    /// <b>Set once at startup and never again.</b> Static mutable state in a class this size
-    /// is worth a raised eyebrow; the alternative was threading two strings through six method
-    /// signatures for no behavioural gain, in a console harness that runs exactly one session
-    /// per process. A UI would pass them as parameters and these would go.
-    ///
-    /// <b>The save defaults to the pack id.</b> Two packs sharing one save is not a
-    /// configuration, it is a corruption: the character and location ids written by one world
-    /// do not exist in the other, so resuming would load a world whose contents the pack has
-    /// never heard of.
-    /// </summary>
-    private static string _packId = DefaultPackId;
-
-    private static string _saveId = DefaultPackId;
-
     private const string SaveRoot = "saves";
 
     /// <summary>
@@ -59,16 +41,30 @@ internal static class PlaySession
         string? saveId = null,
         bool force = false)
     {
-        _packId = string.IsNullOrWhiteSpace(packId) ? DefaultPackId : packId.Trim();
-        _saveId = string.IsNullOrWhiteSpace(saveId) ? _packId : saveId.Trim();
+        // Content and state, and always two identifiers even when they hold the same string.
+        //
+        // The save defaults to the pack id. Two packs sharing one save is not a configuration,
+        // it is a corruption: the character and location ids written by one world do not exist
+        // in the other, so resuming would load a world whose contents the pack never heard of.
+        //
+        // These were static fields until StorySession existed, which is what made two
+        // playthroughs in one process impossible.
+        string packToPlay = string.IsNullOrWhiteSpace(packId) ? DefaultPackId : packId.Trim();
+        string saveToUse = string.IsNullOrWhiteSpace(saveId) ? packToPlay : saveId.Trim();
 
-        // Taken before anything is read, and held for the whole session. Two engines writing
-        // one save corrupts it silently — see SaveLock — so this refuses rather than warns.
-        using SaveLock? sessionLock = SaveLock.Acquire(SaveRoot, _saveId, force, out string? heldBy);
+        // Taken before anything is read. Two engines writing one save corrupts it silently —
+        // see SaveLock — so this refuses rather than warns.
+        //
+        // The `using` stays even though the session below also owns and disposes it. Between
+        // here and that constructor sit pack loading and prompt loading, both of which throw on
+        // malformed content, and dropping the `using` would leak the lock on exactly the paths
+        // Program.cs handles as ordinary user error. SaveLock.Dispose is documented idempotent,
+        // so the second call is a no-op rather than a bug.
+        using SaveLock? sessionLock = SaveLock.Acquire(SaveRoot, saveToUse, force, out string? heldBy);
 
         if (sessionLock is null)
         {
-            Console.WriteLine($"\nThe save '{_saveId}' is already open in another session.");
+            Console.WriteLine($"\nThe save '{saveToUse}' is already open in another session.");
             Console.WriteLine($"  held by: {heldBy}");
             Console.WriteLine();
             Console.WriteLine("Two sessions writing one save overwrite each other's world every");
@@ -83,7 +79,7 @@ internal static class PlaySession
         // Authored content, loaded once. Malformed content throws by name and line rather
         // than vanishing — a silently dropped lore entry or an unreadable seed is the failure
         // this genre is worst at, and the one thing worth failing a startup over.
-        WorldPack pack = WorldPack.Load(PackRoot, _packId);
+        WorldPack pack = WorldPack.Load(PackRoot, packToPlay);
 
         // Prompts are files now, not const strings. Loaded once, and loudly if absent — a
         // narrator with no prompt is unpredictable rather than merely plain.
@@ -107,7 +103,7 @@ internal static class PlaySession
         // The built-in seed is the fallback for a pack that ships none. It is a fixture, not
         // content: the eval scenarios need worlds derived by mutating a base, which is a thing
         // C# does well and JSON does not.
-        WorldState? loaded = await repository.LoadAsync(_saveId).ConfigureAwait(false);
+        WorldState? loaded = await repository.LoadAsync(saveToUse).ConfigureAwait(false);
         bool resumed = loaded is not null;
         WorldState world = loaded ?? pack.Seed ?? WorldSeeds.Marrow();
 
@@ -122,13 +118,18 @@ internal static class PlaySession
                 CreateCharacter(world);
             }
 
-            await repository.SaveAsync(_saveId, world).ConfigureAwait(false);
+            await repository.SaveAsync(saveToUse, world).ConfigureAwait(false);
         }
 
         // After the save exists, so the directory is there to write into. Absent on every save
         // made before manifests, which is why the resume check tolerates a missing origin.
-        SaveOrigin.WriteIfAbsent(Path.Combine(SaveRoot, _saveId), pack.Id, pack.Version);
-        WarnIfThePackHasMoved(pack, Path.Combine(SaveRoot, _saveId));
+        SaveOrigin.WriteIfAbsent(Path.Combine(SaveRoot, saveToUse), pack.Id, pack.Version);
+        WarnIfThePackHasMoved(pack, Path.Combine(SaveRoot, saveToUse));
+
+        // Canon stops being ours here. From this point the session owns the world, the save
+        // lock, and every path that changes either — this file renders and prompts.
+        using StorySession session = new(
+            saveToUse, packToPlay, world, engine, repository, pack.Lore, sessionLock);
 
         PrintBanner(
             log.FilePath, repository.RootDirectory, resumed, world.TurnNumber, historyTurns,
@@ -140,7 +141,7 @@ internal static class PlaySession
             // one in the room with no memory of what just happened. This replaces the opening
             // scene rather than following it — the story tail already establishes where they
             // are, and a static room description after it reads as a reset.
-            await PrintRecentAsync(repository, historyTurns).ConfigureAwait(false);
+            await PrintRecentAsync(repository, session.SaveId, historyTurns).ConfigureAwait(false);
         }
         else
         {
@@ -169,25 +170,22 @@ internal static class PlaySession
             {
                 if (string.Equals(input, "/reload", StringComparison.OrdinalIgnoreCase))
                 {
-                    // Reassigns the session's canon, which is why this cannot live in
-                    // HandleCommand with the other verbs — that takes the world by value, and
-                    // a reload that only updated a copy would be worse than none.
-                    world = await ReloadAsync(_saveId, world, repository, pack.Lore)
-                        .ConfigureAwait(false);
+                    await ReloadAsync(session).ConfigureAwait(false);
                 }
                 else if (string.Equals(input, "/retry", StringComparison.OrdinalIgnoreCase))
                 {
-                    await RetryExtractionAsync(engine, repository, world).ConfigureAwait(false);
+                    await RetryExtractionAsync(session).ConfigureAwait(false);
                 }
                 else if (string.Equals(input, "/reroll", StringComparison.OrdinalIgnoreCase))
                 {
-                    await RerollAsync(engine, repository, world).ConfigureAwait(false);
+                    await RerollAsync(session).ConfigureAwait(false);
                 }
-                else if (!await AuthoringCommands
-                        .TryHandleAsync(input, _saveId, world, repository, pack.Lore)
+                else if (!await AuthoringCommands.TryHandleAsync(input, session, pack.Lore)
                         .ConfigureAwait(false))
                 {
-                    HandleCommand(input, world, repository, pack.Lore, pack.Sheets, pack.Scenario);
+                    HandleCommand(
+                        input, session.World, repository, session.SaveId,
+                        pack.Lore, pack.Sheets, pack.Scenario);
                 }
 
                 continue;
@@ -196,11 +194,18 @@ internal static class PlaySession
             try
             {
                 Console.WriteLine("\n(thinking...)\n");
-                TurnOutcome outcome = await engine
-                    .RunTurnAsync(_saveId, world, input)
+
+                SessionResult<TurnOutcome> turn = await session
+                    .TakeTurnAsync(input)
                     .ConfigureAwait(false);
 
-                PrintTurn(outcome);
+                if (turn.WasRefused)
+                {
+                    Console.WriteLine($"  Not now: {turn.RefusedBecause}.");
+                    continue;
+                }
+
+                PrintTurn(turn.Value!);
             }
             catch (StoryWeaverException ex)
             {
@@ -294,35 +299,31 @@ internal static class PlaySession
     /// those is exactly the drift this architecture exists to prevent. Re-narrating instead
     /// would change prose the player has already read.
     /// </summary>
-    private static async Task RetryExtractionAsync(
-        TurnEngine engine,
-        IWorldRepository repository,
-        WorldState world)
+    private static async Task RetryExtractionAsync(StorySession session)
     {
-        IReadOnlyList<TurnRecord> history =
-            await repository.LoadHistoryAsync(_saveId).ConfigureAwait(false);
-
-        if (history.Count == 0)
-        {
-            Console.WriteLine("No turns to retry yet.");
-            return;
-        }
-
         Console.WriteLine("\n(re-extracting the last turn...)\n");
 
         try
         {
-            TurnOutcome outcome = await engine
-                .ReExtractAsync(_saveId, world, history[^1])
+            // No history lookup here any more: "the last turn" is a session concept, and
+            // finding it outside the guard was reading state nothing was holding still.
+            SessionResult<TurnOutcome> result = await session
+                .ReExtractLastAsync()
                 .ConfigureAwait(false);
 
-            if (outcome.ExtractionFailed)
+            if (result.WasRefused)
             {
-                Console.WriteLine($"  [!] Extraction failed again: {outcome.ExtractionError}");
+                Console.WriteLine($"  Cannot retry: {result.RefusedBecause}.");
                 return;
             }
 
-            PrintDeltas(outcome.Turn);
+            if (result.Value!.ExtractionFailed)
+            {
+                Console.WriteLine($"  [!] Extraction failed again: {result.Value.ExtractionError}");
+                return;
+            }
+
+            PrintDeltas(result.Value.Turn);
         }
         catch (StoryWeaverException ex)
         {
@@ -341,35 +342,25 @@ internal static class PlaySession
     /// canon snapshot that does not exist yet. That covers about a quarter of turns, and every
     /// turn where narration failed outright.
     /// </summary>
-    private static async Task RerollAsync(
-        TurnEngine engine,
-        IWorldRepository repository,
-        WorldState world)
+    private static async Task RerollAsync(StorySession session)
     {
-        IReadOnlyList<TurnRecord> history =
-            await repository.LoadHistoryAsync(_saveId).ConfigureAwait(false);
-
-        if (history.Count == 0)
-        {
-            Console.WriteLine("No turns to reroll yet.");
-            return;
-        }
-
         Console.WriteLine("\n(narrating that turn again...)\n");
 
         try
         {
-            RerollOutcome reroll = await engine
-                .RerollAsync(_saveId, world, history[^1])
+            // Both kinds of no arrive the same way now — "there are no turns yet", "that turn
+            // moved canon", "something else is running" — so there is one thing to check.
+            SessionResult<TurnOutcome> reroll = await session
+                .RerollLastAsync()
                 .ConfigureAwait(false);
 
             if (reroll.WasRefused)
             {
-                Console.WriteLine($"  Cannot reroll: {reroll.RefusedBecause}");
+                Console.WriteLine($"  Cannot reroll: {reroll.RefusedBecause}.");
                 return;
             }
 
-            PrintTurn(reroll.Outcome!);
+            PrintTurn(reroll.Value!);
         }
         catch (StoryWeaverException ex)
         {
@@ -459,20 +450,22 @@ internal static class PlaySession
     /// owns; refusing to load their edit because an item is in an odd state would be the
     /// validator's posture toward a cheap model applied to a person, which is wrong.
     /// </summary>
-    private static async Task<WorldState> ReloadAsync(
-        string saveId,
-        WorldState world,
-        IWorldRepository repository,
-        LoreBook lore)
+    private static async Task ReloadAsync(StorySession session)
     {
-        RefreshReport report = await CanonRefresh
-            .ReadAsync(saveId, world, repository, lore)
-            .ConfigureAwait(false);
+        SessionResult<RefreshReport> result = await session.UpdateStateAsync().ConfigureAwait(false);
+
+        if (result.WasRefused)
+        {
+            Console.WriteLine($"  Cannot update: {result.RefusedBecause}.");
+            return;
+        }
+
+        RefreshReport report = result.Value!;
 
         if (report.NothingOnDisk)
         {
             Console.WriteLine("  Nothing saved yet — canon is only in this session.");
-            return world;
+            return;
         }
 
         if (report.Unchanged)
@@ -498,14 +491,13 @@ internal static class PlaySession
         {
             Console.WriteLine("  Reported, not refused — it is your world. Fix and /reload again.");
         }
-
-        return report.World ?? world;
     }
 
     private static void HandleCommand(
         string input,
         WorldState world,
         IWorldRepository repo,
+        string saveId,
         LoreBook lore,
         IReadOnlyDictionary<string, CharacterSheet> sheets,
         string scenario)
@@ -545,7 +537,7 @@ internal static class PlaySession
                 break;
 
             case "/raw":
-                PrintLastRaw(repo);
+                PrintLastRaw(repo, saveId);
                 break;
 
             case "/help":
@@ -649,9 +641,9 @@ internal static class PlaySession
         }
     }
 
-    private static void PrintLastRaw(IWorldRepository repo)
+    private static void PrintLastRaw(IWorldRepository repo, string saveId)
     {
-        IReadOnlyList<TurnRecord> history = repo.LoadHistoryAsync(_saveId).GetAwaiter().GetResult();
+        IReadOnlyList<TurnRecord> history = repo.LoadHistoryAsync(saveId).GetAwaiter().GetResult();
 
         if (history.Count == 0)
         {
@@ -668,14 +660,14 @@ internal static class PlaySession
     /// same turns the narrator is being reminded of, so what the player sees and what the
     /// model remembers do not quietly diverge.
     /// </summary>
-    private static async Task PrintRecentAsync(IWorldRepository repo, int historyTurns)
+    private static async Task PrintRecentAsync(IWorldRepository repo, string saveId, int historyTurns)
     {
         if (historyTurns <= 0)
         {
             return;
         }
 
-        IReadOnlyList<TurnRecord> history = await repo.LoadHistoryAsync(_saveId).ConfigureAwait(false);
+        IReadOnlyList<TurnRecord> history = await repo.LoadHistoryAsync(saveId).ConfigureAwait(false);
 
         if (history.Count == 0)
         {

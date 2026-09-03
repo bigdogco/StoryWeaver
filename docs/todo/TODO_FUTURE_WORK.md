@@ -775,6 +775,23 @@ completeness.
 phase's open question with *both surfaces*. Re-read canon after editing it by hand; the session
 no longer overwrites the edit. See [`TODO_UPDATE_STATE.md`](TODO_UPDATE_STATE.md).
 
+**Core owns canon (2026-09-04).** `StorySession` holds the world, the save lock and a
+single-writer guard; `PlaySession` renders and prompts. Two write paths: deltas as the norm,
+direct editing as a labelled hatch. See [`TODO_STORY_SESSION.md`](TODO_STORY_SESSION.md) and
+[`design/CANON_OWNERSHIP.md`](../design/CANON_OWNERSHIP.md).
+
+- [ ] **Session lifecycle — the next piece.** `RunAsync` still holds ~160 lines that are
+      decisions rather than rendering: take the lock, load pack and prompts, resume vs. fresh,
+      does the pack author the player, write the first save, write `save.json`, compare pack
+      versions, opening scene vs. recent turns. A window needs every one of them, and
+      `StorySession` deliberately takes the lock as a parameter so this question stays open
+      rather than being answered badly inside the ownership work.
+- [ ] **A second tier of delta kinds the model never sees.** `CANON_OWNERSHIP.md` §5, still
+      undecided. The closed set protects model attention; a text box costs none, so
+      `CharacterDescriptionChanged` and friends could exist in the applier and be absent from
+      the schema — moving most of the editing hatch back onto the validated path. Needs a guard
+      so extraction cannot emit an off-schema kind. **Let the hatch say which kinds are wanted.**
+
 **The boundary is locked (2026-09-02).** A UI is a thin layer, never a driver: no gameplay,
 narration or authoring logic in a UI project. Authoring policy was pulled into
 `Core/Authoring.cs` so the console and an editor window call one implementation — see
