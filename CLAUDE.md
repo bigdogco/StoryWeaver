@@ -6,6 +6,18 @@
   a phase boundary or when a decision is locked or reversed — if a task would contradict
   something in §3, that is a conversation, not a task.
 
+## How this project is worked on
+- This is a hobby project. There is no deadline and nothing ships. **Doing it RIGHT matters more
+  than saving time, tokens, lines changed, or churn** — the constraints worth optimising against
+  elsewhere do not exist here, so optimising against them just produces worse work.
+- If a separation is worth doing — logic/simulation from UI, for example — **do it properly and
+  keep iterating until we are both happy with it.** Not halfway, not a minimal slice, not "the
+  least that still fixes the problem." A half-done separation is worse than none: it leaves two
+  conventions and the drift between them.
+- Once a design is agreed, implement what it says. Do not offer a reduced version and do not
+  defer the design's own open questions for being awkward — answer them, or ask. Cutting scope is
+  the player's call, and they will say so. **Asking is fine; quietly shrinking is not.**
+
 ## Core Project Guidelines:
 - You must create a timestamped dev log file in `docs/devlog` before each commit
 - Add identified issues and challenges to the 'docs/CHALLENGES.md' document
