@@ -7,6 +7,36 @@ ones that turn out to be non-issues, with the resolution noted.
 
 ## Open
 
+### A turn holds canon for 20–60 seconds, and nothing guards it
+
+**Severity: High, and entirely latent — the console cannot reach it.** Identified 2026-09-04
+while designing the windowed UI. Not observed, because it is currently unobservable.
+
+`TurnEngine.RunTurnAsync` reads `WorldState` to build its two context strings, then awaits
+narration and extraction — 20 to 60 seconds of network — and only then mutates and saves. Nothing
+owns canon in the meantime: the only reference lives in a local variable in `PlaySession`.
+
+`Console.ReadLine` blocks, so a second operation cannot start and the window of exposure is
+unreachable. An event-driven UI removes that accident.
+
+**The sharpest case uses Update State against itself.** Edit `canon.json`, press Update State
+while narration is streaming: the reload swaps the session's reference, the in-flight turn still
+holds the *old* object, mutates it, and saves it. The reload is discarded and pre-edit canon is
+written back — the exact bug Update State was built to fix, and it cannot fix this one because it
+caused it.
+
+Siblings: two turns at once (both validated against pre-first-turn canon), a panel editing a
+character mid-turn (the model never saw it), reroll during a turn (two writers to history).
+
+**Why it has nowhere to be fixed today.** There is no object whose job is canon-for-this-session,
+so there is nowhere to put a guard. The concurrency problem and the ownership problem are one
+problem — see [`design/CANON_OWNERSHIP.md`](design/CANON_OWNERSHIP.md), which proposes
+`StorySession` owning canon with a single-writer guard.
+
+**The precedent for refusing rather than trusting the caller** is `SaveLock`: two engines on one
+save corrupted a 250-turn run silently, and the answer was to refuse. This is the same failure one
+level in — two operations, one canon, no error.
+
 ### A slash command typed inside an authoring prompt is stored as content
 
 **Severity: Low, and it is a papercut rather than a bug.** Found 2026-09-02 while verifying the

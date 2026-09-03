@@ -35,7 +35,7 @@ internal static class AuthoringSelfTest
 
     /// <summary>
     /// Producer against checker. <c>Slug</c> makes ids and <c>EntityId.IsWellFormed</c> judges
-    /// them; both are in Core since 2026-09-02, but they remain two pieces of code that must
+    /// them; both are in Core since 2026-09-04, but they remain two pieces of code that must
     /// agree, and an id a slug produces but the loader rejects is a character whose sheet and
     /// seed entry never meet.
     /// </summary>

@@ -782,7 +782,7 @@ narration or authoring logic in a UI project. Authoring policy was pulled into
 rejected**: it taxes every future feature and drags the UI down to what a text prompt can
 express. The CLI is the first client, not the API.
 
-- [x] ~~**Move `EntityId` into Core.**~~ **Done 2026-09-02.** Deferred twice with a trigger —
+- [x] ~~**Move `EntityId` into Core.**~~ **Done 2026-09-04.** Deferred twice with a trigger —
       *revisit when a second Core caller needs to validate an id* — and `CanonRefresh` was it.
       `Authoring.Slug` (Core) produced ids that `EntityId.IsWellFormed` (Storage) judged, and
       Core references nothing, so the producer could not see the checker.

@@ -1,0 +1,220 @@
+# Design — who owns canon, and how it is allowed to change
+
+**Status:** design. One decision made, the rest proposed. Nothing built.
+**Written:** 2026-09-04, entering the UI half of Phase 2.
+
+Started as a discussion about UI separation and turned into one subject with three layers. The
+question *"can we swap the UI without touching the engine?"* leads to *"who owns `WorldState`?"*,
+and the answer to that turns out to also answer *"what is allowed to change canon?"*
+
+---
+
+## 1. The framing that started it
+
+> The CLI is one UI, and we will have another windowed UI made.
+
+That is a better framing than `PROJECT.md` had, and it is the one to design against: **the
+console is client one, the window is client two, and neither is privileged.**
+
+It holds for `PlaySession`. It does **not** hold for the CLI *project*, which is roughly
+two-thirds eval scaffolding and self-tests — instrumentation, not a client, and it should never
+migrate toward Core. Worth stating plainly so nobody later reads "the CLI is a client" and starts
+relocating `EvalScenarios`.
+
+---
+
+## 2. Who owns `WorldState` today
+
+**A local variable in the console**, [`PlaySession.cs:112`](../../src/StoryWeaver.Cli/PlaySession.cs):
+
+```csharp
+WorldState world = loaded ?? pack.Seed ?? WorldSeeds.Marrow();
+```
+
+Nothing else holds one:
+
+| | holds a `WorldState`? |
+|---|---|
+| `JsonWorldRepository` | **No.** Deserializes fresh on every load, writes on every save. Stateless. |
+| `TurnEngine` | **No.** Holds narrator, extractor, repository, lore, sheets, scenario — takes the world *per call*. |
+| `DeltaApplier`, `DeltaValidator`, `CanonRefresh` | No. Static, world passed in. |
+| `InMemoryWorldRepository` | Yes, and deliberately hands back the same graph rather than a copy — a test double. |
+
+So the most important object in the domain is owned by a local in the outermost method of a UI
+client. **That contradicts the rule locked on 2026-09-02** — *a UI is a thin layer, never a
+driver* — on the object rather than on the rules. The window would have to own canon its own way,
+and then two clients own it differently.
+
+---
+
+## 3. Why that is also a correctness problem
+
+A turn looks like this:
+
+```
+1. read world  → build narration + extraction context     (instant)
+2. await       load recent history                        (I/O)
+3. await       narrate                                    (10–40s)
+4. await       extract                                    (5–20s)
+5.             validate against world
+6. MUTATE      TurnNumber++, Apply(deltas), TouchPresent
+7. await       save canon, append turn record
+```
+
+**Between reading canon at step 1 and mutating it at step 6 there is 20–60 seconds of network.**
+
+In the console that window is unreachable: `Console.ReadLine` is not running, so nothing else can
+happen. In an event-driven window it is simply time, with buttons on screen.
+
+**The concrete race, using the feature shipped 2026-09-02.** The player edits `canon.json` and
+presses Update State while narration is streaming. `/reload` returns a *new* `WorldState` and the
+session swaps its reference — but the in-flight turn captured the **old** object at step 1,
+mutates it at step 6, and saves it at step 7. The reload is discarded and pre-edit canon is
+written back. That is the bug Update State exists to fix, reintroduced through a different door,
+and Update State cannot fix it because Update State caused it.
+
+Siblings: two turns submitted at once (both validated against pre-first-turn canon), a panel
+editing a character mid-turn (the model never saw the edit), reroll fired during a turn (two
+writers to history).
+
+**The console structurally cannot reveal any of this.** It arrives all at once with client two
+and looks like "the UI is flaky."
+
+### The race has nowhere to live, which is the real finding
+
+There is no object whose job is *canon for this session*. So there is nowhere to put a guard:
+`/reload` swaps a reference, a turn mutates the object that reference used to point at, and the
+only thing connecting them is a local in a method neither knows about.
+
+**You cannot enforce one-writer-at-a-time without something that owns the thing being written.**
+The concurrency question and the ownership question are the same question.
+
+---
+
+## 4. Sketch: `StorySession`
+
+Lives in Core. Owns canon, and is the only thing that can change it.
+
+```csharp
+public sealed class StorySession
+{
+    private readonly TurnEngine _engine;
+    private readonly SemaphoreSlim _oneWriter = new(1, 1);
+    private WorldState _world;          // the local that used to live in PlaySession
+
+    public string SaveId { get; }
+    public WorldState World => _world;  // reads: /state, /prose, a UI panel
+    public bool IsBusy { get; }
+
+    Task<TurnResult>      TakeTurnAsync(string input, CancellationToken ct);
+    Task<TurnResult>      ReExtractAsync(CancellationToken ct);
+    Task<RerollResult>    RerollAsync(CancellationToken ct);
+    Task<RefreshResult>   UpdateStateAsync(CancellationToken ct);   // swaps _world internally
+    Task<AuthoringResult> AuthorAsync(IReadOnlyList<StateDelta> deltas, CancellationToken ct);
+}
+```
+
+Five mutating operations, one door, one guard. The race disappears because `UpdateStateAsync`
+swaps `_world` **inside the same guard a turn holds** — a reload can no longer land mid-turn.
+
+**Refuse rather than queue**, with precedent already in the codebase: `RerollOutcome.Refused(reason)`
+exists for "you asked for something that is not valid right now." A busy session returns *"a turn
+is in progress"* rather than throwing, or silently queueing a click the player has forgotten
+making.
+
+`PlaySession` then drops to rendering and prompting and owns nothing. The window gets the same
+five methods plus an `IsBusy` to bind a spinner to.
+
+### Open questions on the sketch
+
+1. **Does the session own the save lock?** `SaveLock` is in Storage and is inherently
+   filesystem; Core cannot hold it without dragging file layout inward. Likely: whoever opens a
+   session acquires and disposes the lock, and the session owns canon but not the file's
+   lifetime. This is the *session lifecycle* question arriving early — see §6.
+2. **May a client mutate `World` directly?** As sketched it is a mutable graph and nothing stops
+   a panel setting `character.Mood`. Either documented as read-only by convention (weak), or
+   reads return something immutable (a real cost — `WorldState` is mutable for good reasons).
+3. **One session per process, or several?** *Multiple saves per pack* is already queued; a
+   session object makes it nearly free, and it removes the two `static` fields in `PlaySession`.
+
+---
+
+## 5. What is allowed to change canon — **decided**
+
+> **Deltas are the way canon changes.** Direct authoring exists for what the delta set cannot
+> express, carries a warning, and is the player's call.
+
+Decided by the player, 2026-09-04. It is not a symmetric two-path design: one path is the norm
+and the other is a labelled escape hatch.
+
+In practice it goes window by window. A *New Character* window emits the same deltas `/character`
+does. Fixing the wording of a description goes through authoring, because no delta says that.
+
+### Why an escape hatch is needed at all
+
+The delta set is **17 kinds**, and it describes *things that happen in a story*. Authoring is not
+a story event, so the set has holes exactly where an editor needs them:
+
+| you want to | delta for it? |
+|---|---|
+| fix a location's description | **none** — `LocationIntroduced` only creates |
+| fix a character's description | only by also renaming them (`CharacterRenamed` carries it) |
+| fix a fact's wording | **none** — `FactEstablished` only creates |
+| delete a character added by mistake | **none** |
+| make someone *un*-know something | **none** |
+
+Not an oversight. "I typed the description wrong" is not an event in the world.
+
+### The hatch is also the instrument that measures its own replacement
+
+Every reach for direct editing is **evidence about a missing delta.** If descriptions are always
+hand-edited, the answer is not a better warning — it is that description editing should have been
+a delta. Same shape as *playing is how features get chosen*, pointed at the delta set.
+
+### The warning must not become wallpaper
+
+A warning on every edit is clicked through by the third one, and then it is worse than nothing
+because the player has trained themselves to dismiss it. Open: once per session, first use per
+window, or only on the genuinely dangerous edits.
+
+The truthful warning is also narrower than "this can break your session." Editing a description
+corrupts nothing. **The risk is concentrated in ids and references** — change an id and every
+reference to it orphans; delete a character and items are held by nobody. That is precisely what
+`CanonRefresh.Check` reports, and a warning naming the real risk gets read.
+
+### Proposed: a second tier of delta kinds — **not decided**
+
+The closed delta set exists **for the model's benefit, not the applier's**. §3's rationale is
+entirely about a cheap model writing `character.mood.current` and having it land as a silent
+no-op. That argument does not apply to a window with a text box.
+
+So a delta kind could exist that the model never sees: present in `DeltaApplier` and
+`DeltaValidator`, absent from `DeltaSchema`. `CharacterDescriptionChanged`,
+`LocationDescriptionChanged`, `FactRewritten`, `CharacterRemoved`. Authoring emits them,
+extraction cannot, and **the cost in model attention is zero** — which is the thing the closed set
+actually protects.
+
+That would move most of the "editing wording" case back onto the delta path — validated, applied
+and persisted the ordinary way — leaving the raw hatch genuinely exotic.
+
+**It needs one guard:** extraction must reject a kind absent from the schema, so an off-schema
+kind cannot arrive from a provider that ignores the structured-output constraint. Cheap, and
+worth having regardless.
+
+Two tiers — *kinds that exist* and *kinds the model may propose* — sounds like it weakens the
+closed-set decision. It does not: the closure was always about what the model is offered.
+
+---
+
+## 6. What this leaves open
+
+- **Session lifecycle.** `RunAsync` is ~160 lines and mostly decisions, not rendering: take the
+  lock, load pack and prompts, resume vs. fresh, does the pack author the player, write the first
+  save, write `save.json`, compare pack versions, opening scene vs. recent turns. The window needs
+  every one. This is the next gap and it is bigger than the authoring one was.
+- Whether the two-tier delta set happens, and which kinds.
+- When the authoring warning appears.
+- Everything in §4's open questions.
+
+**Nothing here is built.** The decision in §5 is real; §4 is endorsed in principle and unspecified
+in detail.

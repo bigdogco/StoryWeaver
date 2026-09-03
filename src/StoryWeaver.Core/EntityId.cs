@@ -18,7 +18,7 @@ namespace StoryWeaver.Core;
 /// <b>Two callers, which is why this is in Core.</b> Pack loading <i>requires</i> the shape and
 /// throws — a mistyped filename is a mistyped id, and it is refused before a session starts.
 /// <see cref="CanonRefresh"/> merely <i>warns</i> about it, because canon belongs to the player
-/// and a reload reports rather than refuses. It lived in Storage until 2026-09-02, when the
+/// and a reload reports rather than refuses. It lived in Storage until 2026-09-04, when the
 /// second caller appeared and <c>Core</c>, which references nothing, could not reach it.
 ///
 /// <b>Extraction was never held to this shape, and turns out to satisfy it anyway.</b> The

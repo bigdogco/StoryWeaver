@@ -1,7 +1,7 @@
 # TODO: Move EntityId into Core
 
-**Status:** DONE 2026-09-02
-**Created:** 2026-09-02
+**Status:** DONE 2026-09-04
+**Created:** 2026-09-04
 
 Third piece of **Phase 2**, and the smallest. Deferred twice with a trigger; the trigger fired.
 
