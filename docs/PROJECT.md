@@ -48,7 +48,7 @@ Dependencies point inward. `Core` references nothing.
 |---|---|---|
 | **Core** | domain model, turn loop, validation, applier, context assembly | Mostly. The delta set and validator are stable and well-measured. `ContextAssembler` held at 230 turns (§4) but its *output* is now the weak point: 8.4KB of state per call, carrying names that collide. |
 | **Llm** | provider client, per-role config, prompt assembly, extraction schema | Yes for the mechanism. The *prompts* are living text and change with every measured failure. |
-| **Storage** | JSON canon + history, pack loading (seed, lore, sheets) | Format settled. **The pack is 60% built** — see Phase 1. |
+| **Storage** | JSON canon + history, pack loading (seed, lore, sheets) | Format settled, pack complete (Phase 1). Holds persistence only: `EntityId` moved to Core 2026-09-02, since the id convention is domain, not storage. |
 | **Cli** | play harness, eval scenarios, self-tests | Throwaway by design. 6,061 lines, of which ~67% is eval scaffolding and 647 is the actual game. |
 | **UI** | not built | Avalonia, decided, not started. See Phase 2. |
 | **Plugins** | not built, not designed | See Phase 3. |

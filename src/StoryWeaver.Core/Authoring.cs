@@ -30,8 +30,8 @@ public static class Authoring
     /// Human-readable slug, matching the ids the rest of the world uses
     /// (<c>marrow-tavern</c>, <c>innkeeper-hald</c>) rather than GUIDs.
     ///
-    /// Output always satisfies <c>EntityId.IsWellFormed</c>, which lives in Storage and cannot
-    /// be referenced from here. A self-test holds the two together.
+    /// Output always satisfies <see cref="EntityId.IsWellFormed"/>, which a self-test asserts —
+    /// the producer and the checker are one convention and must not drift apart.
     /// </summary>
     public static string Slug(string text)
     {

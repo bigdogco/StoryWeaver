@@ -27,6 +27,7 @@ internal static class CanonRefreshSelfTest
         failures += CheckLoreKnowledgeIsLegal();
         failures += CheckItemPlacement();
         failures += CheckKeyMustMatchId();
+        failures += CheckMalformedIds();
         failures += CheckNothingOnDisk();
 
         Console.WriteLine(failures == 0
@@ -237,6 +238,39 @@ internal static class CanonRefreshSelfTest
         }
 
         Console.WriteLine("  ok    a key that disagrees with its own id is reported");
+        return 0;
+    }
+
+    /// <summary>
+    /// The check that only became possible when `EntityId` moved into Core. Ids are matched by
+    /// exact string comparison everywhere, so `Warrior_Mike` is a different thing from
+    /// `warrior-mike` to all of it and the same thing to a reader.
+    ///
+    /// The negative half matters as much: every id a real save contains must stay silent, or
+    /// this becomes noise on correct worlds. Measured at 549 ids across 11 saves, zero
+    /// malformed, before the warning was written.
+    /// </summary>
+    private static int CheckMalformedIds()
+    {
+        if (CanonRefresh.Check(Sample()).Any(w => w.Contains("not a usable id", StringComparison.Ordinal)))
+        {
+            Console.WriteLine("  FAIL  a correct world produced an id warning.");
+            return 1;
+        }
+
+        foreach (string bad in new[] { "Warrior_Mike", "warrior--mike", "-mike", "Warrior Mike" })
+        {
+            WorldState world = Sample();
+            world.Characters[bad] = new Character { Id = bad, Name = "Mike", LocationId = "marrow-tavern" };
+
+            if (!Warns(world, "not a usable id"))
+            {
+                Console.WriteLine($"  FAIL  '{bad}' was not reported as a malformed id.");
+                return 1;
+            }
+        }
+
+        Console.WriteLine("  ok    malformed ids are reported; a correct world stays silent");
         return 0;
     }
 

@@ -1,5 +1,4 @@
 using StoryWeaver.Core;
-using StoryWeaver.Storage;
 
 namespace StoryWeaver.Cli;
 
@@ -35,10 +34,10 @@ internal static class AuthoringSelfTest
     }
 
     /// <summary>
-    /// The bridge between two projects. <c>Slug</c> is in Core; <c>EntityId.IsWellFormed</c> is
-    /// in Storage, and Core cannot reference it because dependencies point inward. They are
-    /// nonetheless one convention, and an id that a slug produces but the loader rejects is a
-    /// character whose sheet and seed entry never meet.
+    /// Producer against checker. <c>Slug</c> makes ids and <c>EntityId.IsWellFormed</c> judges
+    /// them; both are in Core since 2026-09-02, but they remain two pieces of code that must
+    /// agree, and an id a slug produces but the loader rejects is a character whose sheet and
+    /// seed entry never meet.
     /// </summary>
     private static int CheckSlugsAreWellFormed()
     {

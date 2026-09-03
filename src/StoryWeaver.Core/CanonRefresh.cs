@@ -65,22 +65,22 @@ public static class CanonRefresh
         // entity is unreachable by its own id while still looking correct in the file.
         foreach ((string key, Character character) in world.Characters)
         {
-            RequireKeyMatchesId(warnings, "character", key, character.Id);
+            CheckId(warnings, "character", key, character.Id);
         }
 
         foreach ((string key, Location location) in world.Locations)
         {
-            RequireKeyMatchesId(warnings, "location", key, location.Id);
+            CheckId(warnings, "location", key, location.Id);
         }
 
         foreach ((string key, Item item) in world.Items)
         {
-            RequireKeyMatchesId(warnings, "item", key, item.Id);
+            CheckId(warnings, "item", key, item.Id);
         }
 
         foreach ((string key, Fact fact) in world.Facts)
         {
-            RequireKeyMatchesId(warnings, "fact", key, fact.Id);
+            CheckId(warnings, "fact", key, fact.Id);
         }
 
         foreach (Character character in Ordered(world.Characters.Values, c => c.Id))
@@ -142,11 +142,26 @@ public static class CanonRefresh
         return warnings;
     }
 
-    private static void RequireKeyMatchesId(List<string> warnings, string what, string key, string id)
+    /// <summary>
+    /// The two things that go wrong when a person edits ids by hand: the key and the field stop
+    /// agreeing, and the id stops being an id.
+    ///
+    /// Checked here rather than refused. Pack loading throws on a malformed id because a pack is
+    /// content being brought in; canon is the player's own file, and telling them what looks
+    /// wrong is the whole posture of this class.
+    /// </summary>
+    private static void CheckId(List<string> warnings, string what, string key, string id)
     {
         if (!string.Equals(key, id, StringComparison.OrdinalIgnoreCase))
         {
             warnings.Add($"{what} filed under '{key}' calls itself '{id}' — it cannot be found by its own id");
+        }
+
+        if (!EntityId.IsWellFormed(id))
+        {
+            warnings.Add(
+                $"{what} id '{id}' is not a usable id — ids are lowercase words joined by single " +
+                "hyphens, like 'warrior-mike', and are matched exactly");
         }
     }
 

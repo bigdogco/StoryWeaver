@@ -782,15 +782,16 @@ narration or authoring logic in a UI project. Authoring policy was pulled into
 rejected**: it taxes every future feature and drags the UI down to what a text prompt can
 express. The CLI is the first client, not the API.
 
-- [ ] **Move `EntityId` into Core, or decide not to. — the trigger has fired.** Raised by the
-      boundary work and deliberately left alone inside it. `Authoring.Slug` (Core) must always
-      produce ids that `EntityId.IsWellFormed` (Storage) accepts, and dependencies point inward,
-      so Core cannot reference the check. A self-test bridges them.
+- [x] ~~**Move `EntityId` into Core.**~~ **Done 2026-09-02.** Deferred twice with a trigger —
+      *revisit when a second Core caller needs to validate an id* — and `CanonRefresh` was it.
+      `Authoring.Slug` (Core) produced ids that `EntityId.IsWellFormed` (Storage) judged, and
+      Core references nothing, so the producer could not see the checker.
 
-      The stated trigger was *a second Core caller needing to validate an id*.
-      **`CanonRefresh` is it** (2026-09-02): a hand-edited id of `Warrior_Mike` is precisely
-      what a reload should warn about, and it cannot. Still a structural change, so it wants a
-      decision rather than riding inside the next feature that notices.
+      **Measured before building**, because `EntityId`'s own docs left open whether extraction
+      ids should be held to the authored shape: **549 ids across 11 saves, zero malformed.** So
+      the new warning is silent on real play, and that open question now has evidence rather
+      than a guess behind it.
+
 - [ ] **Multiple saves per pack.** The ids are separated already, so this is a startup choice
       plus whatever the UI offers. *(TODO_WORLD_PACKS)*
 - [ ] **Pack installing / sharing.** *(TODO_WORLD_PACKS)*
