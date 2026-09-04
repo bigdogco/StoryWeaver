@@ -1,6 +1,6 @@
 using StoryWeaver.Core;
 
-namespace StoryWeaver.Cli;
+namespace StoryWeaver.Harness;
 
 /// <summary>
 /// Offline checks on <see cref="Authoring"/> — the policy the console and, later, an editor

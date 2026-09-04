@@ -1,6 +1,6 @@
 using StoryWeaver.Core;
 
-namespace StoryWeaver.Cli;
+namespace StoryWeaver.Harness;
 
 /// <summary>
 /// Offline checks on <see cref="CanonRefresh"/> — Update State, on both surfaces.

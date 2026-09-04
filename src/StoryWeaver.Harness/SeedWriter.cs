@@ -1,7 +1,7 @@
 using StoryWeaver.Core;
 using StoryWeaver.Storage;
 
-namespace StoryWeaver.Cli;
+namespace StoryWeaver.Harness;
 
 /// <summary>
 /// Writes the built-in world out as a pack seed.
@@ -14,7 +14,7 @@ namespace StoryWeaver.Cli;
 /// Kept afterwards as an authoring aid: it turns any world this codebase can build — including
 /// a save — into a starting pack.
 /// </summary>
-internal static class SeedWriter
+public static class SeedWriter
 {
     public static int Run(string path)
     {

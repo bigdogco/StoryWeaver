@@ -1,6 +1,6 @@
 using StoryWeaver.Core;
 
-namespace StoryWeaver.Cli;
+namespace StoryWeaver.Harness;
 
 /// <summary>
 /// Offline checks on <see cref="StorySession"/> — the object that owns canon.

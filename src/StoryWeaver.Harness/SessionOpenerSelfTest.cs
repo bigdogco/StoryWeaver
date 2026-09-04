@@ -3,7 +3,7 @@ using StoryWeaver.Core;
 using StoryWeaver.Llm.Configuration;
 using StoryWeaver.Storage;
 
-namespace StoryWeaver.Cli;
+namespace StoryWeaver.Harness;
 
 /// <summary>
 /// Offline checks on <see cref="SessionOpener"/> — the thirteen decisions that used to be the

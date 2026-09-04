@@ -978,6 +978,30 @@ in `PROJECT.md` §3.
 
 ---
 
+### The repo has mixed line endings and no `.gitattributes`
+
+Found 2026-09-04, during the Harness extraction. The working tree is a mix of CRLF and LF with
+nothing enforcing either — existing `.cs` files split roughly CRLF/LF, docs lean LF, `.csproj`
+files disagree with each other. It is latent until a tool rewrites a file: a `sed -i` or an
+editor that normalises to LF flips every line of a CRLF file, and then **git stops seeing a move
+as a rename** — the diff reads as a whole-file delete-and-add, the history is lost, and the real
+one-line change is buried in thousands of phantom ones.
+
+It bit exactly that way here: moving twelve files into the Harness, the endings flipped, and the
+first `git status` showed 7,000 lines changed instead of a dozen renames. Recovered by restoring
+each file to its original ending, which brought the renames back and cut the diff to ~240 real
+lines.
+
+**The standing risk:** any future refactor that touches CRLF files with a LF-normalising tool
+will silently destroy rename tracking again, and a reviewer reading the diff cannot tell a move
+from a rewrite. **The fix is a `.gitattributes` normalisation policy** (e.g. `* text=auto`, or
+`*.cs text eol=crlf`), but adding one renormalises the whole tree in a single commit — a
+repo-wide change that is a decision for the player, not a side effect of a feature. Filed here
+until then; until it exists, check `file`/endings before and after moving a file, and verify
+`git status` shows `R` (rename) rather than a delete-and-add pair.
+
+---
+
 ## Resolved
 
 ### A character could not be renamed

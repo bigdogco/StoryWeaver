@@ -1,6 +1,6 @@
 using StoryWeaver.Core;
 
-namespace StoryWeaver.Cli;
+namespace StoryWeaver.Harness;
 
 /// <summary>
 /// Offline checks on reroll and on the rules protecting a character's identity, using fake

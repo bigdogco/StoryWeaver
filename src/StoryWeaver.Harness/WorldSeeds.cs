@@ -1,15 +1,15 @@
 using StoryWeaver.Core;
 
-namespace StoryWeaver.Cli;
+namespace StoryWeaver.Harness;
 
 /// <summary>
-/// The hardcoded starting world, shared by the play harness and the extraction eval.
+/// The hardcoded starting world, shared by the extraction eval and the self-tests.
 ///
 /// Shared deliberately: an eval that scores against a different world than the one being
 /// played is measuring the wrong thing, and two copies of a seed drift the moment one is
 /// edited.
 /// </summary>
-internal static class WorldSeeds
+public static class WorldSeeds
 {
     /// <summary>
     /// Two locations, two NPCs, and one fact that exactly one NPC knows.

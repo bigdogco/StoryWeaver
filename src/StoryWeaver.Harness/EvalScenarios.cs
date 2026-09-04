@@ -1,12 +1,12 @@
 using StoryWeaver.Core;
 
-namespace StoryWeaver.Cli;
+namespace StoryWeaver.Harness;
 
 /// <summary>
 /// A matcher over deltas, with a human-readable name so failures say what was missing rather
 /// than dumping objects.
 /// </summary>
-internal sealed record DeltaRule(string Description, Func<StateDelta, bool> Matches);
+public sealed record DeltaRule(string Description, Func<StateDelta, bool> Matches);
 
 /// <summary>
 /// A check against the world <b>after</b> the accepted deltas are applied.
@@ -18,7 +18,7 @@ internal sealed record DeltaRule(string Description, Func<StateDelta, bool> Matc
 ///
 /// Added after a delta-only rule scored complete, correct multi-step movement as a failure.
 /// </summary>
-internal sealed record StateRule(string Description, Func<WorldState, bool> Holds);
+public sealed record StateRule(string Description, Func<WorldState, bool> Holds);
 
 /// <summary>
 /// One eval case: a fixed world, a fixed player input, and fixed narration.
@@ -33,7 +33,7 @@ internal sealed record StateRule(string Description, Func<WorldState, bool> Hold
 /// mistake — the interesting questions are whether it catches what it must and avoids what it
 /// must not.
 /// </summary>
-internal sealed record EvalScenario(
+public sealed record EvalScenario(
     string Name,
     string PlayerInput,
     string Narration,
@@ -59,7 +59,7 @@ internal sealed record EvalScenario(
     public WorldState World() => (Seed ?? WorldSeeds.Marrow)();
 }
 
-internal static class EvalScenarios
+public static class EvalScenarios
 {
     private const string Hald = "innkeeper-hald";
 

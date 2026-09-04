@@ -2,7 +2,7 @@ using System.Text.Json;
 using StoryWeaver.Core;
 using StoryWeaver.Storage;
 
-namespace StoryWeaver.Cli;
+namespace StoryWeaver.Harness;
 
 /// <summary>
 /// Offline checks on delta serialization. No API calls, so this is free to run and there is

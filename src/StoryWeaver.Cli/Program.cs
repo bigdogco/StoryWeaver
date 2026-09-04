@@ -1,20 +1,22 @@
-using System.Text.Json;
+using StoryWeaver.Harness;
 using StoryWeaver.Llm;
 using StoryWeaver.Llm.Configuration;
-using StoryWeaver.Llm.Logging;
-using StoryWeaver.Llm.OpenRouter;
 
 namespace StoryWeaver.Cli;
 
 /// <summary>
-/// Throwaway harness. Loads and validates settings, and can run a smoke test that exercises
-/// both roles against the real API.
+/// The console entry point — a dispatcher. It loads and validates settings, then hands off:
+/// play to <see cref="PlaySession"/>, and everything instrumental (<c>--selftest</c>,
+/// <c>--eval</c>, <c>--smoke</c>, <c>--probe-schema</c>, <c>--write-seed</c>) to the Harness.
+///
+/// It renders and prompts and nothing more. The gameplay lives in Core, the composition in App,
+/// and the instrumentation in Harness; this file is a thin console client of all three.
 /// </summary>
 internal static class Program
 {
     private static async Task<int> Main(string[] args)
     {
-        Console.WriteLine("StoryWeaver - console harness");
+        Console.WriteLine("StoryWeaver - console client");
         Console.WriteLine();
 
         // Ahead of settings loading: it makes no API calls and must stay runnable when
@@ -22,26 +24,8 @@ internal static class Program
         // for an API key.
         if (args.Contains("--selftest", StringComparer.OrdinalIgnoreCase))
         {
-            // Every suite runs; the exit code is the worst of them, so one failure
-            // cannot be hidden by the others passing.
-            int json = JsonSelfTest.Run();
-            Console.WriteLine();
-            int lore = LoreSelfTest.Run();
-            Console.WriteLine();
-            int wire = StoryWeaver.Llm.OpenRouter.ResponseSelfTest.Run();
-            Console.WriteLine();
-            int reroll = RerollSelfTest.Run();
-            Console.WriteLine();
-            int authoring = AuthoringSelfTest.Run();
-            Console.WriteLine();
-            int refresh = CanonRefreshSelfTest.Run();
-            Console.WriteLine();
-            int session = StorySessionSelfTest.Run();
-            Console.WriteLine();
-            int opener = SessionOpenerSelfTest.Run();
-            Console.WriteLine();
-            int edits = CanonEditsSelfTest.Run();
-            return new[] { json, lore, wire, reroll, authoring, refresh, session, opener, edits }.Max();
+            // The suites live in the Harness now; it owns the order and how their codes combine.
+            return SelfTests.RunAll();
         }
 
         // Writes the built-in seed out as a pack file. One-shot authoring aid: it guarantees
@@ -120,8 +104,15 @@ internal static class Program
             string[]? providers = Value(args, "--providers")
                 ?.Split(',', StringSplitOptions.RemoveEmptyEntries);
 
-            return await ExtractionEval.RunAsync(settings, models, runs, scenarios, showDeltas, providers)
+            // The Harness scores and reports progress to the observer; the CLI renders both the
+            // running commentary and the final report. Two halves of one seam.
+            ConsoleEvalObserver observer = new(showDeltas);
+            EvalReport report = await ExtractionEval
+                .RunAsync(settings, models, runs, scenarios, providers, observer)
                 .ConfigureAwait(false);
+
+            EvalRenderer.RenderSummary(report);
+            return 0;
         }
 
         if (args.Contains("--play", StringComparer.OrdinalIgnoreCase))
@@ -154,7 +145,7 @@ internal static class Program
 
         if (smoke)
         {
-            return await RunSmokeTestAsync(settings).ConfigureAwait(false);
+            return await SmokeTest.RunAsync(settings).ConfigureAwait(false);
         }
 
         Console.WriteLine("  --play          play a session (saved to disk, two calls per turn)");
@@ -199,114 +190,6 @@ internal static class Program
         }
 
         Console.WriteLine();
-    }
-
-    /// <summary>
-    /// Two calls. Narration proves the basic path; extraction proves schema-constrained
-    /// output actually works on the configured model, which is the open question the
-    /// bootstrap phase exists to answer.
-    /// </summary>
-    private static async Task<int> RunSmokeTestAsync(StoryWeaverSettings settings)
-    {
-        FileLlmLog log = new(settings.Logging);
-        Console.WriteLine($"Logging to {log.FilePath}");
-        Console.WriteLine();
-
-        using OpenRouterClient client = new(settings, log);
-
-        Console.WriteLine("[1/2] Narration ...");
-        LlmResult narration = await client.CompleteAsync(new LlmCall
-        {
-            Role = LlmRole.Narration,
-            Messages =
-            [
-                LlmMessage.System("You are narrating a dark fantasy RPG. Two sentences, no preamble."),
-                LlmMessage.User("The player pushes open the door of the tavern in Marrow."),
-            ],
-        }).ConfigureAwait(false);
-
-        Report(narration);
-
-        if (!narration.IsSuccess)
-        {
-            return 1;
-        }
-
-        Console.WriteLine();
-        Console.WriteLine("[2/2] Extraction (schema-constrained) ...");
-
-        const string schema = """
-        {
-          "type": "object",
-          "properties": {
-            "location":  { "type": "string", "description": "Where the scene takes place." },
-            "characters": {
-              "type": "array",
-              "description": "Named characters present.",
-              "items": { "type": "string" }
-            },
-            "mood": { "type": "string", "description": "One word for the scene's tone." }
-          },
-          "required": ["location", "characters", "mood"],
-          "additionalProperties": false
-        }
-        """;
-
-        LlmResult extraction = await client.CompleteAsync(new LlmCall
-        {
-            Role = LlmRole.Extraction,
-            Schema = new JsonSchemaSpec("scene_state", schema),
-            Validator = IsJsonObject,
-            Messages =
-            [
-                LlmMessage.System("Extract structured state from the narration. Return JSON only."),
-                LlmMessage.User(narration.Content),
-            ],
-        }).ConfigureAwait(false);
-
-        Report(extraction);
-
-        if (extraction.IsSuccess)
-        {
-            Console.WriteLine();
-            Console.WriteLine("  Schema-constrained output works on this model.");
-        }
-
-        return extraction.IsSuccess ? 0 : 1;
-    }
-
-    private static void Report(LlmResult result)
-    {
-        if (!result.IsSuccess)
-        {
-            Console.WriteLine($"  FAILED after {result.Attempts} attempt(s): {result.Error}");
-            return;
-        }
-
-        Console.WriteLine($"  {result.Content.Trim()}");
-        Console.WriteLine();
-        Console.WriteLine(
-            $"  served by {result.Model ?? "(unreported)"}, " +
-            $"{result.Usage?.TotalTokens ?? 0} tokens, {result.Attempts} attempt(s)");
-    }
-
-    /// <summary>Cheap structural check — is this parseable JSON with an object at the root?</summary>
-    private static bool IsJsonObject(string content)
-    {
-        if (string.IsNullOrWhiteSpace(content))
-        {
-            return false;
-        }
-
-        try
-        {
-            using JsonDocument document = JsonDocument.Parse(content);
-            return document.RootElement.ValueKind == JsonValueKind.Object;
-        }
-        catch (JsonException)
-        {
-            return false;
-        }
     }
 
     /// <summary>Never print the key. Enough characters to tell which key it is, no more.</summary>

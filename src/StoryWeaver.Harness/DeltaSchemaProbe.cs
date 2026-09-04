@@ -6,7 +6,7 @@ using StoryWeaver.Llm.Logging;
 using StoryWeaver.Llm.OpenRouter;
 using StoryWeaver.Llm.Story;
 
-namespace StoryWeaver.Cli;
+namespace StoryWeaver.Harness;
 
 /// <summary>
 /// Answers one question before §7 is built on top of it: can the extraction model emit a
@@ -20,7 +20,7 @@ namespace StoryWeaver.Cli;
 /// Worth keeping after it passes: the routing hazard means this needs re-running whenever
 /// the extraction model changes.
 /// </summary>
-internal static class DeltaSchemaProbe
+public static class DeltaSchemaProbe
 {
     /// <summary>
     /// Prose written to exercise several delta kinds at once — a move, a mood shift, a new

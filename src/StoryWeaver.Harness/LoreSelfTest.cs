@@ -6,7 +6,7 @@ using StoryWeaver.Llm.Configuration;
 using StoryWeaver.Llm.Story;
 using StoryWeaver.Storage;
 
-namespace StoryWeaver.Cli;
+namespace StoryWeaver.Harness;
 
 /// <summary>
 /// Offline checks on the lore markdown parser and the rules that keep lore out of canon.
