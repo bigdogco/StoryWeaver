@@ -1,0 +1,7 @@
+# Commits to skip in `git blame` — tree-wide reformattings whose authorship is
+# noise. GitHub honours this file automatically; locally, enable it with:
+#   git config blame.ignoreRevsFile .git-blame-ignore-revs
+# (this repo's checkout is configured below by the same commit that adds this).
+
+# Normalize line endings to LF, enforced by .gitattributes (2026-09-04)
+719b648a3a54eab5c7855a2f2fffe1f210197e1c
