@@ -55,7 +55,7 @@ internal static class AuthoringCommands
 
     private static IReadOnlyList<StateDelta>? PromptPlace(WorldState world)
     {
-        string? name = Ask("Name");
+        string? name = ConsolePrompt.Ask("Name");
         if (name is null)
         {
             return null;
@@ -67,13 +67,13 @@ internal static class AuthoringCommands
             return null;
         }
 
-        string? description = Ask("Description");
+        string? description = ConsolePrompt.Ask("Description");
         return description is null ? null : Authoring.Place(id, name, description);
     }
 
     private static IReadOnlyList<StateDelta>? PromptCharacter(WorldState world)
     {
-        string? name = Ask("Name");
+        string? name = ConsolePrompt.Ask("Name");
         if (name is null)
         {
             return null;
@@ -85,14 +85,14 @@ internal static class AuthoringCommands
             return null;
         }
 
-        string? description = Ask("Description");
+        string? description = ConsolePrompt.Ask("Description");
         if (description is null)
         {
             return null;
         }
 
         Console.WriteLine($"  Known places: {string.Join(", ", world.Locations.Keys.OrderBy(k => k, StringComparer.Ordinal))}");
-        string? locationId = AskOptional("Location id (blank = unknown / offstage)");
+        string? locationId = ConsolePrompt.AskOptional("Location id (blank = unknown / offstage)");
 
         return Authoring.Person(id, name, description, locationId);
     }
@@ -102,7 +102,7 @@ internal static class AuthoringCommands
         Console.WriteLine("  A fact is one sentence that is either true or not, and that");
         Console.WriteLine("  characters can learn separately. \"Bill stole the grain.\"");
 
-        string? text = Ask("Fact");
+        string? text = ConsolePrompt.Ask("Fact");
         if (text is null)
         {
             return null;
@@ -114,14 +114,14 @@ internal static class AuthoringCommands
             return null;
         }
 
-        return Authoring.Fact(id, text, AskYesNo("Does your character know this?", defaultYes: true));
+        return Authoring.Fact(id, text, ConsolePrompt.AskYesNo("Does your character know this?", defaultYes: true));
     }
 
     private static IReadOnlyList<StateDelta>? PromptRename(WorldState world)
     {
         ListCharacters(world);
 
-        string? id = Ask("Character id");
+        string? id = ConsolePrompt.Ask("Character id");
         if (id is null)
         {
             return null;
@@ -136,13 +136,13 @@ internal static class AuthoringCommands
         Console.WriteLine($"  Renaming {character.Id} — the id stays as it is.");
         Console.WriteLine($"  Currently: {character.Name} — {character.Description}");
 
-        string? name = Ask("New name");
+        string? name = ConsolePrompt.Ask("New name");
         if (name is null)
         {
             return null;
         }
 
-        string? description = AskOptional("New description (blank = keep current)");
+        string? description = ConsolePrompt.AskOptional("New description (blank = keep current)");
 
         return Authoring.Rename(id, name, description);
     }
@@ -157,7 +157,7 @@ internal static class AuthoringCommands
 
         ListCharacters(world);
 
-        string? characterId = Ask("Character id");
+        string? characterId = ConsolePrompt.Ask("Character id");
         if (characterId is null)
         {
             return null;
@@ -177,7 +177,7 @@ internal static class AuthoringCommands
             Console.WriteLine($"    {entry.Id} — {entry.Title} ({mark})");
         }
 
-        string? loreId = Ask("Lore id");
+        string? loreId = ConsolePrompt.Ask("Lore id");
         if (loreId is null)
         {
             return null;
@@ -243,21 +243,6 @@ internal static class AuthoringCommands
         }
     }
 
-    /// <summary>Prompt for required text. Null means the player gave up.</summary>
-    private static string? Ask(string label)
-    {
-        Console.Write($"  {label} (blank to cancel): ");
-        string? value = Console.ReadLine()?.Trim();
-        return string.IsNullOrWhiteSpace(value) ? null : value;
-    }
-
-    private static string? AskOptional(string label)
-    {
-        Console.Write($"  {label}: ");
-        string? value = Console.ReadLine()?.Trim();
-        return string.IsNullOrWhiteSpace(value) ? null : value;
-    }
-
     /// <summary>
     /// Prompt for an id, offering a slug derived from what was just typed.
     ///
@@ -284,15 +269,5 @@ internal static class AuthoringCommands
 
             return id;
         }
-    }
-
-    private static bool AskYesNo(string label, bool defaultYes)
-    {
-        Console.Write($"  {label} [{(defaultYes ? "Y/n" : "y/N")}]: ");
-        string? value = Console.ReadLine()?.Trim();
-
-        return string.IsNullOrWhiteSpace(value)
-            ? defaultYes
-            : value.StartsWith('y') || value.StartsWith('Y');
     }
 }

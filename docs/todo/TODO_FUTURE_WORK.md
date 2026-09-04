@@ -787,11 +787,21 @@ direct editing as a labelled hatch. See [`TODO_STORY_SESSION.md`](TODO_STORY_SES
       see a second session in the same process — an assumption `StorySession` had quietly
       invalidated. See [`TODO_SESSION_LIFECYCLE.md`](TODO_SESSION_LIFECYCLE.md).
 
-- [ ] **A second tier of delta kinds the model never sees.** `CANON_OWNERSHIP.md` §5, still
-      undecided. The closed set protects model attention; a text box costs none, so
-      `CharacterDescriptionChanged` and friends could exist in the applier and be absent from
-      the schema — moving most of the editing hatch back onto the validated path. Needs a guard
-      so extraction cannot emit an off-schema kind. **Let the hatch say which kinds are wanted.**
+- [ ] **A second tier of delta kinds the model never sees. — parked 2026-09-04.**
+      `CANON_OWNERSHIP.md` §5. The closed set protects model attention; a text box costs none, so
+      `CharacterRemoved` and friends could live in the applier and be absent from the schema.
+
+      **Not built, deliberately.** The argument for it was that using the escape hatch would say
+      which kinds are wanted, and `EditAsync` had no caller at the time — so the instrument was
+      switched off. `/edit` now exists
+      ([`TODO_EDIT_COMMAND.md`](TODO_EDIT_COMMAND.md)), so the question is answerable.
+
+      Two things to carry forward if it is revisited. **Start with destructive kinds, not
+      cosmetic ones**: neither path leaves an audit trail, so the only real difference is
+      validated-before versus checked-after, which is nearly nothing for rewording a description
+      and everything for removing a character. And it needs a guard so extraction cannot emit an
+      off-schema kind, plus a bridge test — `DeltaSchema` is hand-written JSON in Llm and Core
+      cannot read it, so it is the `EntityId` shape again.
 
 **The boundary is locked (2026-09-02).** A UI is a thin layer, never a driver: no gameplay,
 narration or authoring logic in a UI project. Authoring policy was pulled into

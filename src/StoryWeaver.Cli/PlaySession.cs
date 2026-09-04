@@ -143,6 +143,10 @@ internal static class PlaySession
                 {
                     await RerollAsync(session).ConfigureAwait(false);
                 }
+                else if (await EditCommand.TryHandleAsync(input, session).ConfigureAwait(false))
+                {
+                    // Handled.
+                }
                 else if (!await AuthoringCommands.TryHandleAsync(input, session, pack.Lore)
                         .ConfigureAwait(false))
                 {
@@ -520,6 +524,11 @@ internal static class PlaySession
                 Console.WriteLine("  /fact       add a truth, and choose whether you know it");
                 Console.WriteLine("  /rename     rename someone — their id stays the same");
                 Console.WriteLine("  /knows      let a character have heard of a lore entry");
+                Console.WriteLine();
+                Console.WriteLine("  /edit       change canon directly — descriptions, the wording");
+                Console.WriteLine("              of a fact, forgetting, removing. The last resort,");
+                Console.WriteLine("              for what the commands above cannot say: they are");
+                Console.WriteLine("              checked before they land, /edit is checked after.");
                 break;
 
             default:

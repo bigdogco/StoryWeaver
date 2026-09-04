@@ -1,7 +1,7 @@
 # Design — who owns canon, and how it is allowed to change
 
-**Status:** §4, §5 and §6 **built 2026-09-04** — see `todo/TODO_STORY_SESSION.md` and
-`todo/TODO_SESSION_LIFECYCLE.md`. Only §5's second-tier delta proposal is still undecided.
+**Status:** §4, §5 and §6 **built 2026-09-04**. The escape hatch has a caller (`/edit`) as of
+the same day; §5's second-tier delta proposal is **parked** — see below.
 **Written:** 2026-09-04, entering the UI half of Phase 2.
 
 Started as a discussion about UI separation and turned into one subject with three layers. The
@@ -231,6 +231,23 @@ and persisted the ordinary way — leaving the raw hatch genuinely exotic.
 **It needs one guard:** extraction must reject a kind absent from the schema, so an off-schema
 kind cannot arrive from a provider that ignores the structured-output constraint. Cheap, and
 worth having regardless.
+
+### Parked 2026-09-04, with the reasoning
+
+Two things settled it, neither of them caution.
+
+**The instrument was switched off.** The argument for the tier is that *using the hatch says
+which kinds are wanted* — and `EditAsync` had no caller outside its own self-tests. Choosing
+kinds then would have been choosing by imagination. `/edit` now exists, so the question is
+answerable; revisit when something is reached for often enough to deserve validating before it
+lands.
+
+**And the case is the inverse of the one that motivated it.** Neither path leaves an audit trail
+— `AuthorAsync` appends no `TurnRecord` either — so the only real difference is validated-before
+versus checked-after. For rewording a description that is nearly nothing to validate. For
+**removal** it is the whole game, since deleting a character orphans items and knowledge. So if
+the tier is ever built it should start with destructive kinds, not the description-editing ones
+that prompted the idea.
 
 Two tiers — *kinds that exist* and *kinds the model may propose* — sounds like it weakens the
 closed-set decision. It does not: the closure was always about what the model is offered.
