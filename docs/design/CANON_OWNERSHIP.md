@@ -1,7 +1,7 @@
 # Design — who owns canon, and how it is allowed to change
 
-**Status:** §4 and §5 **built 2026-09-04** — see `todo/TODO_STORY_SESSION.md`. §5's
-second-tier delta proposal is still undecided; §6's session-lifecycle gap is still open.
+**Status:** §4, §5 and §6 **built 2026-09-04** — see `todo/TODO_STORY_SESSION.md` and
+`todo/TODO_SESSION_LIFECYCLE.md`. Only §5's second-tier delta proposal is still undecided.
 **Written:** 2026-09-04, entering the UI half of Phase 2.
 
 Started as a discussion about UI separation and turned into one subject with three layers. The
@@ -239,10 +239,10 @@ closed-set decision. It does not: the closure was always about what the model is
 
 ## 6. What this leaves open
 
-- **Session lifecycle.** `RunAsync` is ~160 lines and mostly decisions, not rendering: take the
-  lock, load pack and prompts, resume vs. fresh, does the pack author the player, write the first
-  save, write `save.json`, compare pack versions, opening scene vs. recent turns. The window needs
-  every one. This is the next gap and it is bigger than the authoring one was.
+- ~~**Session lifecycle.**~~ **Built 2026-09-04** as `StoryWeaver.App`, a new composition layer —
+  necessary because opening needs Storage *and* Llm, and no existing project could see both.
+  Two-phase, so the one step that needs the client mid-way (*who are you?*) stops and hands back
+  a `PendingPlayer` rather than taking a callback that would make a window block inside a load.
 - Whether the two-tier delta set happens, and which kinds.
 - When the authoring warning appears.
 - Everything in §4's open questions.

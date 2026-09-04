@@ -28,6 +28,19 @@ public sealed class SaveLock : IDisposable
 {
     public const string FileName = ".session.lock";
 
+    /// <summary>
+    /// Save directories locked by <i>this</i> process, by full path.
+    ///
+    /// The file on disk cannot answer "is another session in my own process holding this?",
+    /// because a lock we wrote and a lock we are about to write look identical — same process
+    /// id, same machine. That was fine while one process meant one playthrough; `StorySession`
+    /// made several sessions per process a supported thing, so the question became real and
+    /// needs an exact answer rather than an assumption.
+    /// </summary>
+    private static readonly HashSet<string> HeldHere = new(StringComparer.OrdinalIgnoreCase);
+
+    private static readonly object HeldHereGate = new();
+
     private readonly string _path;
     private bool _released;
 
@@ -50,19 +63,40 @@ public sealed class SaveLock : IDisposable
         Directory.CreateDirectory(directory);
         string path = Path.Combine(directory, FileName);
 
-        if (Read(path) is { } holder && !force)
+        string key = Path.GetFullPath(path);
+
+        lock (HeldHereGate)
         {
-            // Our own id is not a conflict. A session that somehow re-acquires its own lock is
-            // taking back something it already owns.
-            if (holder.ProcessId != Environment.ProcessId && IsAlive(holder))
+            // Same-process conflicts, which used to be impossible and are not any more.
+            //
+            // This check used to read "our own process id is not a conflict", on the reasoning
+            // that one process meant one session. StorySession ended that: sessions are objects
+            // now and several can exist at once, so a second one opening the same save is a
+            // real scenario — and the file alone cannot tell it apart from a session
+            // re-acquiring its own lock, because both look like our own process id.
+            //
+            // In-process holders are tracked in memory instead, where the answer is exact.
+            if (HeldHere.Contains(key) && !force)
             {
-                heldBy = holder.Describe();
+                heldBy = "this process, in another session";
                 return null;
             }
-        }
 
-        Write(path);
-        return new SaveLock(path);
+            if (Read(path) is { } holder && !force)
+            {
+                // A different live process still refuses. Our own id no longer waves it through
+                // on its own — the set above already answered that question more precisely.
+                if (holder.ProcessId != Environment.ProcessId && IsAlive(holder))
+                {
+                    heldBy = holder.Describe();
+                    return null;
+                }
+            }
+
+            Write(path);
+            HeldHere.Add(key);
+            return new SaveLock(path);
+        }
     }
 
     /// <summary>
@@ -77,6 +111,11 @@ public sealed class SaveLock : IDisposable
         }
 
         _released = true;
+
+        lock (HeldHereGate)
+        {
+            HeldHere.Remove(Path.GetFullPath(_path));
+        }
 
         try
         {

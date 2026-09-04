@@ -40,15 +40,16 @@ public sealed class StorySession : IDisposable
     private readonly LoreBook _lore;
 
     /// <summary>
-    /// Held for the life of the session and disposed with it, but never inspected.
+    /// Things whose lifetime is exactly this session's: the save lock, and the provider client
+    /// the turn engine talks through. Held and disposed, never inspected.
     ///
-    /// The session owns *"this save is mine for now"* and *"I hold canon for this save"*
-    /// together, because they are one lifetime — but it is an <see cref="IDisposable"/> rather
-    /// than a <c>SaveLock</c> so that Core gains the ownership without learning that the
-    /// mechanism is a file. Whoever opens a session acquires it; disposing the session releases
-    /// it.
+    /// <b>Untyped on purpose.</b> The session owns *"this save is mine for now"* and *"I hold
+    /// canon for this save"* together, because they are one lifetime — but as
+    /// <see cref="IDisposable"/> rather than a <c>SaveLock</c> and an <c>HttpClient</c>, so Core
+    /// gains the ownership without learning that one is a file and the other is a socket.
+    /// Whoever opens a session acquires them; disposing the session releases them.
     /// </summary>
-    private readonly IDisposable? _saveLock;
+    private readonly IReadOnlyList<IDisposable> _owned;
 
     /// <summary>
     /// The single-writer guard. Every operation that can change canon takes it, and takes it
@@ -66,7 +67,7 @@ public sealed class StorySession : IDisposable
         TurnEngine engine,
         IWorldRepository repository,
         LoreBook? lore = null,
-        IDisposable? saveLock = null)
+        IReadOnlyList<IDisposable>? owned = null)
     {
         SaveId = saveId;
         PackId = packId;
@@ -74,7 +75,7 @@ public sealed class StorySession : IDisposable
         _engine = engine;
         _repository = repository;
         _lore = lore ?? LoreBook.Empty;
-        _saveLock = saveLock;
+        _owned = owned ?? [];
     }
 
     /// <summary>Which playthrough this is. State, as opposed to <see cref="PackId"/>.</summary>
@@ -104,6 +105,35 @@ public sealed class StorySession : IDisposable
     /// is a race; the operations refuse on their own, which is the part that is safe.
     /// </summary>
     public bool IsBusy => _oneWriter.CurrentCount == 0;
+
+    /// <summary>
+    /// The tail of the story, oldest first — for replaying a resumed session, or showing the
+    /// last raw extraction.
+    ///
+    /// <b>Not guarded, deliberately.</b> History is append-only, so the worst a concurrent read
+    /// can see is a tail one turn shorter than it will be a moment later. Taking the guard for
+    /// a read would mean a UI refreshing a transcript could be told "a turn is in progress",
+    /// which is useless — and it would make the guard contended by things that never write.
+    ///
+    /// <b>A read rather than a repository.</b> Exposing <c>IWorldRepository</c> would hand every
+    /// client a way to write behind the guard's back, which is the whole thing this class
+    /// exists to prevent.
+    /// </summary>
+    public async Task<IReadOnlyList<TurnRecord>> RecentTurnsAsync(
+        int count,
+        CancellationToken cancellationToken = default)
+    {
+        if (count <= 0)
+        {
+            return [];
+        }
+
+        IReadOnlyList<TurnRecord> history = await _repository
+            .LoadHistoryAsync(SaveId, cancellationToken)
+            .ConfigureAwait(false);
+
+        return history.Count <= count ? history : [.. history.Skip(history.Count - count)];
+    }
 
     /// <summary>Play a turn: narrate, extract, validate, apply, save.</summary>
     public Task<SessionResult<TurnOutcome>> TakeTurnAsync(
@@ -299,7 +329,12 @@ public sealed class StorySession : IDisposable
         }
 
         _disposed = true;
-        _saveLock?.Dispose();
+
+        foreach (IDisposable owned in _owned)
+        {
+            owned.Dispose();
+        }
+
         _oneWriter.Dispose();
     }
 }

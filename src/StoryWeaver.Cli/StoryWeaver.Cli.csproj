@@ -4,6 +4,7 @@
     <ProjectReference Include="..\StoryWeaver.Core\StoryWeaver.Core.csproj" />
     <ProjectReference Include="..\StoryWeaver.Llm\StoryWeaver.Llm.csproj" />
     <ProjectReference Include="..\StoryWeaver.Storage\StoryWeaver.Storage.csproj" />
+    <ProjectReference Include="..\StoryWeaver.App\StoryWeaver.App.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

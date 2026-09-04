@@ -307,7 +307,7 @@ internal static class StorySessionSelfTest
     private static StorySession Session(
         INarrator narrator,
         out InMemoryWorldRepository repository,
-        IDisposable? saveLock = null)
+        IDisposable? owned = null)
     {
         repository = new InMemoryWorldRepository();
         WorldState world = Sample();
@@ -315,7 +315,9 @@ internal static class StorySessionSelfTest
 
         TurnEngine engine = new(narrator, new NoOpExtractor(), repository);
 
-        return new StorySession("test", "marrow", world, engine, repository, LoreBook.Empty, saveLock);
+        return new StorySession(
+            "test", "marrow", world, engine, repository, LoreBook.Empty,
+            owned is null ? null : [owned]);
     }
 
     private static WorldState Sample()

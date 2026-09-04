@@ -42,7 +42,8 @@ It is a hobby project. Packaging and distribution may never happen.
 
 ## 2. Layers
 
-Dependencies point inward. `Core` references nothing.
+Dependencies point inward. `Core` references nothing; `App` composes the three libraries
+beneath it and is what a client talks to.
 
 | layer | holds | settled? |
 |---|---|---|
@@ -50,6 +51,7 @@ Dependencies point inward. `Core` references nothing.
 | **Llm** | provider client, per-role config, prompt assembly, extraction schema | Yes for the mechanism. The *prompts* are living text and change with every measured failure. |
 | **Storage** | JSON canon + history, pack loading (seed, lore, sheets) | Format settled, pack complete (Phase 1). Holds persistence only: `EntityId` moved to Core 2026-09-04, since the id convention is domain, not storage. |
 | **Cli** | play harness, eval scenarios, self-tests | Throwaway by design, and **client one of two** — `PlaySession` renders and prompts, `StorySession` owns canon. The framing holds for the play harness only: two-thirds of this project is eval scaffolding, which is instrumentation and never migrates inward. 6,061 lines, of which ~67% is eval scaffolding and 647 is the actual game. |
+| **App** | composition: opening a session out of pack, prompts, provider and save | New 2026-09-04. Exists because opening needs Storage *and* Llm, and Core references neither — no other project could see both. Renders nothing, asks nothing. |
 | **UI** | not built | Avalonia, decided, not started. See Phase 2. |
 | **Plugins** | not built, not designed | See Phase 3. |
 

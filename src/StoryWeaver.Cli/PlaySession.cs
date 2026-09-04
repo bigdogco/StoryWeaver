@@ -1,8 +1,7 @@
+using StoryWeaver.App;
 using StoryWeaver.Core;
 using StoryWeaver.Llm;
 using StoryWeaver.Llm.Configuration;
-using StoryWeaver.Llm.Logging;
-using StoryWeaver.Llm.OpenRouter;
 using StoryWeaver.Llm.Story;
 using StoryWeaver.Storage;
 
@@ -41,31 +40,17 @@ internal static class PlaySession
         string? saveId = null,
         bool force = false)
     {
-        // Content and state, and always two identifiers even when they hold the same string.
-        //
-        // The save defaults to the pack id. Two packs sharing one save is not a configuration,
-        // it is a corruption: the character and location ids written by one world do not exist
-        // in the other, so resuming would load a world whose contents the pack never heard of.
-        //
-        // These were static fields until StorySession existed, which is what made two
-        // playthroughs in one process impossible.
-        string packToPlay = string.IsNullOrWhiteSpace(packId) ? DefaultPackId : packId.Trim();
-        string saveToUse = string.IsNullOrWhiteSpace(saveId) ? packToPlay : saveId.Trim();
+        // Everything that used to be here — the lock, the pack, the prompts, the engine wiring,
+        // resume-vs-fresh, the first save, the origin file — is SessionOpener's now. A window
+        // needs every one of those decisions and none of this file's rendering.
+        SessionOpening opening = await SessionOpener
+            .OpenAsync(settings, packId ?? DefaultPackId, saveId, force, SaveRoot, PackRoot)
+            .ConfigureAwait(false);
 
-        // Taken before anything is read. Two engines writing one save corrupts it silently —
-        // see SaveLock — so this refuses rather than warns.
-        //
-        // The `using` stays even though the session below also owns and disposes it. Between
-        // here and that constructor sit pack loading and prompt loading, both of which throw on
-        // malformed content, and dropping the `using` would leak the lock on exactly the paths
-        // Program.cs handles as ordinary user error. SaveLock.Dispose is documented idempotent,
-        // so the second call is a no-op rather than a bug.
-        using SaveLock? sessionLock = SaveLock.Acquire(SaveRoot, saveToUse, force, out string? heldBy);
-
-        if (sessionLock is null)
+        if (opening.WasRefused)
         {
-            Console.WriteLine($"\nThe save '{saveToUse}' is already open in another session.");
-            Console.WriteLine($"  held by: {heldBy}");
+            Console.WriteLine($"\nCannot open: {opening.RefusedBecause}.");
+            Console.WriteLine($"  held by: {opening.HeldBy}");
             Console.WriteLine();
             Console.WriteLine("Two sessions writing one save overwrite each other's world every");
             Console.WriteLine("turn, and neither reports an error. Close the other session, or");
@@ -73,79 +58,57 @@ internal static class PlaySession
             return 1;
         }
 
-        FileLlmLog log = new(settings.Logging);
-        using OpenRouterClient client = new(settings, log);
+        SessionContext context = opening.Context!;
+        WorldPack pack = context.Pack;
 
-        // Authored content, loaded once. Malformed content throws by name and line rather
-        // than vanishing — a silently dropped lore entry or an unreadable seed is the failure
-        // this genre is worst at, and the one thing worth failing a startup over.
-        WorldPack pack = WorldPack.Load(PackRoot, packToPlay);
+        PrintBanner(context);
 
-        // Prompts are files now, not const strings. Loaded once, and loudly if absent — a
-        // narrator with no prompt is unpredictable rather than merely plain.
-        PromptLibrary prompts = PromptLibrary.Load();
-
-        JsonWorldRepository repository = new(SaveRoot);
-        int historyTurns = settings.Story.HistoryTurns;
-        TurnEngine engine = new(
-            new LlmNarrator(client, prompts, pack.Voice),
-            new LlmStateExtractor(client, prompts),
-            repository,
-            historyTurns,
-            pack.Lore,
-            pack.Sheets,
-            pack.Scenario,
-            pack.Opening);
-
-        // Resume the save if it exists, otherwise start from the pack's seed and write the
-        // first save so the world is on disk before any turn runs.
-        //
-        // The built-in seed is the fallback for a pack that ships none. It is a fixture, not
-        // content: the eval scenarios need worlds derived by mutating a base, which is a thing
-        // C# does well and JSON does not.
-        WorldState? loaded = await repository.LoadAsync(saveToUse).ConfigureAwait(false);
-        bool resumed = loaded is not null;
-        WorldState world = loaded ?? pack.Seed ?? WorldSeeds.Marrow();
-
-        if (!resumed)
+        if (context.PackHasMoved)
         {
-            if (pack.AuthorsThePlayer)
-            {
-                AnnounceAuthoredPlayer(world);
-            }
-            else
-            {
-                CreateCharacter(world);
-            }
-
-            await repository.SaveAsync(saveToUse, world).ConfigureAwait(false);
+            WarnThePackHasMoved(pack, context.PackVersionAtStart!);
         }
 
-        // After the save exists, so the directory is there to write into. Absent on every save
-        // made before manifests, which is why the resume check tolerates a missing origin.
-        SaveOrigin.WriteIfAbsent(Path.Combine(SaveRoot, saveToUse), pack.Id, pack.Version);
-        WarnIfThePackHasMoved(pack, Path.Combine(SaveRoot, saveToUse));
+        // Phase two, and the only part of opening a session that is this file's business: when
+        // the pack does not say who the player is, somebody has to be asked.
+        StorySession? opened;
 
-        // Canon stops being ours here. From this point the session owns the world, the save
-        // lock, and every path that changes either — this file renders and prompts.
-        using StorySession session = new(
-            saveToUse, packToPlay, world, engine, repository, pack.Lore, sessionLock);
+        if (opening.IsWaitingForPlayer)
+        {
+            // The `using` is what hands the save back when the question is abandoned. Once
+            // CompleteAsync has succeeded the pending state is spent and this disposes nothing
+            // — the session owns the lock from that point.
+            using PendingPlayer pending = opening.NeedsPlayer!;
+            opened = await AskWhoYouAreAsync(pending).ConfigureAwait(false);
+        }
+        else
+        {
+            opened = opening.Session;
+        }
 
-        PrintBanner(
-            log.FilePath, repository.RootDirectory, resumed, world.TurnNumber, historyTurns,
-            pack, prompts);
+        using StorySession? session = opened;
 
-        if (resumed)
+        if (session is null)
+        {
+            Console.WriteLine("\nNo character, no session. Nothing was written.");
+            return 1;
+        }
+
+        if (context.Resumed)
         {
             // The narrator gets the same window as prose; the player should not be the only
             // one in the room with no memory of what just happened. This replaces the opening
             // scene rather than following it — the story tail already establishes where they
             // are, and a static room description after it reads as a reset.
-            await PrintRecentAsync(repository, session.SaveId, historyTurns).ConfigureAwait(false);
+            await PrintRecentAsync(session, context.HistoryTurns).ConfigureAwait(false);
         }
         else
         {
-            PrintOpeningScene(world, pack);
+            if (pack.AuthorsThePlayer)
+            {
+                AnnounceAuthoredPlayer(session.World);
+            }
+
+            PrintOpeningScene(session.World, pack);
         }
 
         while (true)
@@ -155,7 +118,7 @@ internal static class PlaySession
 
             if (input is null || input.Trim() is "/quit" or "/q")
             {
-                Console.WriteLine($"\nEnding session. World saved under {repository.RootDirectory}.");
+                Console.WriteLine($"\nEnding session. World saved under {context.SaveRootDirectory}.");
                 return 0;
             }
 
@@ -183,9 +146,7 @@ internal static class PlaySession
                 else if (!await AuthoringCommands.TryHandleAsync(input, session, pack.Lore)
                         .ConfigureAwait(false))
                 {
-                    HandleCommand(
-                        input, session.World, repository, session.SaveId,
-                        pack.Lore, pack.Sheets, pack.Scenario);
+                    HandleCommand(input, session, pack.Lore, pack.Sheets, pack.Scenario);
                 }
 
                 continue;
@@ -236,44 +197,46 @@ internal static class PlaySession
     }
 
     /// <summary>
-    /// Name and describe the player's character, before turn one.
+    /// Phase two of opening a session: name and describe the player, then complete.
     ///
-    /// **Skipped entirely when the pack ships `characters/player.md`** — see
-    /// <see cref="WorldPack.AuthorsThePlayer"/>. The two write the same fields and the prompts
-    /// run second, so running both means the pack's premise is destroyed by any answer given
-    /// here.
+    /// **Only reached when the pack ships no `characters/player.md`** — a pack that authors its
+    /// protagonist is never asked, because the two write the same fields and a prompt running
+    /// second would destroy the pack's premise with whatever was typed here.
     ///
-    /// **Required, not skippable.** The seed used to ship a player called "You" whose one-line
-    /// description nobody chose, which was harmless only while the name appeared nowhere but
-    /// their own record. Character sheets show it to somebody else: an NPC whose sheet reads
-    /// "curious about {{player}}" renders as "curious about You".
+    /// **The name is required, the description is not.** Everyone in the world uses the name, so
+    /// an empty one produces a narrator addressing somebody nameless. A blank description keeps
+    /// whatever the seed wrote, which may well be better than a hurried sentence at a prompt.
     ///
-    /// Names are fixed — for the player exactly as for any authored character — so this is the
-    /// same act the pack author performed for Hald, done by the person who owns this one.
+    /// Returns null when the question is abandoned — end of input, or Ctrl-C. The caller lets
+    /// the <see cref="PendingPlayer"/> dispose, which hands the save back rather than leaving a
+    /// lock behind for a session that never started.
     /// </summary>
-    private static void CreateCharacter(WorldState world)
+    private static async Task<StorySession?> AskWhoYouAreAsync(PendingPlayer pending)
     {
-        if (world.Player is not { } player)
-        {
-            return;
-        }
-
         Console.WriteLine();
         Console.WriteLine("Before you begin — who are you?");
         Console.WriteLine();
 
-        while (true)
+        string? name = null;
+
+        while (string.IsNullOrWhiteSpace(name))
         {
             Console.Write("  Name: ");
-            string? name = Console.ReadLine()?.Trim();
+            string? typed = Console.ReadLine();
 
-            if (!string.IsNullOrWhiteSpace(name))
+            if (typed is null)
             {
-                player.Name = name;
-                break;
+                // End of input. Previously this looped forever on a closed stdin, holding the
+                // save lock while doing it.
+                return null;
             }
 
-            Console.WriteLine("  A name is required. Everyone in this world will use it.");
+            name = typed.Trim();
+
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                Console.WriteLine("  A name is required. Everyone in this world will use it.");
+            }
         }
 
         Console.WriteLine();
@@ -282,13 +245,9 @@ internal static class PlaySession
         Console.Write("  You are: ");
 
         string? description = Console.ReadLine()?.Trim();
-
-        if (!string.IsNullOrWhiteSpace(description))
-        {
-            player.Description = description;
-        }
-
         Console.WriteLine();
+
+        return await pending.CompleteAsync(name, description).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -495,13 +454,13 @@ internal static class PlaySession
 
     private static void HandleCommand(
         string input,
-        WorldState world,
-        IWorldRepository repo,
-        string saveId,
+        StorySession session,
         LoreBook lore,
         IReadOnlyDictionary<string, CharacterSheet> sheets,
         string scenario)
     {
+        WorldState world = session.World;
+
         switch (input)
         {
             case "/lore":
@@ -537,7 +496,7 @@ internal static class PlaySession
                 break;
 
             case "/raw":
-                PrintLastRaw(repo, saveId);
+                PrintLastRaw(session);
                 break;
 
             case "/help":
@@ -641,9 +600,9 @@ internal static class PlaySession
         }
     }
 
-    private static void PrintLastRaw(IWorldRepository repo, string saveId)
+    private static void PrintLastRaw(StorySession session)
     {
-        IReadOnlyList<TurnRecord> history = repo.LoadHistoryAsync(saveId).GetAwaiter().GetResult();
+        IReadOnlyList<TurnRecord> history = session.RecentTurnsAsync(1).GetAwaiter().GetResult();
 
         if (history.Count == 0)
         {
@@ -660,14 +619,16 @@ internal static class PlaySession
     /// same turns the narrator is being reminded of, so what the player sees and what the
     /// model remembers do not quietly diverge.
     /// </summary>
-    private static async Task PrintRecentAsync(IWorldRepository repo, string saveId, int historyTurns)
+    private static async Task PrintRecentAsync(StorySession session, int historyTurns)
     {
         if (historyTurns <= 0)
         {
             return;
         }
 
-        IReadOnlyList<TurnRecord> history = await repo.LoadHistoryAsync(saveId).ConfigureAwait(false);
+        IReadOnlyList<TurnRecord> history = await session
+            .RecentTurnsAsync(historyTurns)
+            .ConfigureAwait(false);
 
         if (history.Count == 0)
         {
@@ -693,37 +654,35 @@ internal static class PlaySession
     /// the point is that the player is told which version they started on rather than meeting
     /// the difference at turn thirty as an inexplicably broken world.
     /// </summary>
-    private static void WarnIfThePackHasMoved(WorldPack pack, string saveDirectory)
+    /// <summary>
+    /// Renders drift the opener detected. The comparison is policy and lives there; this is the
+    /// wording.
+    /// </summary>
+    private static void WarnThePackHasMoved(WorldPack pack, string versionAtStart)
     {
-        if (SaveOrigin.Read(saveDirectory) is not { } origin
-            || string.IsNullOrWhiteSpace(origin.PackVersion)
-            || string.IsNullOrWhiteSpace(pack.Version)
-            || string.Equals(origin.PackVersion, pack.Version, StringComparison.Ordinal))
-        {
-            return;
-        }
-
         Console.WriteLine();
         Console.WriteLine(
-            $"  note  this save was started against {pack.Name} v{origin.PackVersion}; " +
+            $"  note  this save was started against {pack.Name} v{versionAtStart}; " +
             $"the pack is now v{pack.Version}.");
         Console.WriteLine(
             "        content may have moved. Anything the pack no longer defines stays in your");
         Console.WriteLine("        world; nothing is removed.");
     }
 
-    private static void PrintBanner(
-        string logPath,
-        string saveRoot,
-        bool resumed,
-        int turnNumber,
-        int historyTurns,
-        WorldPack pack,
-        PromptLibrary prompts)
+    /// <summary>
+    /// The banner, rendered from the one object the opener hands back rather than from seven
+    /// arguments reassembled at the call site — which is how two clients end up disagreeing
+    /// about what a session is.
+    /// </summary>
+    private static void PrintBanner(SessionContext context)
     {
+        WorldPack pack = context.Pack;
+        PromptLibrary prompts = context.Prompts;
+        bool resumed = context.Resumed;
+
         Console.WriteLine();
         Console.WriteLine(resumed
-            ? $"StoryWeaver — play session (resumed at turn {turnNumber})"
+            ? $"StoryWeaver — play session (resumed at turn {context.TurnNumber})"
             : "StoryWeaver — play session (new world)");
         string version = string.IsNullOrWhiteSpace(pack.Version) ? "" : $" v{pack.Version}";
         string author = string.IsNullOrWhiteSpace(pack.Manifest?.Author)
@@ -733,18 +692,16 @@ internal static class PlaySession
         Console.WriteLine($"Pack       {pack.Name}{version}{author}");
         Console.WriteLine($"Prompts    {prompts.Directory}  [{prompts.Fingerprint}]");
         Console.WriteLine($"           {pack.Directory}");
-        Console.WriteLine($"Saving to  {saveRoot}");
-        Console.WriteLine($"Logging to {logPath}");
-        Console.WriteLine($"Narrator remembers the last {historyTurns} turns");
+        Console.WriteLine($"Saving to  {context.SaveRootDirectory}");
+        Console.WriteLine($"Logging to {context.LogPath}");
+        Console.WriteLine($"Narrator remembers the last {context.HistoryTurns} turns");
 
-        // Where the starting world came from. Only interesting on a new world, and worth
-        // saying then: a pack whose seed failed to be found silently falls back to the
-        // built-in fixture, and the two look identical from the opening scene.
+        // Where the starting world came from. Only interesting on a new world. There is no
+        // "or the built-in fixture" case any more — a pack with no seed is refused at open,
+        // rather than silently starting somebody in Marrow.
         if (!resumed)
         {
-            Console.WriteLine(pack.HasSeed
-                ? $"Seeded from {Path.Combine(pack.Directory, WorldPack.SeedFile)}"
-                : "Seeded from the built-in world (this pack ships no seed.json)");
+            Console.WriteLine($"Seeded from {Path.Combine(pack.Directory, WorldPack.SeedFile)}");
         }
 
         // Stated even when zero. "No lore loaded" is information; an absent line reads as a

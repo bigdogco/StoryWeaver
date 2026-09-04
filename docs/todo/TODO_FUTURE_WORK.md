@@ -780,12 +780,13 @@ single-writer guard; `PlaySession` renders and prompts. Two write paths: deltas 
 direct editing as a labelled hatch. See [`TODO_STORY_SESSION.md`](TODO_STORY_SESSION.md) and
 [`design/CANON_OWNERSHIP.md`](../design/CANON_OWNERSHIP.md).
 
-- [ ] **Session lifecycle — the next piece.** `RunAsync` still holds ~160 lines that are
-      decisions rather than rendering: take the lock, load pack and prompts, resume vs. fresh,
-      does the pack author the player, write the first save, write `save.json`, compare pack
-      versions, opening scene vs. recent turns. A window needs every one of them, and
-      `StorySession` deliberately takes the lock as a parameter so this question stays open
-      rather than being answered badly inside the ownership work.
+- [x] ~~**Session lifecycle.**~~ **Done 2026-09-04** — `StoryWeaver.App`, a new composition
+      layer, because opening a session needs Storage and Llm together and nothing could see
+      both. Two-phase so the one interactive step belongs to the client. Found and fixed two
+      bugs on the way: `ashfall` hanging forever on closed stdin, and `SaveLock` being unable to
+      see a second session in the same process — an assumption `StorySession` had quietly
+      invalidated. See [`TODO_SESSION_LIFECYCLE.md`](TODO_SESSION_LIFECYCLE.md).
+
 - [ ] **A second tier of delta kinds the model never sees.** `CANON_OWNERSHIP.md` §5, still
       undecided. The closed set protects model attention; a text box costs none, so
       `CharacterDescriptionChanged` and friends could exist in the applier and be absent from
