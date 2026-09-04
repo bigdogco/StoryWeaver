@@ -1,0 +1,10 @@
+# Line endings are LF everywhere — in the repository and in every working tree.
+# `eol=lf` pins checkout to LF regardless of platform (core.eol defaults to
+# "native", i.e. CRLF on Windows, which is why `text=auto` alone is not enough
+# here). Git still auto-detects binary files and leaves them untouched. Matches
+# .editorconfig (end_of_line = lf).
+#
+# History: added 2026-09-04 after a file move flipped CRLF->LF on CRLF files and
+# broke git's rename detection. With no policy the tree had drifted into a
+# CRLF/LF mix; this makes git normalize on commit so no tool can reintroduce it.
+* text=auto eol=lf
