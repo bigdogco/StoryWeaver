@@ -3,11 +3,11 @@
 A long-form text RPG driven by an LLM, built around one idea: **canon and narration are
 separate things.**
 
-> **Status: late bootstrap, playable.** The turn loop runs, worlds persist to disk and
-> resume, and the narrator remembers recent turns. What remains is a long play session to
-> see how it holds up over ~50 turns. See
-> [docs/todo/TODO_BOOTSTRAP.md](docs/todo/TODO_BOOTSTRAP.md) for exactly where things
-> stand.
+> **Status: Phase 2 — UI design.** Bootstrap and Phase 1 (the story layer) are complete.
+> The CLI is playable, packs define a story as well as a world, and a recorded 230-turn
+> session demonstrated persistent canon over long play. The client/backend separation is
+> complete; the next phase is graphical authoring and play. See
+> [docs/PROJECT.md](docs/PROJECT.md) for the standing decisions and phase goals.
 
 ## The idea
 
@@ -32,34 +32,55 @@ difference between an NPC who feels simulated and one who feels narrated.
 correct structured state deltas. The bootstrap phase existed to test that before anything
 was built on top.
 
-**It holds.** `deepseek-v3.2` scores 100% on the eval's eight scenarios across three
-independent sweeps, with nothing forbidden and nothing rejected, at roughly a hundredth of a
-cent per call. Caveats worth keeping in view: that is eight hand-written scenarios on one
-small world, and it required excluding one upstream provider that returned schema-valid
-nonsense. See [docs/CHALLENGES.md](docs/CHALLENGES.md).
+**It holds well enough to build on.** Bootstrap closed with a 51-turn play session: 209
+deltas applied, eight rejected, and no corruption or canon/history desync. A later 230-turn
+run maintained canon without an increasing rejection rate. These are recorded observations,
+not a guarantee of perfect extraction: omissions, duplicate entities and crowded narration
+context remain known limits. Model quality also varies by serving provider. See
+[docs/PROJECT.md](docs/PROJECT.md) and [docs/CHALLENGES.md](docs/CHALLENGES.md).
 
 ## Project layout
 
 | Project | Responsibility |
 |---|---|
-| `StoryWeaver.Core` | Domain model and turn loop. No UI, no HTTP, no storage dependencies. |
+| `StoryWeaver.Core` | Domain model, turn loop, validation, authoring and session ownership. No UI, HTTP or storage implementation dependencies. |
 | `StoryWeaver.Llm` | Provider abstraction, per-role model config, OpenRouter client. |
-| `StoryWeaver.Storage` | JSON implementation of Core's repository interface. |
-| `StoryWeaver.Cli` | Throwaway console harness. |
+| `StoryWeaver.Storage` | JSON canon/history persistence and authored pack loading. |
+| `StoryWeaver.App` | Composes packs, prompts, provider and persistence into a playable session; returns data rather than prompting or rendering. |
+| `StoryWeaver.Harness` | Extraction eval, offline self-tests, live API probes and shared fixtures. |
+| `StoryWeaver.Cli` | First UI client: collects input and renders play and eval results. |
 
-Dependencies point inward. `Core` references nothing.
+Dependencies point inward. `Core` references no other project. `App` opens sessions;
+`Core/StorySession` owns canon and guards operations that change it. Clients call those
+shared operations rather than implementing gameplay or authoring policy themselves.
+CLI/graphical feature parity is not required. The graphical client is not built yet.
 
 ## Stack
 
 - **.NET 8** (LTS)
-- **Avalonia** for the eventual UI — decided, not yet started
+- **Graphical UI:** Blazor (C# components with HTML/CSS), selected 2026-09-05 for a
+  standalone application, Windows desktop first. MAUI Blazor Hybrid is the proposed host.
 - **OpenRouter** for model access, configured **per role** (narration, extraction,
   summarize, worldgen) rather than per call site, since narration and extraction want very
-  different models
+  different models. Summarize and worldgen are reserved roles, not implemented features.
 - **JSON** storage, permanently — a save is meant to be opened and edited by the person
   playing it. Giving someone an item, fixing a character the model got wrong, adjusting a
   state: that is authorship, not cheating, and a database would hide the world from its
   owner. Diffable saves happen to also be the best debugging tool there is.
+
+## Packs and saves
+
+Authored content lives in `worlds/<pack-id>/`; a playthrough lives separately in
+`saves/<save-id>/`. A pack can define starting canon (`seed.json`), lore, character sheets,
+the player, a standing scenario, an opening passage, a manifest and narration prompt
+overrides. The opening leaves the recent-turn window; the scenario remains standing context.
+
+Saves contain editable JSON canon and a history log. The player owns canon and can correct
+it through authoring commands or by editing the file and explicitly reloading it. History
+records play; it is not the canon-editing surface.
+
+Phase 2 aims to make world creation, character and lore authoring, placement, play,
+save/resume and correction possible without a terminal.
 
 ## Getting started
 
@@ -76,7 +97,8 @@ Then play:
 
 ```powershell
 ./play.ps1                     # play; creates saves/marrow, resumes it next time
-./play.ps1 --selftest          # offline serialization checks, no API calls
+./play.ps1 --play --pack marrow --save marrow-second # separate playthrough
+./play.ps1 --selftest          # offline self-test suites, no API calls
 ./play.ps1 --eval --runs 7     # score extraction against the fixed scenarios
 ```
 
@@ -99,10 +121,22 @@ extraction response, `/quit` ends it. Applied, no-op, and **rejected** deltas pr
 every turn — a silently dropped delta is the failure that would otherwise take fifty turns
 to notice.
 
-Everything except `--selftest` spends real credits, which is why they are flags.
-`--probe-schema` checks that your extraction model can emit the nine-branch delta union
+Play, extraction retries, narration rerolls, `--eval`, `--smoke` and `--probe-schema`
+make paid API calls. Startup configuration display and `--selftest` do not.
+`--probe-schema` checks that your extraction model can emit the current delta union
 under `strict: true`; `--eval` is the real test and is **worth re-running whenever you
 change the extraction model, the prompt, or anything either depends on.**
+
+Use `/retry` to extract the last turn again without rewriting its prose. `/reroll` asks
+for new narration, but is refused if that turn already applied canon changes. `/place`,
+`/character`, `/fact`, `/rename` and `/knows` author canon through validated deltas;
+`/edit` handles direct corrections the delta set cannot express and reports structural
+warnings afterwards. `/help` lists the commands.
+
+After editing `canon.json` externally, use `/reload` (the future UI's **Update State**)
+before taking another turn. Make external edits while the session is idle: an in-flight
+turn can overwrite file edits before a reload can read them. Sessions refuse competing
+write operations and opening a save already held by another live session.
 
 ## A warning worth reading before you configure anything
 
@@ -133,17 +167,19 @@ Those and several other sharp edges — including reasoning tokens silently eati
 
 ## Documentation
 
+- [docs/PROJECT.md](docs/PROJECT.md) — standing reference: layers, decisions and phases.
 - [docs/CHALLENGES.md](docs/CHALLENGES.md) — known risks, gotchas, and what has been ruled
   out. The most useful file in the repo.
-- [docs/todo/TODO_BOOTSTRAP.md](docs/todo/TODO_BOOTSTRAP.md) — the current plan and its
-  decisions.
+- [docs/todo/TODO_BOOTSTRAP.md](docs/todo/TODO_BOOTSTRAP.md) — historical bootstrap work
+  and measurements.
 - [docs/todo/TODO_FUTURE_WORK.md](docs/todo/TODO_FUTURE_WORK.md) — deferred ideas.
+- [docs/design/](docs/design/) — the reasoning behind individual designs.
 - [docs/devlog/](docs/devlog/) — a dated entry per commit, including the wrong turns.
 
 ## Testing
 
 Manual, by design at this stage. `dotnet build` is the only automated check, and
-`./play.ps1 --selftest` runs the offline serialization checks without touching the API.
+`./play.ps1 --selftest` explicitly runs the Harness's offline suites without touching the API.
 
 The real quality gate is `./play.ps1 --eval` — fixed scenarios scored as *required* and
 *forbidden* rules rather than exact matches, run N times per model, with the cross-run spread

@@ -22,8 +22,12 @@ a reason. Nothing is left stranded in a finished doc.
 These were cut from the bootstrap phase deliberately — bootstrap exists to answer "is the
 extraction pass reliable?", and none of these help answer it.
 
-- [ ] **Avalonia UI** — **[Phase 2]**, and now the whole of that phase rather than a line
-      item. Core must stay UI-agnostic so this stays a top-layer addition.
+- [ ] **Blazor UI** — **[Phase 2]**. Selected 2026-09-05, replacing Avalonia at the
+      player's request. Standalone application; no external browser required.
+      Windows desktop first, selected by the player. MAUI Blazor Hybrid is the proposed
+      Windows host. Settle the host, then design and implement
+      the authoring and play workflows. Keep host-specific services outside shared
+      Blazor components, and gameplay/authoring policy in the backend.
 - [ ] **Streaming narration** — not implemented, but `ILlmClient` is shaped so the
       incremental form is the primitive and the whole-string call wraps it. Adding real
       streaming should then be a rendering change, not an architecture change. **[Phase 2]** —
@@ -454,7 +458,7 @@ Small things the incumbents mostly don't do, cheap to add once the foundations e
       changing it leaves the history permanently mixed and the model reads that history
       back.
 
-      Revisit once Avalonia can actually style it: italic action spans, coloured or
+      Revisit once the graphical client can actually style it: italic action spans, coloured or
       attributed dialogue, NPC name emphasis. In a console, markup renders as literal
       asterisks, which is strictly worse than none.
 
@@ -514,7 +518,7 @@ Small things the incumbents mostly don't do, cheap to add once the foundations e
 
 ## The extraction eval
 
-`--eval` (scenarios in [EvalScenarios](../../src/StoryWeaver.Cli/EvalScenarios.cs)) is now
+`--eval` (scenarios in [EvalScenarios](../../src/StoryWeaver.Harness/EvalScenarios.cs)) is now
 the way any extraction change is judged. It earned its keep repeatedly — it killed a
 two-call redesign built on a movement failure that turned out to be noise, and it caught
 three response-shape bugs that all presented as "the model is bad".
@@ -601,7 +605,7 @@ boxes for weeks, which is where a rule goes to be forgotten.
       Design considerations, so this is not restarted from zero later:
 
       - **Scenarios are the hard part, not the runner.** Today's scenarios
-        ([EvalScenarios](../../src/StoryWeaver.Cli/EvalScenarios.cs)) are hand-written against
+        ([EvalScenarios](../../src/StoryWeaver.Harness/EvalScenarios.cs)) are hand-written against
         the one Marrow seed. A user's world is different, so a shipped version needs one of:
         curated genre-agnostic scenarios that travel; a way to *capture* scenarios from real
         play (a turn the user marks "extraction got this wrong/right" becomes a case — pairs
@@ -704,9 +708,9 @@ built.
 - [x] ~~**Opening message**, and the loader check that every name in it exists in the seed.~~
       **Built 2026-08-16** — see `TODO_OPENING_MESSAGE.md`. The check is a warning rather than a
       refusal, and was measured for noise on three real packs before being kept.
-- [ ] **Per-pack narration prompt overrides.** *(TODO_WORLD_PACKS)* — narration yes,
-      extraction no; that split was already settled in the design. Overlaps with "Prompts as
-      editable files" above, which is the general form.
+- [x] **Per-pack narration prompt overrides.** **Built 2026-08-16** — see
+      [TODO_PROMPTS_AS_FILES.md](TODO_PROMPTS_AS_FILES.md). The pack adds narration
+      voice; engine rules remain, and extraction cannot be overridden by a pack.
 
 ### Narration eval — deferred 2026-08-16, and not by omission
 
@@ -845,10 +849,14 @@ express. The CLI is the first client, not the API.
 - [ ] **Record narration's provider.** Needs `INarrator` to return more than a string. Worth
       doing the day a narration eval exists and prose has a score to attribute — not before.
       *(TODO_PLAY_51_FIXES)*
-- [ ] **Pack root as an explicit parameter, not the working directory.** Still a constant
-      (`PlaySession.PackRoot`). *(TODO_WORLD_PACKS)*
+- [x] **Pack root as an explicit parameter.** **Built 2026-09-04** —
+      `SessionOpener.OpenAsync` accepts `packRoot` and `saveRoot`; see
+      [TODO_SESSION_LIFECYCLE.md](TODO_SESSION_LIFECYCLE.md). Choosing suitable
+      desktop paths remains separate from exposing the backend parameters.
 - [ ] **`saves/` root configured rather than cwd-relative.** The reason `play.ps1` forces the
-      cwd and harness testing needs a temp directory. *(TODO_WORLD_PACKS)*
+      cwd and harness testing needs a temp directory. `SessionOpener` now accepts an
+      explicit root, but its default remains relative. Desktop path selection is
+      still to design. *(TODO_WORLD_PACKS)*
 - [ ] **Region- or world-level status.** Two facts out of eleven in one `ashfall` session
       wanted a condition wider than a room. **Carrying its threshold, not its hunch: build when
       it reproduces in a scenario *and* appears in a third session.** This is the exact
@@ -910,12 +918,14 @@ Observed and deliberately not chased. See `devlog/2026-08-13_a-world-with-no-exi
       every hand-made test and was empty in every real world, because only seeds wrote it.
       Anything else with that shape has the same latent bug.
 
-- [ ] **Character creation spins forever on closed stdin.** Found 2026-08-14 while testing the
+- [x] **Character creation spins forever on closed stdin.** **Fixed 2026-09-04** —
+      see [TODO_SESSION_LIFECYCLE.md](TODO_SESSION_LIFECYCLE.md). EOF now abandons
+      creation and releases the pending session's save lock. Original finding:
+      found 2026-08-14 while testing the
       save lock: a pack with no `player.md` prompts for a name, and with stdin at EOF
       `Console.ReadLine()` returns null immediately and the loop reprints *"A name is required"*
       without end. Harmless interactively, and a hang for any agent-driven or piped run against
-      a blank-slate pack — which is now a normal way this project is exercised. Wants an EOF
-      check that exits with a message rather than looping.
+      a blank-slate pack — a normal way this project is exercised.
 
 ---
 
@@ -942,3 +952,10 @@ The run that closed the 200-turn measurement. See
       constantly. No longer worth re-testing — the mechanism is understood (mood is visible in
       one scene, standing is the integral of many) and the answer is a reconciliation pass, not
       a prompt.
+
+## From Phase 2 onboarding — 2026-09-05
+
+- [x] **Reconcile current documentation with the completed client separation.**
+      **Completed 2026-09-05.** README and PROJECT.md Phase 2 refreshed; prompt
+      overrides, closed-stdin handling and pack-root parameter entries reconciled.
+      Dated historical evidence retained. See CHALLENGES.md and TODO_UI_DESIGN_DOCS_.md.

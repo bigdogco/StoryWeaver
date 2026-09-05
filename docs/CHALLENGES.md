@@ -7,6 +7,25 @@ ones that turn out to be non-issues, with the resolution noted.
 
 ## Open
 
+### Entry-point documentation lagged the Phase 2 boundary — resolved 2026-09-05
+
+Found 2026-09-05 during onboarding. README.md still describes late bootstrap,
+a pending 50-turn session and four projects, omitting App and Harness.
+PROJECT.md records the completed 230-turn measurement and session ownership in
+its layer table, but the Phase 2 closing paragraph still calls StorySession
+proposed and canon CLI-owned. These are stale summaries, not unfinished engine work.
+
+**Resolved 2026-09-05.** README and PROJECT.md Phase 2 corrected, and the identified
+stale queue entries reconciled against the completed task docs and SessionOpener.
+See `todo/TODO_UI_DESIGN_DOCS_.md`. Retained here as a documentation-maintenance lesson.
+
+TODO_FUTURE_WORK.md also retained older unchecked entries for per-pack narration
+prompt overrides and the closed-stdin character-creation hang alongside later
+completion records. Those now link to their completed tasks. The pack-root parameter
+entry was stale as well: App already exposes it, while desktop path selection remains
+open. Preserve dated historical evidence, but update current status and cross-links
+when a prerequisite is completed so the queue does not send a new client backwards.
+
 ### A turn holds canon for 20–60 seconds — guarded 2026-09-04, with one limit left
 
 **Severity: was High and entirely latent.** Identified 2026-09-04 while designing the windowed

@@ -2,6 +2,7 @@
 
 **Status:** approved 2026-08-13
 **Created:** 2026-08-13
+**Latest decision update:** 2026-09-05 — Blazor UI, standalone, Windows desktop first
 
 The standing reference for what this project is and where it is going. Written after three
 weeks of post-bootstrap work in which every task was chosen by whatever the last play
@@ -53,7 +54,7 @@ beneath it and is what a client talks to.
 | **Cli** | play UI: the dispatcher, the turn loop, `/edit`, authoring prompts, and the eval *renderer* | Throwaway by design, and **client one of two** — it renders and prompts; `StorySession` owns canon. Now genuinely thin: the instrumentation moved to Harness 2026-09-04 when the Cli was held to the UI rules, so the old "two-thirds eval scaffolding" is gone. 1,813 lines, ~214 of them the eval renderer — client-side by right, since the Harness scores and the CLI draws. |
 | **App** | composition: opening a session out of pack, prompts, provider and save | New 2026-09-04. Exists because opening needs Storage *and* Llm, and Core references neither — no other project could see both. Renders nothing, asks nothing. |
 | **Harness** | instrumentation: the extraction eval, the self-test suites, the live API probes, and the shared world fixture | New 2026-09-04. Everything that measures the engine rather than plays it, pulled out of the Cli because a client — thin by rule — cannot own the benchmark. References Core + Llm + Storage + App (it tests all of them). The eval is UI-bound and returns a structured `EvalReport` a client renders; the self-tests and probes are dev-only and print directly. `ResponseSelfTest` stays in Llm, with the internal wire types it checks. |
-| **UI** | not built | Avalonia, decided, not started. See Phase 2. |
+| **UI** | not built | Blazor, selected 2026-09-05 for a standalone application, Windows desktop first. MAUI Blazor Hybrid is the proposed host. See Phase 2. |
 | **Plugins** | not built, not designed | See Phase 3. |
 
 **What the base game is** (decided 2026-08-13): the narrator, and the canon it maintains —
@@ -154,7 +155,21 @@ Two consequences to design for, not to solve here:
 **Stack**
 
 C# / .NET 8 · OpenRouter, per-role models · JSON behind `IWorldRepository`, permanently ·
-Avalonia for UI · secrets in env vars or gitignored `*.local.json` only.
+Blazor for UI · secrets in env vars or gitignored `*.local.json` only.
+
+**UI framework changed 2026-09-05, at the player's request.** Blazor replaces the
+earlier Avalonia choice. The application must launch in its own desktop window without
+requiring an external browser. Blazor supplies reusable C# components with HTML/CSS;
+a desktop host supplies the window and embedded webview. Selecting Blazor does not
+select MAUI or Photino. The player subsequently selected **Windows desktop first**;
+MAUI Blazor Hybrid is the proposed Windows host, not yet an approved implementation
+design. Other platforms remain possible future targets without a support commitment.
+
+The thin-client rule still applies. Presentation owns forms, layout and interaction;
+App composes sessions and Core owns gameplay and canon. Replacing Blazor later should
+preserve the engine and save format, but still entails rebuilding screens and their
+interactions. Replacing only the desktop host should allow the Blazor components to
+remain, provided host-specific services stay outside them.
 
 ---
 
@@ -245,9 +260,17 @@ So it is deferred, and it should be sequenced against something that actually ne
 where *"did the narration contradict the roll?"* is the first objectively checkable property of
 prose.
 
-### Phase 2 — Avalonia UI — **next**
+### Phase 2 — Blazor UI — **current: design**
 
 > Can someone who did not write the engine author a pack and play it, without the CLI?
+
+**Starting point for design (2026-09-05).** Blazor and Windows desktop first are
+selected; MAUI Blazor Hybrid remains the proposed host. No UI project exists yet.
+Design must distinguish editing a reusable pack from editing a running save and
+cover both authoring and play. The first questions are the workflows and screen
+layout, then host integration, session lifetime and in-progress/failure feedback.
+The repository currently targets .NET 8; the UI host's SDK/runtime requirements
+and any resulting upgrade are implementation decisions still to make.
 
 **The pack format is now settled**, which is what Phase 1 was for: seed, lore, sheets,
 scenario, opening, manifest, prompts. An editor built now is built once.
@@ -285,12 +308,12 @@ same function.
 **Done when:** create a world, author characters and lore, place them, play, save, resume,
 and correct any of it after the fact — all without touching a terminal.
 
-**The design that has to land first:** [`design/CANON_OWNERSHIP.md`](design/CANON_OWNERSHIP.md).
-Canon is currently owned by a local variable in `PlaySession`, which contradicts the thin-layer
-rule on the *object* rather than on the rules, and leaves a 20–60 second window in every turn
-that nothing guards. **Decided there:** deltas are how canon changes; direct authoring is a
-labelled escape hatch for what the delta set cannot express. **Proposed there:** a `StorySession`
-in Core owning canon behind a single-writer guard.
+**Session ownership prerequisite completed 2026-09-04:**
+[`design/CANON_OWNERSHIP.md`](design/CANON_OWNERSHIP.md). `StorySession` in Core owns
+canon behind a single-writer guard; App composes and opens sessions. Deltas are the
+ordinary write path, with direct authoring as a labelled escape hatch for what the
+delta set cannot express. UI edits must use the session's operations rather than
+mutating its exposed world graph through bindings.
 
 ### Phase 3 — plugins
 
