@@ -969,11 +969,16 @@ The run that closed the 200-turn measurement. See
       MAUI Blazor Hybrid scaffold commit from the current branch, and current
       docs now record the UI framework and host as undecided again.
 
-- [ ] **Continue the Uno Platform spike on Windows.**
-      Started 2026-09-06 on branch `uno_spike`. Windows build and launch smoke
-      pass; next prove the actual StoryWeaver workflow shape by wiring a small,
-      read-only backend surface into the shell. Track completed setup details in
-      TODO_UNO_SPIKE_.md.
+- [x] **Continue the Uno Platform spike on Windows.**
+      **Completed 2026-09-06.** The Uno shell now renders real read-only
+      `worlds/marrow` pack seed data through `StoryWeaver.Storage`, without
+      opening a save, starting a turn, creating an LLM client, or writing canon.
+      See TODO_UNO_WINDOWS_SPIKE_.md.
+- [ ] **Open a real session context in the Uno shell.**
+      Next Windows spike: use `SessionOpener.OpenAsync` to render a session
+      opening/refusal/needs-player state, while still not running a turn. This is
+      the first check that the UI can use the same App composition path as the
+      CLI without taking ownership of gameplay logic.
 - [ ] **Verify Uno desktop GUI launch on Linux later.** Parked 2026-09-06 while
       the local Linux environment is repaired. The `net9.0-desktop` Skia target
       is intended for Linux, and an earlier WSL build passed before the .NET 9

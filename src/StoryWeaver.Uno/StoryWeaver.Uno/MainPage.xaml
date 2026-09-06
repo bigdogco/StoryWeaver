@@ -19,7 +19,7 @@
       <TextBlock Text="StoryWeaver Uno Spike"
                  FontSize="22"
                  FontWeight="SemiBold" />
-      <TextBlock Text="Desktop Skia shell for Windows, Linux and macOS. Static UI only; gameplay stays behind StoryWeaver.App and Core."
+      <TextBlock Text="Desktop Skia shell for Windows. Read-only pack data comes from StoryWeaver.Storage; gameplay stays behind StoryWeaver.App and Core."
                  Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
     </StackPanel>
 
@@ -35,16 +35,18 @@
           <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <TextBlock Text="Narration"
+        <TextBlock x:Name="NarrationHeading"
+                   Text="Opening"
                    FontSize="16"
                    FontWeight="SemiBold" />
 
         <ScrollViewer Grid.Row="1">
           <StackPanel Spacing="14">
-            <TextBlock TextWrapping="Wrap"
-                       Text="Rain needles the market awnings as Hald watches the alley mouth. The brass key in your palm is warm from being held too tightly." />
-            <TextBlock TextWrapping="Wrap"
-                       Text="Mabb lowers her voice. &quot;If the lock answers to that, the cellar was never sealed for wine.&quot;" />
+            <TextBlock x:Name="OpeningText"
+                       TextWrapping="Wrap" />
+            <TextBlock x:Name="ScenarioText"
+                       TextWrapping="Wrap"
+                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
           </StackPanel>
         </ScrollViewer>
 
@@ -89,39 +91,14 @@
         </StackPanel>
 
         <ScrollViewer Grid.Row="2">
-          <StackPanel Spacing="10">
-            <Border BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}"
-                    BorderThickness="1"
-                    CornerRadius="4"
-                    Padding="10">
-              <StackPanel Spacing="3">
-                <TextBlock Text="Player"
-                           FontWeight="SemiBold" />
-                <TextBlock Text="Location: Marrow Market"
-                           TextWrapping="Wrap" />
-                <TextBlock Text="Knows: cellar key, Shurus cult"
-                           TextWrapping="Wrap" />
-              </StackPanel>
-            </Border>
-
-            <Border BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}"
-                    BorderThickness="1"
-                    CornerRadius="4"
-                    Padding="10">
-              <StackPanel Spacing="3">
-                <TextBlock Text="Marrow Market"
-                           FontWeight="SemiBold" />
-                <TextBlock Text="Connections: tavern, alley, old cellar"
-                           TextWrapping="Wrap" />
-              </StackPanel>
-            </Border>
-          </StackPanel>
+          <StackPanel x:Name="ExplorerItems" Spacing="10" />
         </ScrollViewer>
 
         <StackPanel Grid.Row="3" Spacing="4">
           <TextBlock Text="Spike status"
                      FontWeight="SemiBold" />
-          <TextBlock Text="Builds as Uno Skia Desktop. Linux support still needs a Linux machine or CI check."
+          <TextBlock x:Name="SpikeStatusText"
+                     Text="Loading pack data..."
                      TextWrapping="Wrap"
                      Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
         </StackPanel>

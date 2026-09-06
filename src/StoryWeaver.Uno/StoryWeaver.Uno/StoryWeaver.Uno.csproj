@@ -27,4 +27,8 @@
     </UnoFeatures>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\StoryWeaver.Storage\StoryWeaver.Storage.csproj" />
+  </ItemGroup>
+
 </Project>
