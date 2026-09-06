@@ -7,6 +7,54 @@ ones that turn out to be non-issues, with the resolution noted.
 
 ## Open
 
+### A companion narrated beside the player is not moved in canon
+
+**Severity: Medium.** Found 2026-09-06 in the `uno-spike` save, while looking at the UI. One
+sighting; logged with a threshold, not fixed.
+
+The player crossed between Marrow Square and the Drowned Crow several times. Mona — a King's
+Investigator travelling with them, at standing 100 — was narrated at the player's side in the
+tavern on turns 3 and 5, but every one of those turns extracted only `player_moved`. Canon left
+her in the square she was seeded in; the prose had her in the tavern. The two disagree, and the
+UI faithfully showed canon (Mona in the square) while the story the player read had her beside
+them.
+
+```
+save turn 3   narration: "Mona ... standing near the hearth" (in the tavern)
+save turn 5   narration: "Mona sits at a corner table near the hearth"
+              extraction (both turns): player_moved only — no character_moved for Mona
+canon.json    inspector-mona.locationId = "marrow-square"   (player in marrow-tavern)
+```
+
+**It is an omission, the hardest class** — nothing detects a delta that was never emitted (see
+*Extraction reliability* below). The schema was never the problem: `character_moved` exists and
+the applier even derives the connection edge. The narrator was not misbehaving either. It was
+handed a correct `## Present` roster that did not list Mona, and improvised a companion who
+should follow — the right instinct with nowhere to record it. Nothing in `narration.md` speaks
+to who is in the scene, and nothing in `extraction.md` tells the extractor that a character the
+prose has plainly relocated is a `character_moved` to report.
+
+**Why the fix belongs in extraction, not a deterministic follow.** Whether a companion follows
+is a *choice*, visible only in the prose — she could have been told to wait. That rules out an
+apply-time derivation like `Connect` (which is sound only because walking A→B *proves* A connects
+to B). The narration is the authority on whether she came along, so canon must learn it from the
+prose the sanctioned way: an extraction-reconciliation rule — *a character already in canon,
+shown present with the player somewhere canon does not place them, has moved there* — riding on
+the existing "where do they END the turn / present vs merely mentioned" discipline so it does not
+fire on someone spoken about. A light `narration.md` clarification (established companions may
+accompany the player; a character shown in a scene is really there) keeps the two roles agreeing.
+
+**Held behind the threshold.** Per PROJECT.md §3, no prompt change ships until it reproduces in
+a scenario **and** appears in a second live session. The reproduction now exists —
+`companion-follows` in `EvalScenarios.Diagnostics`, seeded by `WorldSeeds.Marrow_WithCompanion`
+(player and Mona together in the square; the prose walks them both to the tavern; scored on Mona
+ending the turn there). Run it before touching the prompts. See
+[`todo/TODO_COMPANION_FOLLOW_.md`](todo/TODO_COMPANION_FOLLOW_.md).
+
+**Detection, meanwhile:** an NPC whose `LocationId` disagrees with where recent narration keeps
+placing them, and whose `lastSeenTurn` lags the turns they visibly appear in. Cheap to check in
+any save with a companion.
+
 ### Entry-point documentation lagged the Phase 2 boundary — resolved 2026-09-05
 
 Found 2026-09-05 during onboarding. README.md still describes late bootstrap,

@@ -146,6 +146,47 @@ public static class WorldSeeds
     }
 
     /// <summary>
+    /// Marrow with the player and a devoted companion standing together in the square, one
+    /// move away from the tavern.
+    ///
+    /// Reproduces the uno-spike save finding (2026-09-06): the player walks back and forth
+    /// between the square and the Drowned Crow, the narrator keeps Mona — a companion at
+    /// standing 100 — beside them the whole way, and extraction emits only <c>player_moved</c>.
+    /// Canon leaves her stranded in the room the player left while the prose has her present in
+    /// the one they entered.
+    ///
+    /// <b>Both start in the square, not the tavern.</b> The failure is a companion who does not
+    /// follow a player *move*, so the fixture has to put a move under test: player and companion
+    /// together, then the player crosses to the tavern in the narration. Seeding her already in
+    /// the tavern would test whether she is spuriously moved out, which is the opposite bug.
+    ///
+    /// Mona is added to the cast for this seed only, matching the save exactly, so the failure
+    /// reads as the one that was actually observed rather than an abstraction of it.
+    /// </summary>
+    public static WorldState Marrow_WithCompanion()
+    {
+        WorldState world = Marrow();
+
+        world.Characters[Character.PlayerId].LocationId = "marrow-square";
+
+        world.Characters["inspector-mona"] = new Character
+        {
+            Id = "inspector-mona",
+            Name = "Mona",
+            Description =
+                "A King's Investigator travelling with the player. Short, stocky and quick, " +
+                "blond hair and green eyes, one hand forever drifting to the hilt of the short " +
+                "sword on her belt. Sarcastic, direct, and loyal.",
+            LocationId = "marrow-square",
+            Status = "normal",
+            Mood = "neutral",
+            RelationshipToPlayer = new Relationship(100, "a devoted companion"),
+        };
+
+        return world;
+    }
+
+    /// <summary>
     /// Marrow with a plan already in canon naming one of two objects.
     ///
     /// Written after <c>wrong-object-acted-on</c> failed to reproduce a real play failure. In

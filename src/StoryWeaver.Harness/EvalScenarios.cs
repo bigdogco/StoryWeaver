@@ -113,6 +113,7 @@ public static class EvalScenarios
     [
         PlayerPlace,
         PlayerAbsentCharacter,
+        CompanionFollows,
         NarratorMention,
         PlayerArrivalLarge,
         TwoStageEntryLarge,
@@ -1201,6 +1202,74 @@ public static class EvalScenarios
             new("a known character re-introduced",
                 d => d is CharacterIntroduced { CharacterId: Hald or "drinker-mabb" or Character.PlayerId }),
             new("any location introduced", d => d is LocationIntroduced),
+        ]);
+
+    /// <summary>
+    /// <b>Diagnostic — reproduces the uno-spike save finding, 2026-09-06.</b> A companion the
+    /// prose keeps beside the player is not moved in canon.
+    ///
+    /// In that save the player crossed between Marrow Square and the Drowned Crow several times.
+    /// Mona — a King's Investigator travelling with them, at standing 100 — was narrated at the
+    /// player's side in the tavern on turns 3 and 5, while extraction emitted only
+    /// <c>player_moved</c>. Canon left her in the square she had been seeded in; the story had
+    /// her in the tavern. The <c>## Present</c> roster the narrator was handed was correct and
+    /// did not list her, so the narrator was improvising a companion who should follow — the
+    /// right instinct, with no delta to record it and no rule telling extraction to.
+    ///
+    /// <b>The mirror of <see cref="PlayerAbsentCharacter"/>, and the pair is the whole point.</b>
+    /// There, moving an absent person into the scene is the failure; here, <i>not</i> moving a
+    /// present one is. The dividing line is the same one that runs through
+    /// <see cref="NarratorMention"/> and <see cref="Atmosphere"/> — presence. Someone merely
+    /// spoken about stays where they are; someone shown travelling with the player has moved.
+    ///
+    /// <b>Whether a companion follows is a choice, visible only in the prose</b> — she could
+    /// have been told to wait — so this cannot be an apply-time derivation like
+    /// <c>Connect</c>. The narration is the authority on whether she came along, which puts the
+    /// fix in extraction. This scenario measures whether the model reconciles a companion the
+    /// prose has plainly relocated; today it is expected to fail, leaving her behind.
+    ///
+    /// <b>Scored on the outcome, not the delta.</b> What matters is where she ends the turn,
+    /// not which delta got her there — the movement lesson from <see cref="PlayerArrival"/> and
+    /// <see cref="TwoStageEntry"/>. The forbidden rules target the two workarounds a model
+    /// reaches for when it will not emit <c>character_moved</c>: a second copy of her, or a
+    /// fresh character where one already exists.
+    /// </summary>
+    private static EvalScenario CompanionFollows => new(
+        "companion-follows",
+        "*Come on, Mona. We'll get nothing more standing over a boarded well.* *I turn back for the Drowned Crow.*",
+        """
+        The square gives up its cold reluctantly as you turn for the tavern, and Mona falls into
+        step at your shoulder, one thumb hooked over the worn hilt of her short sword. "About
+        time," she mutters. "I've counted every plank on that well twice, and it hasn't confessed
+        to anything yet."
+
+        You push back through the heavy door of the Drowned Crow together. The peat smoke closes
+        over you, sour and warm after the marsh air, and the low murmur of the taproom dips as
+        the locals mark two strangers instead of one. Behind the counter, Hald's rag goes still.
+
+        Mona drops onto the bench beside you, her back to the wall and her green eyes already
+        moving over the room. "Well then," she says, pitched for you and not for him. "Which of
+        these cheerful souls do we lean on first?"
+        """,
+        Required: [],
+        Forbidden:
+        [
+            new("Mona introduced as a new character (she already exists)",
+                d => d is CharacterIntroduced),
+            new("Mona re-introduced under her own id",
+                d => d is CharacterIntroduced { CharacterId: "inspector-mona" }),
+        ],
+        Seed: WorldSeeds.Marrow_WithCompanion,
+        Expected:
+        [
+            // Positive control: the player's own move is the easy half and fires reliably.
+            new("the player ends the turn in the tavern",
+                w => w.PlayerLocationId == "marrow-tavern"),
+
+            // The reproduction target. With today's behaviour extraction reports only the
+            // player's move and Mona is left stranded in the square the prose walked her out of.
+            new("Mona ends the turn in the tavern with the player",
+                w => w.FindCharacter("inspector-mona")?.LocationId == "marrow-tavern"),
         ]);
 
     // PlayerClaim is retired, not deleted. It encoded the decision that a player's assertion
