@@ -985,10 +985,18 @@ The run that closed the 200-turn measurement. See
       `characters/player.md`; the Uno shell currently reports that state but
       cannot complete it. Build the dialog before using Uno with a blank-player
       pack.
-- [ ] **Shape the first durable play layout for Uno.**
-      The spike proves the backend path. Next UI work should decide the actual
-      play screen: transcript behavior, command affordances, state/prose panels,
-      busy/failure feedback, and where Update State belongs.
+- [x] **Shape the first durable play layout for Uno.**
+      **Completed 2026-09-06.** The Windows Uno shell now has an app/session
+      header, status pill, main transcript pane, bottom command bar and scene
+      side rail. See TODO_UNO_PLAY_LAYOUT_.md.
+- [ ] **Add a real transcript mode to the Uno play screen.**
+      State and Prose currently replace the opening text. The next refinement is
+      a deliberate view model for modes: transcript, extractor state and
+      narrator prose, with a way back to the active transcript after debugging.
+- [ ] **Add busy and failure styling to the Uno play screen.**
+      The status pill text changes, but it is not visually distinct yet. Decide
+      the restrained color/shape language for ready, thinking, refused, failed,
+      check-turn and check-canon states.
 - [ ] **Verify Uno desktop GUI launch on Linux later.** Parked 2026-09-06 while
       the local Linux environment is repaired. The `net9.0-desktop` Skia target
       is intended for Linux, and an earlier WSL build passed before the .NET 9

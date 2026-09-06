@@ -11,38 +11,80 @@
       <RowDefinition Height="Auto" />
     </Grid.RowDefinitions>
     <Grid.ColumnDefinitions>
-      <ColumnDefinition Width="2*" />
-      <ColumnDefinition Width="420" />
+      <ColumnDefinition Width="3*" />
+      <ColumnDefinition Width="380" />
     </Grid.ColumnDefinitions>
 
-    <StackPanel Grid.ColumnSpan="2" Spacing="4">
-      <TextBlock Text="StoryWeaver Uno Spike"
-                 FontSize="22"
-                 FontWeight="SemiBold" />
-      <TextBlock x:Name="HeaderDetailText"
-                 Text="Desktop Skia shell for Windows. Sessions open through StoryWeaver.App; gameplay stays behind Core."
-                 Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-    </StackPanel>
+    <Grid Grid.ColumnSpan="2" ColumnSpacing="12">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="Auto" />
+      </Grid.ColumnDefinitions>
+
+      <StackPanel Spacing="2">
+        <TextBlock Text="StoryWeaver"
+                   FontSize="24"
+                   FontWeight="SemiBold" />
+        <TextBlock x:Name="HeaderDetailText"
+                   Text="Opening session..."
+                   TextWrapping="Wrap"
+                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+      </StackPanel>
+
+      <Border Grid.Column="1"
+              BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}"
+              BorderThickness="1"
+              CornerRadius="6"
+              Padding="10,6"
+              VerticalAlignment="Center">
+        <TextBlock x:Name="StatusPillText"
+                   Text="Starting"
+                   FontWeight="SemiBold" />
+      </Border>
+    </Grid>
 
     <Border Grid.Row="1"
             BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}"
             BorderThickness="1"
             CornerRadius="6"
             Padding="16">
-      <Grid RowSpacing="14">
+      <Grid RowSpacing="12">
         <Grid.RowDefinitions>
           <RowDefinition Height="Auto" />
           <RowDefinition Height="*" />
-          <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <TextBlock x:Name="NarrationHeading"
-                   Text="Opening session..."
-                   FontSize="16"
-                   FontWeight="SemiBold" />
+        <Grid ColumnSpacing="12">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+          </Grid.ColumnDefinitions>
+          <StackPanel Spacing="2">
+            <TextBlock x:Name="NarrationHeading"
+                       Text="Opening session..."
+                       FontSize="18"
+                       FontWeight="SemiBold" />
+            <TextBlock x:Name="TurnText"
+                       Text="Turn --"
+                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+          </StackPanel>
+          <StackPanel Grid.Column="1"
+                      Orientation="Horizontal"
+                      Spacing="8"
+                      VerticalAlignment="Top">
+            <Button x:Name="StateButton"
+                    Content="State"
+                    Click="StateButton_Click"
+                    IsEnabled="False" />
+            <Button x:Name="ProseButton"
+                    Content="Prose"
+                    Click="ProseButton_Click"
+                    IsEnabled="False" />
+          </StackPanel>
+        </Grid>
 
         <ScrollViewer Grid.Row="1">
-          <StackPanel x:Name="StoryItems" Spacing="14">
+          <StackPanel x:Name="StoryItems" Spacing="12">
             <TextBlock x:Name="OpeningText"
                        TextWrapping="Wrap" />
             <TextBlock x:Name="ScenarioText"
@@ -50,24 +92,6 @@
                        Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
           </StackPanel>
         </ScrollViewer>
-
-        <Grid Grid.Row="2" ColumnSpacing="8">
-          <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="Auto" />
-          </Grid.ColumnDefinitions>
-          <TextBox x:Name="PlayerInputBox"
-                   Header="Player action"
-                   PlaceholderText="Type an action for the next turn"
-                   IsEnabled="False"
-                   KeyDown="PlayerInputBox_KeyDown" />
-          <Button Grid.Column="1"
-                  x:Name="SendButton"
-                  Content="Send"
-                  IsEnabled="False"
-                  Click="SendButton_Click"
-                  VerticalAlignment="Bottom" />
-        </Grid>
       </Grid>
     </Border>
 
@@ -85,23 +109,21 @@
           <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <TextBlock x:Name="ExplorerHeading"
-                   Text="Session"
-                   FontSize="16"
-                   FontWeight="SemiBold" />
+        <StackPanel Spacing="2">
+          <TextBlock x:Name="ExplorerHeading"
+                     Text="Scene"
+                     FontSize="18"
+                     FontWeight="SemiBold" />
+          <TextBlock x:Name="SaveText"
+                     Text="Save --"
+                     TextWrapping="Wrap"
+                     Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+        </StackPanel>
 
         <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="8">
           <Button x:Name="RefreshButton"
                   Content="Refresh"
                   Click="RefreshButton_Click"
-                  IsEnabled="False" />
-          <Button x:Name="StateButton"
-                  Content="State"
-                  Click="StateButton_Click"
-                  IsEnabled="False" />
-          <Button x:Name="ProseButton"
-                  Content="Prose"
-                  Click="ProseButton_Click"
                   IsEnabled="False" />
         </StackPanel>
 
@@ -110,13 +132,38 @@
         </ScrollViewer>
 
         <StackPanel Grid.Row="3" Spacing="4">
-          <TextBlock Text="Spike status"
+          <TextBlock Text="Status"
                      FontWeight="SemiBold" />
           <TextBlock x:Name="SpikeStatusText"
-                     Text="Loading pack data..."
+                     Text="Loading..."
                      TextWrapping="Wrap"
                      Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
         </StackPanel>
+      </Grid>
+    </Border>
+
+    <Border Grid.Row="2"
+            Grid.ColumnSpan="2"
+            BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}"
+            BorderThickness="1"
+            CornerRadius="6"
+            Padding="12">
+      <Grid ColumnSpacing="10">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <TextBox x:Name="PlayerInputBox"
+                 Header="Player action"
+                 PlaceholderText="Type speech, action, or pick a suggested move"
+                 IsEnabled="False"
+                 KeyDown="PlayerInputBox_KeyDown" />
+        <Button Grid.Column="1"
+                x:Name="SendButton"
+                Content="Send"
+                IsEnabled="False"
+                Click="SendButton_Click"
+                VerticalAlignment="Bottom" />
       </Grid>
     </Border>
   </Grid>

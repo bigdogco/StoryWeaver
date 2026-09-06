@@ -93,6 +93,8 @@ public sealed partial class MainPage : Page
         HeaderDetailText.Text = _context.Resumed
             ? $"Resumed {SaveId} at turn {_context.TurnNumber}."
             : $"Started {SaveId} from {_context.Pack.Name}{version}.";
+        StatusPillText.Text = _context.Resumed ? "Resumed" : "Ready";
+        TurnText.Text = $"Turn {world.TurnNumber}";
 
         NarrationHeading.Text = _context.Resumed
             ? $"{_context.Pack.Name} resumed"
@@ -123,6 +125,7 @@ public sealed partial class MainPage : Page
         }
 
         ExplorerHeading.Text = $"Session: {SaveId}";
+        SaveText.Text = saveDirectory;
         RenderExplorer(world);
 
         SpikeStatusText.Text =
@@ -249,19 +252,23 @@ public sealed partial class MainPage : Page
             {
                 SpikeStatusText.Text =
                     $"Turn {outcome.Turn.TurnNumber} narrated, but extraction failed: {outcome.ExtractionError}";
+                StatusPillText.Text = "Check extraction";
             }
             else
             {
                 SpikeStatusText.Text =
                     $"Turn {outcome.Turn.TurnNumber}: {outcome.Turn.Applied.Count} applied, " +
                     $"{outcome.Turn.NoOps.Count} no-op, {outcome.Turn.Rejected.Count} rejected.";
+                StatusPillText.Text = outcome.Turn.Rejected.Count == 0 ? "Ready" : "Check turn";
             }
 
+            TurnText.Text = $"Turn {_session.World.TurnNumber}";
             RenderExplorer(_session.World);
         }
         catch (Exception ex)
         {
             SpikeStatusText.Text = $"Turn failed: {ex.Message}";
+            StatusPillText.Text = "Turn failed";
         }
         finally
         {
@@ -298,16 +305,21 @@ public sealed partial class MainPage : Page
             else if (report.Unchanged)
             {
                 SpikeStatusText.Text = "Canon on disk matches this session.";
+                StatusPillText.Text = "Ready";
             }
             else
             {
                 SpikeStatusText.Text =
                     $"Re-read canon: {report.Changes.Count} change(s), {report.Warnings.Count} warning(s).";
+                StatusPillText.Text = report.Warnings.Count == 0 ? "Updated" : "Check canon";
             }
+
+            TurnText.Text = $"Turn {_session.World.TurnNumber}";
         }
         catch (Exception ex)
         {
             SpikeStatusText.Text = $"Refresh failed: {ex.Message}";
+            StatusPillText.Text = "Refresh failed";
         }
         finally
         {
@@ -327,6 +339,8 @@ public sealed partial class MainPage : Page
             _context.Pack.Lore,
             _context.Pack.Sheets);
         ScenarioText.Text = "Extractor state view.";
+        NarrationHeading.Text = "State";
+        TurnText.Text = $"Turn {_session.World.TurnNumber}";
         ResetStoryItems();
     }
 
@@ -344,34 +358,45 @@ public sealed partial class MainPage : Page
         ScenarioText.Text = string.IsNullOrWhiteSpace(_context.Pack.Scenario)
             ? "Narrator prose view."
             : $"Scenario: {EntityReferences.Resolve(_context.Pack.Scenario, _session.World)}";
+        NarrationHeading.Text = "Prose";
+        TurnText.Text = $"Turn {_session.World.TurnNumber}";
         ResetStoryItems();
     }
 
     private void RenderOpenRefusal(SessionOpening opening)
     {
         SetInteractive(false);
+        StatusPillText.Text = "Refused";
         NarrationHeading.Text = "Cannot open session";
+        TurnText.Text = "Turn --";
         OpeningText.Text = opening.RefusedBecause ?? "The save could not be opened.";
         ScenarioText.Text = opening.HeldBy is null ? string.Empty : $"Held by: {opening.HeldBy}";
+        SaveText.Text = $"Save: {SaveId}";
         SpikeStatusText.Text = "Close the other StoryWeaver session, or clear the stale lock intentionally.";
     }
 
     private void RenderNeedsPlayer(SessionOpening opening)
     {
         SetInteractive(false);
+        StatusPillText.Text = "Needs player";
         NarrationHeading.Text = "Player setup required";
+        TurnText.Text = "Turn 0";
         OpeningText.Text =
             "This pack does not author the player yet. The Uno spike has not built the player setup dialog.";
         ScenarioText.Text = opening.Context?.Pack.Name ?? string.Empty;
+        SaveText.Text = $"Save: {SaveId}";
         SpikeStatusText.Text = "Use the CLI for this pack until the player creation dialog is added.";
     }
 
     private void RenderFailure(string title, string detail)
     {
         SetInteractive(false);
+        StatusPillText.Text = "Failed";
         NarrationHeading.Text = title;
+        TurnText.Text = "Turn --";
         OpeningText.Text = detail;
         ScenarioText.Text = string.Empty;
+        SaveText.Text = "Save --";
         SpikeStatusText.Text = "Fix the issue and restart the Uno shell.";
     }
 
