@@ -58,8 +58,9 @@ CLI/graphical feature parity is not required. The graphical client is not built 
 ## Stack
 
 - **.NET 8** (LTS)
-- **Graphical UI:** Blazor (C# components with HTML/CSS), selected 2026-09-05 for a
-  standalone application, Windows desktop first. MAUI Blazor Hybrid is the proposed host.
+- **Graphical UI:** undecided. Blazor was selected on 2026-09-05, then reversed
+  on 2026-09-06 at the player's request. Phase 2 remains graphical authoring and play
+  without a terminal, but no UI framework or desktop host is selected.
 - **OpenRouter** for model access, configured **per role** (narration, extraction,
   summarize, worldgen) rather than per call site, since narration and extraction want very
   different models. Summarize and worldgen are reserved roles, not implemented features.

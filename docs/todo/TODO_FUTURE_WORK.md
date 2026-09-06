@@ -22,12 +22,13 @@ a reason. Nothing is left stranded in a finished doc.
 These were cut from the bootstrap phase deliberately — bootstrap exists to answer "is the
 extraction pass reliable?", and none of these help answer it.
 
-- [ ] **Blazor UI** — **[Phase 2]**. Selected 2026-09-05, replacing Avalonia at the
-      player's request. Standalone application; no external browser required.
-      Windows desktop first, selected by the player. MAUI Blazor Hybrid is the proposed
-      Windows host. Settle the host, then design and implement
-      the authoring and play workflows. Keep host-specific services outside shared
-      Blazor components, and gameplay/authoring policy in the backend.
+- [ ] **Graphical UI** — **[Phase 2]**. Framework selection is open again as of
+      2026-09-06: Blazor was selected 2026-09-05 and reversed at the player's
+      request. The UI must support authoring and play without a terminal, and
+      should launch as a standalone desktop application without requiring an
+      external browser. Re-select the framework and host before implementation.
+      Keep host-specific services outside shared interaction logic, and keep
+      gameplay/authoring policy in the backend.
 - [ ] **Streaming narration** — not implemented, but `ILlmClient` is shaped so the
       incremental form is the primitive and the whole-string call wraps it. Adding real
       streaming should then be a rendering change, not an architecture change. **[Phase 2]** —
@@ -959,3 +960,8 @@ The run that closed the 200-turn measurement. See
       **Completed 2026-09-05.** README and PROJECT.md Phase 2 refreshed; prompt
       overrides, closed-stdin handling and pack-root parameter entries reconciled.
       Dated historical evidence retained. See CHALLENGES.md and TODO_UI_DESIGN_DOCS_.md.
+
+- [x] **Reverse Blazor as the selected UI direction.**
+      **Completed 2026-09-06.** Checkout reset to 42188f9, removing the later
+      MAUI Blazor Hybrid scaffold commit from the current branch, and current
+      docs now record the UI framework and host as undecided again.

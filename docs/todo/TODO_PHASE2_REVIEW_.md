@@ -22,3 +22,6 @@ No code changed or tests run during the review.
 Follow-up 2026-09-05: Blazor replaces the initial Avalonia choice, with Windows
 desktop first. README/PROJECT summaries and the identified stale backlog entries
 were reconciled; see TODO_UI_DESIGN_DOCS_.md.
+
+Reversed 2026-09-06: Blazor is no longer selected. The Phase 2 constraints from
+the review still stand, but framework and host selection are open again.

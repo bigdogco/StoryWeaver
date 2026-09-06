@@ -14,3 +14,7 @@ Design work remains in TODO_FUTURE_WORK.md's Phase 2 UI item. This checkpoint do
 not choose screens, add dependencies or approve a host/runtime migration.
 No code changed or tests run. The player subsequently requested committing and
 pushing the documentation; the corresponding dev log records this checkpoint.
+
+**Reversed 2026-09-06:** the player no longer wants Blazor as the UI. Blazor and
+MAUI Blazor Hybrid are no longer selected; current project guidance records the
+framework and host as undecided.

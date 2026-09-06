@@ -2,7 +2,8 @@
 
 Started 2026-09-05. Requested: bring README up to date and discuss alternatives
 to Avalonia for a cross-platform C# client. The framework was undecided at the
-start of the review; the final decisions are recorded below.
+start of the review; the 2026-09-05 follow-up decision is recorded below and
+then explicitly reversed in the 2026-09-06 note.
 
 **Follow-up 2026-09-05:** the player selected Blazor. This supersedes the review's
 initial undecided status. Standalone application, Windows desktop first. MAUI Blazor
@@ -30,3 +31,7 @@ paragraph is also corrected.
 - [x] Record the Blazor decision and standalone requirement in current documentation.
 - [x] Preserve host/platform selection as an explicit open implementation decision.
 - [x] Record the player's follow-up: Windows desktop first; host remains proposed.
+
+**Reversed 2026-09-06:** the player no longer wants Blazor as the UI. The current
+Phase 2 guidance records the framework and host as undecided again; the comparison
+above remains historical context only.

@@ -22,6 +22,10 @@ character creation and pack-root parameters against completed work. Repaired two
 eval source links after the Harness move. Added completed review/checkpoint notes
 and kept pending UI design work in FUTURE_WORK.
 
+**Reversed 2026-09-06:** Blazor is no longer the selected UI direction, and MAUI
+Blazor Hybrid is no longer the proposed host. Current Phase 2 guidance records
+the UI framework and host as undecided again.
+
 Validation: reviewed documentation changes, checked local Markdown links and
 git diff whitespace. No build, self-tests or paid model calls: documentation only.
 
