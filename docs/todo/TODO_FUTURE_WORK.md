@@ -24,11 +24,12 @@ extraction pass reliable?", and none of these help answer it.
 
 - [ ] **Graphical UI** — **[Phase 2]**. Framework selection is open again as of
       2026-09-06: Blazor was selected 2026-09-05 and reversed at the player's
-      request. The UI must support authoring and play without a terminal, and
-      should launch as a standalone desktop application without requiring an
-      external browser. Re-select the framework and host before implementation.
-      Keep host-specific services outside shared interaction logic, and keep
-      gameplay/authoring policy in the backend.
+      request. Linux desktop support matters, so Uno Platform is under spike as
+      the leading candidate. The UI must support authoring and play without a
+      terminal, and should launch as a standalone desktop application without
+      requiring an external browser. Re-select the framework and host before full
+      implementation. Keep host-specific services outside shared interaction
+      logic, and keep gameplay/authoring policy in the backend.
 - [ ] **Streaming narration** — not implemented, but `ILlmClient` is shaped so the
       incremental form is the primitive and the whole-string call wraps it. Adding real
       streaming should then be a rendering change, not an architecture change. **[Phase 2]** —
@@ -965,3 +966,21 @@ The run that closed the 200-turn measurement. See
       **Completed 2026-09-06.** Checkout reset to 42188f9, removing the later
       MAUI Blazor Hybrid scaffold commit from the current branch, and current
       docs now record the UI framework and host as undecided again.
+
+- [ ] **Uno Platform spike.**
+      Started 2026-09-06 on branch `uno_spike`. Verify Windows build/run locally,
+      then verify Linux desktop build/run on a Linux machine or CI before
+      selecting Uno. Track details in TODO_UNO_SPIKE_.md.
+- [ ] **Verify Uno desktop GUI launch on Linux.** The `net10.0-desktop` Skia
+      target builds under Ubuntu 26.04 on WSL2, but GUI launch is not verified:
+      this Windows install shows a WSLg Remote Desktop ActiveX popup for
+      `rdclientax.dll`. Before selecting Uno, run the app on a Linux desktop,
+      fixed WSLg setup, or CI/VM path that can actually exercise the window.
+- [ ] **Decide the runtime policy for UI.** The engine stays on .NET 8 today, while
+      the Uno spike targets `net10.0-desktop`. Decide whether that split is
+      acceptable for Phase 2 or whether UI selection waits for a broader runtime
+      policy.
+- [ ] **Check Uno/XAML comfort against the actual editor workflow.** The blank
+      desktop shell proves the stack builds; it does not prove that Uno's
+      XAML/WinUI-style model is the right surface for pack authoring, explorer
+      panes, validation panels and play.

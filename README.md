@@ -58,9 +58,9 @@ CLI/graphical feature parity is not required. The graphical client is not built 
 ## Stack
 
 - **.NET 8** (LTS)
-- **Graphical UI:** undecided. Blazor was selected on 2026-09-05, then reversed
-  on 2026-09-06 at the player's request. Phase 2 remains graphical authoring and play
-  without a terminal, but no UI framework or desktop host is selected.
+- **Graphical UI:** undecided, with Uno Platform under spike because Linux desktop
+  support matters. Blazor was selected on 2026-09-05, then reversed on 2026-09-06
+  at the player's request. Phase 2 remains graphical authoring and play without a terminal.
 - **OpenRouter** for model access, configured **per role** (narration, extraction,
   summarize, worldgen) rather than per call site, since narration and extraction want very
   different models. Summarize and worldgen are reserved roles, not implemented features.

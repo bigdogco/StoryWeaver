@@ -2,7 +2,7 @@
 
 **Status:** approved 2026-08-13
 **Created:** 2026-08-13
-**Latest decision update:** 2026-09-06 — Blazor reversed; UI framework undecided
+**Latest decision update:** 2026-09-06 — Uno Platform spike started; Linux support required
 
 The standing reference for what this project is and where it is going. Written after three
 weeks of post-bootstrap work in which every task was chosen by whatever the last play
@@ -54,7 +54,7 @@ beneath it and is what a client talks to.
 | **Cli** | play UI: the dispatcher, the turn loop, `/edit`, authoring prompts, and the eval *renderer* | Throwaway by design, and **client one of two** — it renders and prompts; `StorySession` owns canon. Now genuinely thin: the instrumentation moved to Harness 2026-09-04 when the Cli was held to the UI rules, so the old "two-thirds eval scaffolding" is gone. 1,813 lines, ~214 of them the eval renderer — client-side by right, since the Harness scores and the CLI draws. |
 | **App** | composition: opening a session out of pack, prompts, provider and save | New 2026-09-04. Exists because opening needs Storage *and* Llm, and Core references neither — no other project could see both. Renders nothing, asks nothing. |
 | **Harness** | instrumentation: the extraction eval, the self-test suites, the live API probes, and the shared world fixture | New 2026-09-04. Everything that measures the engine rather than plays it, pulled out of the Cli because a client — thin by rule — cannot own the benchmark. References Core + Llm + Storage + App (it tests all of them). The eval is UI-bound and returns a structured `EvalReport` a client renders; the self-tests and probes are dev-only and print directly. `ResponseSelfTest` stays in Llm, with the internal wire types it checks. |
-| **UI** | not built | Framework undecided. Blazor was selected 2026-09-05 and reversed 2026-09-06 at the player's request. See Phase 2. |
+| **UI** | spike only | Framework undecided. Uno Platform is under spike because Linux desktop support matters. Blazor was selected 2026-09-05 and reversed 2026-09-06 at the player's request. See Phase 2. |
 | **Plugins** | not built, not designed | See Phase 3. |
 
 **What the base game is** (decided 2026-08-13): the narrator, and the canon it maintains —
@@ -154,14 +154,16 @@ Two consequences to design for, not to solve here:
 
 **Stack**
 
-C# / .NET 8 · OpenRouter, per-role models · JSON behind `IWorldRepository`, permanently ·
-UI framework undecided · secrets in env vars or gitignored `*.local.json` only.
+C# / .NET 8 for the engine · OpenRouter, per-role models · JSON behind
+`IWorldRepository`, permanently · UI framework undecided · secrets in env vars
+or gitignored `*.local.json` only.
 
 **UI framework selection reopened 2026-09-06, at the player's request.** Blazor is
 no longer the selected UI direction, and MAUI Blazor Hybrid is no longer the
 proposed host. The application still needs to launch in its own desktop window
-without requiring an external browser, but the framework and host are open design
-questions again. The earlier Avalonia choice also remains unselected.
+without requiring an external browser. Linux desktop support is now an explicit
+selection pressure, so Uno Platform is the current spike candidate. The earlier
+Avalonia choice also remains unselected.
 
 The thin-client rule still applies. Presentation owns forms, layout and interaction;
 App composes sessions and Core owns gameplay and canon. Replacing the UI should
@@ -262,13 +264,13 @@ prose.
 > Can someone who did not write the engine author a pack and play it, without the CLI?
 
 **Starting point for design (updated 2026-09-06).** No UI framework or desktop
-host is selected. Blazor and MAUI Blazor Hybrid are explicitly reversed, and no
-UI project exists yet. Design must distinguish editing a reusable pack from
-editing a running save and cover both authoring and play. The first questions
-are the workflows and screen layout, then framework choice, host integration,
-session lifetime and in-progress/failure feedback.
-The repository currently targets .NET 8; the UI host's SDK/runtime requirements
-and any resulting upgrade are implementation decisions still to make.
+host is selected. Blazor and MAUI Blazor Hybrid are explicitly reversed. Uno
+Platform is being spiked as a Linux-capable desktop candidate. Design must
+distinguish editing a reusable pack from editing a running save and cover both
+authoring and play. The first questions are the workflows and screen layout,
+then framework choice, host integration, session lifetime and in-progress/failure
+feedback. The engine currently targets .NET 8; the Uno spike targets
+`net10.0-desktop`, so runtime and SDK requirements remain part of the spike.
 
 **The pack format is now settled**, which is what Phase 1 was for: seed, lore, sheets,
 scenario, opening, manifest, prompts. An editor built now is built once.

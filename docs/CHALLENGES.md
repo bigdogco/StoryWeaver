@@ -7,6 +7,42 @@ ones that turn out to be non-issues, with the resolution noted.
 
 ## Open
 
+### Uno SDK resolution depends on the build entry point — resolved 2026-09-06
+
+Found during the Uno Platform spike. The generated Uno project built when invoked
+directly because the template created `src/StoryWeaver.Uno/global.json` with the
+`Uno.Sdk` version. After adding the project to `StoryWeaver.sln`, the root
+solution build failed: MSBuild could not resolve `Uno.Sdk` because the nested
+`global.json` was not visible from the solution entry point.
+
+**Resolved 2026-09-06.** Added a root `global.json` pinning `Uno.Sdk` 6.7.22.
+`dotnet build StoryWeaver.sln` then built the existing .NET 8 projects and the
+Uno `net10.0-desktop` spike together with zero warnings and zero errors.
+
+Keep this in mind if the spike is moved, renamed or split: the SDK pin must be
+visible from whichever solution or project file developers are expected to build.
+
+### WSL can build Uno, but WSLg launch is blocked locally — open 2026-09-06
+
+Found during the Uno Platform Linux check. Ubuntu 26.04 under WSL2 can build the
+full solution with the Uno `net10.0-desktop` project after installing .NET SDK
+10.0.400 into `/home/pavel/.dotnet`. The build was run with GUI environment
+variables unset and succeeded with one warning and zero errors.
+
+The warning is `UNOB0003`: Uno ignored `Strings/en-US/Resources.resw` because it
+could not determine the language while .NET was running in invariant
+globalization mode. That mode was needed because the WSL distro is missing ICU
+packages. The same resource builds without warnings on Windows.
+
+The Linux GUI launch is not verified. Starting WSLg on this Windows install
+shows a Windows Remote Desktop popup: "Could not load the Remote Desktop Services
+ActiveX control. Make sure rdclientax.dll is in the path." This appears to be
+WSLg's Windows-side GUI bridge, not the Uno build. Build checks can avoid it by
+unsetting `DISPLAY`, `WAYLAND_DISPLAY` and `PULSE_SERVER`; a real app run still
+needs either a fixed WSLg setup or another Linux desktop/VM. Local check:
+`C:\Program Files\WSL\rdclientax.dll` exists, so the problem is not that the file
+is absent from the WSL install directory.
+
 ### Entry-point documentation lagged the Phase 2 boundary — resolved 2026-09-05
 
 Found 2026-09-05 during onboarding. README.md still describes late bootstrap,
