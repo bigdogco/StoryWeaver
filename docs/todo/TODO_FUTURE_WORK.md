@@ -25,11 +25,13 @@ extraction pass reliable?", and none of these help answer it.
 - [ ] **Graphical UI** — **[Phase 2]**. Framework selection is open again as of
       2026-09-06: Blazor was selected 2026-09-05 and reversed at the player's
       request. Linux desktop support matters, so Uno Platform is under spike as
-      the leading candidate. The UI must support authoring and play without a
-      terminal, and should launch as a standalone desktop application without
-      requiring an external browser. Re-select the framework and host before full
-      implementation. Keep host-specific services outside shared interaction
-      logic, and keep gameplay/authoring policy in the backend.
+      the leading candidate, but the active spike work is Windows first while the
+      local Linux environment is repaired separately. The UI must support
+      authoring and play without a terminal, and should launch as a standalone
+      desktop application without requiring an external browser. Re-select the
+      framework and host before full implementation. Keep host-specific services
+      outside shared interaction logic, and keep gameplay/authoring policy in the
+      backend.
 - [ ] **Streaming narration** — not implemented, but `ILlmClient` is shaped so the
       incremental form is the primitive and the whole-string call wraps it. Adding real
       streaming should then be a rendering change, not an architecture change. **[Phase 2]** —
@@ -967,15 +969,17 @@ The run that closed the 200-turn measurement. See
       MAUI Blazor Hybrid scaffold commit from the current branch, and current
       docs now record the UI framework and host as undecided again.
 
-- [ ] **Uno Platform spike.**
-      Started 2026-09-06 on branch `uno_spike`. Verify Windows build/run locally,
-      then verify Linux desktop build/run on a Linux machine or CI before
-      selecting Uno. Track details in TODO_UNO_SPIKE_.md.
-- [ ] **Verify Uno desktop GUI launch on Linux.** The `net9.0-desktop` Skia
-      target builds under Ubuntu 26.04 on WSL2, but GUI launch is not verified:
-      this Windows install shows a WSLg Remote Desktop ActiveX popup for
-      `rdclientax.dll`. Before selecting Uno, run the app on a Linux desktop,
-      fixed WSLg setup, or CI/VM path that can actually exercise the window.
+- [ ] **Continue the Uno Platform spike on Windows.**
+      Started 2026-09-06 on branch `uno_spike`. Windows build and launch smoke
+      pass; next prove the actual StoryWeaver workflow shape by wiring a small,
+      read-only backend surface into the shell. Track completed setup details in
+      TODO_UNO_SPIKE_.md.
+- [ ] **Verify Uno desktop GUI launch on Linux later.** Parked 2026-09-06 while
+      the local Linux environment is repaired. The `net9.0-desktop` Skia target
+      is intended for Linux, and an earlier WSL build passed before the .NET 9
+      retarget, but GUI launch is not verified: this Windows install shows a WSLg
+      Remote Desktop ActiveX popup for `rdclientax.dll`. Revisit on a working
+      Linux desktop, fixed WSLg setup, or VM/CI path that can exercise the window.
 - [ ] **Decide the runtime policy for UI.** The engine stays on .NET 8 today, while
       the Uno spike targets `net9.0-desktop` for Visual Studio 2022 compatibility.
       Decide whether that split is acceptable for Phase 2 or whether UI selection

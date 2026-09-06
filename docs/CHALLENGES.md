@@ -24,7 +24,7 @@ MSBuild 18.0 or newer. Retargeted the spike to `net9.0-desktop` and pinned SDK
 Keep this in mind if the spike is moved, renamed or split: the SDK pin must be
 visible from whichever solution or project file developers are expected to build.
 
-### WSL can build Uno, but WSLg launch is blocked locally — open 2026-09-06
+### WSL can build Uno, but WSLg launch is blocked locally — parked 2026-09-06
 
 Found during the Uno Platform Linux check. Ubuntu 26.04 under WSL2 built the full
 solution with the Uno `net10.0-desktop` project after installing .NET SDK 10.0.400
@@ -46,6 +46,10 @@ unsetting `DISPLAY`, `WAYLAND_DISPLAY` and `PULSE_SERVER`; a real app run still
 needs either a fixed WSLg setup or another Linux desktop/VM. Local check:
 `C:\Program Files\WSL\rdclientax.dll` exists, so the problem is not that the file
 is absent from the WSL install directory.
+
+**Parked by decision 2026-09-06.** Linux remains important, but the local Linux
+environment needs repair before it can answer GUI questions. The Uno spike now
+continues on Windows; this item should not block Windows UI workflow work.
 
 ### Entry-point documentation lagged the Phase 2 boundary — resolved 2026-09-05
 
