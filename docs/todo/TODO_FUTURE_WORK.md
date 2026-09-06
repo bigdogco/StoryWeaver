@@ -971,15 +971,15 @@ The run that closed the 200-turn measurement. See
       Started 2026-09-06 on branch `uno_spike`. Verify Windows build/run locally,
       then verify Linux desktop build/run on a Linux machine or CI before
       selecting Uno. Track details in TODO_UNO_SPIKE_.md.
-- [ ] **Verify Uno desktop GUI launch on Linux.** The `net10.0-desktop` Skia
+- [ ] **Verify Uno desktop GUI launch on Linux.** The `net9.0-desktop` Skia
       target builds under Ubuntu 26.04 on WSL2, but GUI launch is not verified:
       this Windows install shows a WSLg Remote Desktop ActiveX popup for
       `rdclientax.dll`. Before selecting Uno, run the app on a Linux desktop,
       fixed WSLg setup, or CI/VM path that can actually exercise the window.
 - [ ] **Decide the runtime policy for UI.** The engine stays on .NET 8 today, while
-      the Uno spike targets `net10.0-desktop`. Decide whether that split is
-      acceptable for Phase 2 or whether UI selection waits for a broader runtime
-      policy.
+      the Uno spike targets `net9.0-desktop` for Visual Studio 2022 compatibility.
+      Decide whether that split is acceptable for Phase 2 or whether UI selection
+      waits for a broader runtime policy.
 - [ ] **Check Uno/XAML comfort against the actual editor workflow.** The blank
       desktop shell proves the stack builds; it does not prove that Uno's
       XAML/WinUI-style model is the right surface for pack authoring, explorer

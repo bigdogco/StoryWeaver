@@ -270,7 +270,8 @@ distinguish editing a reusable pack from editing a running save and cover both
 authoring and play. The first questions are the workflows and screen layout,
 then framework choice, host integration, session lifetime and in-progress/failure
 feedback. The engine currently targets .NET 8; the Uno spike targets
-`net10.0-desktop`, so runtime and SDK requirements remain part of the spike.
+`net9.0-desktop` so it can open in the installed Visual Studio 2022, whose
+MSBuild is too old for .NET SDK 10.
 
 **The pack format is now settled**, which is what Phase 1 was for: seed, lore, sheets,
 scenario, opening, manifest, prompts. An editor built now is built once.

@@ -15,18 +15,22 @@ directly because the template created `src/StoryWeaver.Uno/global.json` with the
 solution build failed: MSBuild could not resolve `Uno.Sdk` because the nested
 `global.json` was not visible from the solution entry point.
 
-**Resolved 2026-09-06.** Added a root `global.json` pinning `Uno.Sdk` 6.7.22.
-`dotnet build StoryWeaver.sln` then built the existing .NET 8 projects and the
-Uno `net10.0-desktop` spike together with zero warnings and zero errors.
+**Resolved 2026-09-06.** Added a root `global.json` pinning `Uno.Sdk` 6.7.22
+and the .NET SDK. The spike was first generated as `net10.0-desktop`, but the
+installed Visual Studio 2022 uses MSBuild 17.14 and .NET SDK 10.0.400 requires
+MSBuild 18.0 or newer. Retargeted the spike to `net9.0-desktop` and pinned SDK
+9.0.314 so Visual Studio can restore and build the whole solution.
 
 Keep this in mind if the spike is moved, renamed or split: the SDK pin must be
 visible from whichever solution or project file developers are expected to build.
 
 ### WSL can build Uno, but WSLg launch is blocked locally — open 2026-09-06
 
-Found during the Uno Platform Linux check. Ubuntu 26.04 under WSL2 can build the
-full solution with the Uno `net10.0-desktop` project after installing .NET SDK
-10.0.400 into `/home/pavel/.dotnet`. The build was run with GUI environment
+Found during the Uno Platform Linux check. Ubuntu 26.04 under WSL2 built the full
+solution with the Uno `net10.0-desktop` project after installing .NET SDK 10.0.400
+into `/home/pavel/.dotnet`. That check happened before the Visual Studio
+compatibility retarget to `net9.0-desktop`; the Linux build should be repeated
+with .NET SDK 9 installed in WSL. The earlier build was run with GUI environment
 variables unset and succeeded with one warning and zero errors.
 
 The warning is `UNOB0003`: Uno ignored `Strings/en-US/Resources.resw` because it
