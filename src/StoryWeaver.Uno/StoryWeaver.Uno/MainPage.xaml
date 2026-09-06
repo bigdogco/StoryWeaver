@@ -19,7 +19,8 @@
       <TextBlock Text="StoryWeaver Uno Spike"
                  FontSize="22"
                  FontWeight="SemiBold" />
-      <TextBlock Text="Desktop Skia shell for Windows. Read-only pack data comes from StoryWeaver.Storage; gameplay stays behind StoryWeaver.App and Core."
+      <TextBlock x:Name="HeaderDetailText"
+                 Text="Desktop Skia shell for Windows. Sessions open through StoryWeaver.App; gameplay stays behind Core."
                  Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
     </StackPanel>
 
@@ -36,12 +37,12 @@
         </Grid.RowDefinitions>
 
         <TextBlock x:Name="NarrationHeading"
-                   Text="Opening"
+                   Text="Opening session..."
                    FontSize="16"
                    FontWeight="SemiBold" />
 
         <ScrollViewer Grid.Row="1">
-          <StackPanel Spacing="14">
+          <StackPanel x:Name="StoryItems" Spacing="14">
             <TextBlock x:Name="OpeningText"
                        TextWrapping="Wrap" />
             <TextBlock x:Name="ScenarioText"
@@ -55,12 +56,16 @@
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="Auto" />
           </Grid.ColumnDefinitions>
-          <TextBox Header="Player action"
+          <TextBox x:Name="PlayerInputBox"
+                   Header="Player action"
                    PlaceholderText="Type an action for the next turn"
-                   IsEnabled="False" />
+                   IsEnabled="False"
+                   KeyDown="PlayerInputBox_KeyDown" />
           <Button Grid.Column="1"
+                  x:Name="SendButton"
                   Content="Send"
                   IsEnabled="False"
+                  Click="SendButton_Click"
                   VerticalAlignment="Bottom" />
         </Grid>
       </Grid>
@@ -80,14 +85,24 @@
           <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <TextBlock Text="Explorer"
+        <TextBlock x:Name="ExplorerHeading"
+                   Text="Session"
                    FontSize="16"
                    FontWeight="SemiBold" />
 
         <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="8">
-          <Button Content="Player" IsEnabled="False" />
-          <Button Content="Canon" IsEnabled="False" />
-          <Button Content="Issues" IsEnabled="False" />
+          <Button x:Name="RefreshButton"
+                  Content="Refresh"
+                  Click="RefreshButton_Click"
+                  IsEnabled="False" />
+          <Button x:Name="StateButton"
+                  Content="State"
+                  Click="StateButton_Click"
+                  IsEnabled="False" />
+          <Button x:Name="ProseButton"
+                  Content="Prose"
+                  Click="ProseButton_Click"
+                  IsEnabled="False" />
         </StackPanel>
 
         <ScrollViewer Grid.Row="2">

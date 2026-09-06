@@ -20,10 +20,6 @@ public partial class App : Application
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
         MainWindow = new Window();
-#if DEBUG
-        MainWindow.UseStudio();
-#endif
-
 
         // Do not repeat app initialization when the Window already has content,
         // just ensure that the window is active
@@ -94,6 +90,8 @@ public partial class App : Application
             builder.AddFilter("Uno", LogLevel.Warning);
             builder.AddFilter("Windows", LogLevel.Warning);
             builder.AddFilter("Microsoft", LogLevel.Warning);
+            builder.AddFilter("Uno.UI.HotDesign", LogLevel.Critical);
+            builder.AddFilter("Uno.UI.RemoteControl", LogLevel.Critical);
 
             // Generic Xaml events
             // builder.AddFilter("Microsoft.UI.Xaml", LogLevel.Debug );

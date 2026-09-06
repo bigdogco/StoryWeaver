@@ -974,11 +974,21 @@ The run that closed the 200-turn measurement. See
       `worlds/marrow` pack seed data through `StoryWeaver.Storage`, without
       opening a save, starting a turn, creating an LLM client, or writing canon.
       See TODO_UNO_WINDOWS_SPIKE_.md.
-- [ ] **Open a real session context in the Uno shell.**
-      Next Windows spike: use `SessionOpener.OpenAsync` to render a session
-      opening/refusal/needs-player state, while still not running a turn. This is
-      the first check that the UI can use the same App composition path as the
-      CLI without taking ownership of gameplay logic.
+- [x] **Open a real session context in the Uno shell.**
+      **Completed 2026-09-06.** The Windows Uno shell now opens `worlds/marrow`
+      through `SessionOpener.OpenAsync` into a separate `saves/uno-spike`
+      playthrough, renders the session context and current canon, and can submit
+      a first turn through `StorySession.TakeTurnAsync`. See
+      TODO_UNO_SESSION_SLICE_.md.
+- [ ] **Add the Uno player setup dialog.**
+      The App layer already returns `PendingPlayer` when a pack does not author
+      `characters/player.md`; the Uno shell currently reports that state but
+      cannot complete it. Build the dialog before using Uno with a blank-player
+      pack.
+- [ ] **Shape the first durable play layout for Uno.**
+      The spike proves the backend path. Next UI work should decide the actual
+      play screen: transcript behavior, command affordances, state/prose panels,
+      busy/failure feedback, and where Update State belongs.
 - [ ] **Verify Uno desktop GUI launch on Linux later.** Parked 2026-09-06 while
       the local Linux environment is repaired. The `net9.0-desktop` Skia target
       is intended for Linux, and an earlier WSL build passed before the .NET 9
