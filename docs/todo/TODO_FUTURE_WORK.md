@@ -989,10 +989,10 @@ The run that closed the 200-turn measurement. See
       **Completed 2026-09-06.** The Windows Uno shell now has an app/session
       header, status pill, main transcript pane, bottom command bar and scene
       side rail. See TODO_UNO_PLAY_LAYOUT_.md.
-- [ ] **Add a real transcript mode to the Uno play screen.**
-      State and Prose currently replace the opening text. The next refinement is
-      a deliberate view model for modes: transcript, extractor state and
-      narrator prose, with a way back to the active transcript after debugging.
+- [x] **Add a real transcript mode to the Uno play screen.**
+      **Completed 2026-09-06.** Transcript, State and Prose are explicit modes.
+      Submitting a turn returns to Transcript, and Refresh redraws the active
+      mode from the latest session world. See TODO_UNO_TRANSCRIPT_MODE_.md.
 - [ ] **Add busy and failure styling to the Uno play screen.**
       The status pill text changes, but it is not visually distinct yet. Decide
       the restrained color/shape language for ready, thinking, refused, failed,

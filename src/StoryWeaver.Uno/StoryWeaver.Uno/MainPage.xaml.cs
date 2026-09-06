@@ -13,8 +13,17 @@ public sealed partial class MainPage : Page
     private const string PackId = "marrow";
     private const string SaveId = "uno-spike";
 
+    private enum StoryViewMode
+    {
+        Transcript,
+        State,
+        Prose,
+    }
+
     private StorySession? _session;
     private SessionContext? _context;
+    private readonly List<TurnRecord> _transcriptTurns = [];
+    private StoryViewMode _viewMode = StoryViewMode.Transcript;
     private bool _turnInProgress;
 
     public MainPage()
@@ -100,29 +109,9 @@ public sealed partial class MainPage : Page
             ? $"{_context.Pack.Name} resumed"
             : $"{_context.Pack.Name} opening";
 
-        IReadOnlyList<TurnRecord> recentTurns = await _session.RecentTurnsAsync(_context.HistoryTurns);
-
-        if (_context.Resumed && recentTurns.Count > 0)
-        {
-            OpeningText.Text = $"The story so far, last {recentTurns.Count} turn(s):";
-            ScenarioText.Text = string.IsNullOrWhiteSpace(_context.Pack.Scenario)
-                ? "No standing scenario is authored for this pack."
-                : $"Scenario: {EntityReferences.Resolve(_context.Pack.Scenario, world)}";
-            ResetStoryItems();
-
-            foreach (TurnRecord turn in recentTurns)
-            {
-                AddStoryTurn(turn);
-            }
-        }
-        else
-        {
-            OpeningText.Text = OpeningScene(world);
-            ScenarioText.Text = string.IsNullOrWhiteSpace(_context.Pack.Scenario)
-                ? "No standing scenario is authored for this pack."
-                : $"Scenario: {EntityReferences.Resolve(_context.Pack.Scenario, world)}";
-            ResetStoryItems();
-        }
+        _transcriptTurns.Clear();
+        _transcriptTurns.AddRange(await _session.RecentTurnsAsync(_context.HistoryTurns));
+        RenderTranscriptView();
 
         ExplorerHeading.Text = $"Session: {SaveId}";
         SaveText.Text = saveDirectory;
@@ -141,6 +130,52 @@ public sealed partial class MainPage : Page
         StoryItems.Children.Clear();
         StoryItems.Children.Add(OpeningText);
         StoryItems.Children.Add(ScenarioText);
+    }
+
+    private void RenderTranscriptView()
+    {
+        if (_session is null || _context is null)
+        {
+            return;
+        }
+
+        _viewMode = StoryViewMode.Transcript;
+        WorldState world = _session.World;
+
+        NarrationHeading.Text = _context.Resumed && _transcriptTurns.Count > 0
+            ? $"{_context.Pack.Name} transcript"
+            : $"{_context.Pack.Name} opening";
+        TurnText.Text = $"Turn {world.TurnNumber}";
+
+        OpeningText.Text = _context.Resumed && _transcriptTurns.Count > 0
+            ? $"The story so far, last {_transcriptTurns.Count} turn(s):"
+            : OpeningScene(world);
+
+        ScenarioText.Text = string.IsNullOrWhiteSpace(_context.Pack.Scenario)
+            ? "No standing scenario is authored for this pack."
+            : $"Scenario: {EntityReferences.Resolve(_context.Pack.Scenario, world)}";
+
+        ResetStoryItems();
+
+        foreach (TurnRecord turn in _transcriptTurns)
+        {
+            AddStoryTurn(turn);
+        }
+    }
+
+    private void RenderDebugView(StoryViewMode mode, string heading, string text, string note)
+    {
+        if (_session is null)
+        {
+            return;
+        }
+
+        _viewMode = mode;
+        NarrationHeading.Text = heading;
+        TurnText.Text = $"Turn {_session.World.TurnNumber}";
+        OpeningText.Text = text;
+        ScenarioText.Text = note;
+        ResetStoryItems();
     }
 
     private void RenderExplorer(WorldState world)
@@ -234,6 +269,7 @@ public sealed partial class MainPage : Page
         SetInteractive(false);
         PlayerInputBox.Text = string.Empty;
         SpikeStatusText.Text = "Narrating and extracting the turn...";
+        StatusPillText.Text = "Thinking";
 
         try
         {
@@ -246,7 +282,8 @@ public sealed partial class MainPage : Page
             }
 
             TurnOutcome outcome = result.Value!;
-            AddStoryTurn(outcome.Turn);
+            _transcriptTurns.Add(outcome.Turn);
+            RenderTranscriptView();
 
             if (outcome.ExtractionFailed)
             {
@@ -297,10 +334,12 @@ public sealed partial class MainPage : Page
 
             RefreshReport report = result.Value!;
             RenderExplorer(_session.World);
+            RenderCurrentStoryView();
 
             if (report.NothingOnDisk)
             {
                 SpikeStatusText.Text = "Nothing saved yet; canon is only in this session.";
+                StatusPillText.Text = "Ready";
             }
             else if (report.Unchanged)
             {
@@ -329,38 +368,65 @@ public sealed partial class MainPage : Page
 
     private void StateButton_Click(object sender, RoutedEventArgs e)
     {
-        if (_session is null || _context is null)
-        {
-            return;
-        }
-
-        OpeningText.Text = ContextAssembler.ForExtraction(
-            _session.World,
-            _context.Pack.Lore,
-            _context.Pack.Sheets);
-        ScenarioText.Text = "Extractor state view.";
-        NarrationHeading.Text = "State";
-        TurnText.Text = $"Turn {_session.World.TurnNumber}";
-        ResetStoryItems();
+        RenderStateView();
     }
 
     private void ProseButton_Click(object sender, RoutedEventArgs e)
+    {
+        RenderProseView();
+    }
+
+    private void TranscriptButton_Click(object sender, RoutedEventArgs e)
+    {
+        RenderTranscriptView();
+    }
+
+    private void RenderCurrentStoryView()
+    {
+        switch (_viewMode)
+        {
+            case StoryViewMode.State:
+                RenderStateView();
+                break;
+            case StoryViewMode.Prose:
+                RenderProseView();
+                break;
+            default:
+                RenderTranscriptView();
+                break;
+        }
+    }
+
+    private void RenderStateView()
     {
         if (_session is null || _context is null)
         {
             return;
         }
 
-        OpeningText.Text = ContextAssembler.ForNarration(
-            _session.World,
-            _context.Pack.Lore,
-            _context.Pack.Sheets);
-        ScenarioText.Text = string.IsNullOrWhiteSpace(_context.Pack.Scenario)
+        RenderDebugView(
+            StoryViewMode.State,
+            "State",
+            ContextAssembler.ForExtraction(_session.World, _context.Pack.Lore, _context.Pack.Sheets),
+            "Extractor state view.");
+    }
+
+    private void RenderProseView()
+    {
+        if (_session is null || _context is null)
+        {
+            return;
+        }
+
+        string note = string.IsNullOrWhiteSpace(_context.Pack.Scenario)
             ? "Narrator prose view."
             : $"Scenario: {EntityReferences.Resolve(_context.Pack.Scenario, _session.World)}";
-        NarrationHeading.Text = "Prose";
-        TurnText.Text = $"Turn {_session.World.TurnNumber}";
-        ResetStoryItems();
+
+        RenderDebugView(
+            StoryViewMode.Prose,
+            "Prose",
+            ContextAssembler.ForNarration(_session.World, _context.Pack.Lore, _context.Pack.Sheets),
+            note);
     }
 
     private void RenderOpenRefusal(SessionOpening opening)
@@ -405,6 +471,7 @@ public sealed partial class MainPage : Page
         PlayerInputBox.IsEnabled = enabled;
         SendButton.IsEnabled = enabled;
         RefreshButton.IsEnabled = enabled;
+        TranscriptButton.IsEnabled = enabled;
         StateButton.IsEnabled = enabled;
         ProseButton.IsEnabled = enabled;
     }

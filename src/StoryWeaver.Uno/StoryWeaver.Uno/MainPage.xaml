@@ -72,6 +72,10 @@
                       Orientation="Horizontal"
                       Spacing="8"
                       VerticalAlignment="Top">
+            <Button x:Name="TranscriptButton"
+                    Content="Transcript"
+                    Click="TranscriptButton_Click"
+                    IsEnabled="False" />
             <Button x:Name="StateButton"
                     Content="State"
                     Click="StateButton_Click"
