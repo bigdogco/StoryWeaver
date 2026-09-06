@@ -38,10 +38,15 @@ its root in there being no concept of a companion following the player.
 - [x] `dotnet build` — clean
 - [x] Log the challenge with the second-sighting threshold
 - [x] Create this task doc and mirror to mysite
-- [ ] **(manual, player)** Run the reproduction sweep, pinned by provider:
-      `--eval --scenarios companion-follows` — confirm it fails today and record the per-provider
-      numbers
+- [x] Run the reproduction sweep and confirm it fails today.
+      **2026-09-06, deepseek-v3.2 / StreamLake, n=7: Mona left behind 6/7** (`required 8/14`,
+      forbidden 0.00; the player's own move lands 7/7). Clean omission — no workaround delta.
+      Note: a first draft with explicit "walks with you" prose scored 14/14 clean; the subtle
+      "discovered present" prose (matching save turn 5) is what reproduces. First half of the §3
+      gate met.
 - [ ] **(manual, player)** Watch for a second live sighting in a fresh session with a companion
+- [ ] **(optional)** Re-run pinned across a second provider / a couple more sweeps for a firmer
+      baseline before the fix, per the eval-honesty rules (one routed sweep is one data point)
 
 ## Held pending the threshold above (do NOT do yet)
 

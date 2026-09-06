@@ -1226,7 +1226,16 @@ public static class EvalScenarios
     /// have been told to wait — so this cannot be an apply-time derivation like
     /// <c>Connect</c>. The narration is the authority on whether she came along, which puts the
     /// fix in extraction. This scenario measures whether the model reconciles a companion the
-    /// prose has plainly relocated; today it is expected to fail, leaving her behind.
+    /// prose relocates; today it is expected to fail, leaving her behind.
+    ///
+    /// <b>The prose is deliberately the subtle shape the save actually produced, not an explicit
+    /// one.</b> A first draft narrated Mona plainly walking to the tavern with the player —
+    /// "falls into step at your shoulder", "push through the door together" — and deepseek-v3.2
+    /// scored it 14/14 clean, 7/7. That measured a behaviour the save never exhibited. Here the
+    /// player's own action is the only movement stated and Mona is simply <i>discovered present</i>
+    /// in the room they enter, exactly as on save turn 5 ("You push open the door... Mona sits at
+    /// a corner table"). The extractor has to infer the move from her presence — against a state
+    /// that places her elsewhere and a prompt that says do not infer — which is the real failure.
     ///
     /// <b>Scored on the outcome, not the delta.</b> What matters is where she ends the turn,
     /// not which delta got her there — the movement lesson from <see cref="PlayerArrival"/> and
@@ -1236,20 +1245,20 @@ public static class EvalScenarios
     /// </summary>
     private static EvalScenario CompanionFollows => new(
         "companion-follows",
-        "*Come on, Mona. We'll get nothing more standing over a boarded well.* *I turn back for the Drowned Crow.*",
+        "*I head back into the Drowned Crow.*",
         """
-        The square gives up its cold reluctantly as you turn for the tavern, and Mona falls into
-        step at your shoulder, one thumb hooked over the worn hilt of her short sword. "About
-        time," she mutters. "I've counted every plank on that well twice, and it hasn't confessed
-        to anything yet."
+        You push open the heavy door of the Drowned Crow, leaving the damp of the square behind
+        you. The taproom is thick with peat smoke and the sour smell of stale ale, and the low
+        murmur of the locals dies as the latch clicks shut. Behind the counter, Hald's rag stops
+        on the wood.
 
-        You push back through the heavy door of the Drowned Crow together. The peat smoke closes
-        over you, sour and warm after the marsh air, and the low murmur of the taproom dips as
-        the locals mark two strangers instead of one. Behind the counter, Hald's rag goes still.
+        Mona is at a corner table near the hearth, one thumb working the worn hilt of the short
+        sword on her belt. Her green eyes are up and reading you before you have crossed the
+        room, and her lips curve into that knowing half-smile.
 
-        Mona drops onto the bench beside you, her back to the wall and her green eyes already
-        moving over the room. "Well then," she says, pitched for you and not for him. "Which of
-        these cheerful souls do we lean on first?"
+        "Back already?" she says, tipping her head at the empty chair across from her. "Please
+        tell me that well gave up something more interesting than splinters and rusted nails.
+        My boots have about given up on this mud."
         """,
         Required: [],
         Forbidden:

@@ -47,8 +47,20 @@ accompany the player; a character shown in a scene is really there) keeps the tw
 **Held behind the threshold.** Per PROJECT.md §3, no prompt change ships until it reproduces in
 a scenario **and** appears in a second live session. The reproduction now exists —
 `companion-follows` in `EvalScenarios.Diagnostics`, seeded by `WorldSeeds.Marrow_WithCompanion`
-(player and Mona together in the square; the prose walks them both to the tavern; scored on Mona
-ending the turn there). Run it before touching the prompts. See
+(player and Mona both in the square; the player's own action carries them to the tavern where
+Mona is discovered present; scored on Mona ending the turn there).
+
+**Reproduced 2026-09-06, deepseek-v3.2 / StreamLake, n=7: Mona left behind 6/7** (`required
+8/14`, forbidden 0.00, the player's own move landing 7/7). The failure is a clean omission — no
+re-introduction, no workaround, the companion's move simply not emitted.
+
+**The prose shape was the whole lever, and it is a lesson in its own right.** A first draft
+narrated Mona plainly walking to the tavern with the player ("falls into step at your shoulder",
+"push through the door together") and scored **14/14 clean, 7/7** — measuring a behaviour the
+save never produced. Dropping the explicit travel cues so she is only *discovered present* in the
+room the player entered, matching save turn 5, took it to 6/7 failure with nothing else changed.
+The model handles a stated follow and drops an implied one. First half of the §3 gate met; still
+needs a second live sighting before the prompt change. See
 [`todo/TODO_COMPANION_FOLLOW_.md`](todo/TODO_COMPANION_FOLLOW_.md).
 
 **Detection, meanwhile:** an NPC whose `LocationId` disagrees with where recent narration keeps
