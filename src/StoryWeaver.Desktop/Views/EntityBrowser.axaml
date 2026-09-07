@@ -1,0 +1,52 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:StoryWeaver.Desktop.ViewModels"
+             xmlns:p="using:StoryWeaver.Desktop.Presentation"
+             x:Class="StoryWeaver.Desktop.Views.EntityBrowser"
+             x:DataType="vm:EntityTabViewModel">
+  <Grid Margin="20">
+    <!-- Keep both controls alive: Back and tab changes preserve list scroll position. -->
+    <Grid RowDefinitions="Auto,Auto,*" IsVisible="{Binding IsListVisible}">
+      <TextBlock Classes="heading" Text="{Binding Title}" Margin="0,0,0,12" />
+      <TextBlock Grid.Row="1" Text="No information to display yet." Classes="secondary"
+                 IsVisible="{Binding IsEmpty}" />
+      <ListBox Grid.Row="2" ItemsSource="{Binding Entities}" SelectedItem="{Binding Selected}"
+               Background="Transparent" BorderThickness="0"
+               AutomationProperties.Name="World information list">
+        <ListBox.Styles>
+          <Style Selector="ListBoxItem">
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+          </Style>
+        </ListBox.Styles>
+        <ListBox.ItemTemplate>
+          <DataTemplate x:DataType="p:EntityDetails">
+            <StackPanel Margin="4,10" Spacing="4">
+              <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+              <TextBlock Text="{Binding Summary}" Classes="secondary" FontSize="13" />
+            </StackPanel>
+          </DataTemplate>
+        </ListBox.ItemTemplate>
+      </ListBox>
+    </Grid>
+    <Grid RowDefinitions="Auto,*" IsVisible="{Binding IsDetailVisible}">
+      <Button Content="← Back to list" Click="BackToList" HorizontalAlignment="Left" Margin="0,0,0,16" />
+      <ScrollViewer x:Name="DetailScroll" Grid.Row="1" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Spacing="14">
+          <TextBlock Classes="heading" Text="{Binding Selected.Name}" />
+          <TextBlock Classes="secondary" Text="{Binding Selected.Summary}" />
+          <TextBlock Text="{Binding Selected.Description}" />
+          <ItemsControl ItemsSource="{Binding Selected.Fields}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="p:DetailField">
+                <TextBlock Margin="0,12,0,0" TextWrapping="Wrap">
+                  <Run Text="{Binding Label}" FontWeight="SemiBold" /><Run Text=": " />
+                  <Run Text="{Binding Value}" />
+                </TextBlock>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </ScrollViewer>
+    </Grid>
+  </Grid>
+</UserControl>

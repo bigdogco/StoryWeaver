@@ -1,0 +1,124 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:StoryWeaver.Desktop.ViewModels"
+        xmlns:p="using:StoryWeaver.Desktop.Presentation"
+        xmlns:views="using:StoryWeaver.Desktop.Views"
+        x:Class="StoryWeaver.Desktop.Views.MainWindow" x:Name="Root"
+        x:DataType="vm:PlayShellViewModel"
+        Title="StoryWeaver" Width="1200" Height="820" MinWidth="800" MinHeight="560">
+  <Grid RowDefinitions="Auto,Auto,Auto,*">
+    <Menu x:Name="MainMenu">
+      <MenuItem Header="_File">
+        <MenuItem Header="_Library" IsEnabled="False" />
+        <MenuItem Header="_New Playthrough" IsEnabled="False" />
+        <MenuItem Header="_Open Save" IsEnabled="False" />
+        <MenuItem Header="_World Editor" IsEnabled="False" />
+        <Separator />
+        <MenuItem Header="_Close Playthrough" IsEnabled="False" />
+        <MenuItem Header="E_xit" Command="{Binding #Root.ExitCommand}" />
+      </MenuItem>
+      <MenuItem Header="_Edit" SubmenuOpened="EditMenuOpened">
+        <MenuItem Header="_Undo" InputGesture="Ctrl+Z" Command="{Binding #Root.UndoCommand}" />
+        <MenuItem Header="_Redo" InputGesture="Ctrl+Y" Command="{Binding #Root.RedoCommand}" />
+        <Separator />
+        <MenuItem Header="Cu_t" InputGesture="Ctrl+X" Command="{Binding #Root.CutCommand}" />
+        <MenuItem Header="_Copy" InputGesture="Ctrl+C" Command="{Binding #Root.CopyCommand}" />
+        <MenuItem Header="_Paste" InputGesture="Ctrl+V" Command="{Binding #Root.PasteCommand}" />
+        <MenuItem Header="Select _All" InputGesture="Ctrl+A" Command="{Binding #Root.SelectAllCommand}" />
+        <Separator />
+        <MenuItem Header="_Settings" Command="{Binding #Root.SettingsCommand}" />
+      </MenuItem>
+      <MenuItem Header="_View">
+        <MenuItem Header="Show/Hide _World Panel" InputGesture="Ctrl+Shift+W" Command="{Binding ToggleWorldCommand}" />
+        <MenuItem Header="_Reset Pane Split" Command="{Binding #Root.ResetSplitCommand}" />
+        <MenuItem Header="_Text Size">
+          <MenuItem Header="_Larger" Command="{Binding LargerTextCommand}" />
+          <MenuItem Header="_Smaller" Command="{Binding SmallerTextCommand}" />
+          <MenuItem Header="_Default" Command="{Binding ResetTextCommand}" />
+        </MenuItem>
+      </MenuItem>
+      <MenuItem Header="_Story">
+        <MenuItem Header="_Retry" IsEnabled="False" />
+        <MenuItem Header="Re_roll" IsEnabled="False" />
+        <MenuItem Header="_Update State" IsEnabled="False" />
+        <MenuItem Header="_Check Canon" IsEnabled="False" />
+      </MenuItem>
+      <MenuItem Header="_Help">
+        <MenuItem Header="_Keyboard Shortcuts" InputGesture="F1" Command="{Binding #Root.ShortcutsCommand}" />
+        <MenuItem Header="_About" Command="{Binding #Root.AboutCommand}" />
+      </MenuItem>
+    </Menu>
+    <Border Grid.Row="1" Padding="20,12" BorderThickness="0,1,0,1"
+            BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+      <Grid ColumnDefinitions="*,Auto">
+        <TextBlock Text="{Binding SceneTitle}" FontWeight="SemiBold" />
+        <TextBlock Grid.Column="1" Text="{Binding SessionStatus}" Classes="secondary" Margin="16,0,0,0" />
+      </Grid>
+    </Border>
+    <Border Grid.Row="2" Padding="16,8" IsVisible="{Binding HasNotice}">
+      <Grid ColumnDefinitions="*,Auto">
+        <TextBlock Text="{Binding Notice}" VerticalAlignment="Center" />
+        <Button Grid.Column="1" Content="Dismiss" Command="{Binding DismissNoticeCommand}" Margin="12,0,0,0" />
+      </Grid>
+    </Border>
+    <Grid Grid.Row="3" x:Name="PlayLayout">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="52*" MinWidth="330" />
+        <ColumnDefinition Width="7" />
+        <ColumnDefinition Width="48*" MinWidth="310" />
+      </Grid.ColumnDefinitions>
+      <Grid RowDefinitions="*,Auto">
+        <ScrollViewer x:Name="NarrationScroll" HorizontalScrollBarVisibility="Disabled" Padding="28,24">
+          <StackPanel>
+            <StackPanel IsVisible="{Binding IsEmpty}" Spacing="16">
+              <TextBlock Classes="heading" Text="Your story starts here" />
+              <TextBlock Text="The Play shell is ready to review. Session opening and live turns will be connected next." />
+              <Button Content="Explore a preview scene" Command="{Binding #Root.PreviewCommand}" HorizontalAlignment="Left" />
+            </StackPanel>
+            <ItemsControl ItemsSource="{Binding Narration}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="p:NarrativeParagraph">
+                  <StackPanel Spacing="8" Margin="0,0,0,24">
+                    <TextBlock Text="{Binding Label}" Classes="secondary" FontSize="12" />
+                    <views:NarrativeText Paragraph="{Binding}" Shell="{Binding #Root.Model}"
+                                         FontSize="{Binding #Root.Model.NarrationSize}"
+                                         FontFamily="Georgia" TextWrapping="Wrap" />
+                  </StackPanel>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </ScrollViewer>
+        <Border Grid.Row="1" Padding="20,14" BorderThickness="0,1,0,0"
+                BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+          <StackPanel Spacing="8">
+            <TextBlock Classes="secondary" FontSize="12"
+                       Text="Session actions are unavailable in this shell. Your draft stays while browsing." />
+            <TextBlock Text="What do you do?" />
+            <TextBox x:Name="DraftEditor" Text="{Binding Draft, Mode=TwoWay}" AcceptsReturn="True"
+                     TextWrapping="Wrap" MinHeight="90" MaxHeight="170" FontSize="16"
+                     PlaceholderText="Speak, act, or describe your next move…"
+                     AutomationProperties.Name="Your next action" />
+            <Button Content="Send" IsEnabled="False" HorizontalAlignment="Right"
+                    ToolTip.Tip="Available when live sessions are connected." />
+          </StackPanel>
+        </Border>
+      </Grid>
+      <GridSplitter x:Name="PaneSplitter" Grid.Column="1" ResizeDirection="Columns"
+                    ResizeBehavior="PreviousAndNext" HorizontalAlignment="Stretch"
+                    Background="{DynamicResource SystemControlForegroundBaseLowBrush}"
+                    IsVisible="{Binding ShowWorldPanel}" DragCompleted="SplitterDragCompleted"
+                    AutomationProperties.Name="Resize story and world panes" />
+      <TabControl Grid.Column="2" SelectedIndex="{Binding SelectedTab, Mode=TwoWay}"
+                  IsVisible="{Binding ShowWorldPanel}">
+        <TabControl.ItemsPanel>
+          <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
+        </TabControl.ItemsPanel>
+        <TabItem Header="Characters"><views:EntityBrowser DataContext="{Binding Characters}" /></TabItem>
+        <TabItem Header="Locations"><views:EntityBrowser DataContext="{Binding Locations}" /></TabItem>
+        <TabItem Header="Canon"><views:EntityBrowser DataContext="{Binding Canon}" /></TabItem>
+        <TabItem Header="Items"><views:EntityBrowser DataContext="{Binding Items}" /></TabItem>
+      </TabControl>
+    </Grid>
+  </Grid>
+</Window>

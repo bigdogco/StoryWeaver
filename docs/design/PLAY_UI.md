@@ -4,6 +4,13 @@
 selected framework.** This document records the agreed direction; details marked
 proposed or open still need design discussion before implementation.
 
+**Implementation checkpoint, 2026-09-07:** the approved first shell is in
+`src/StoryWeaver.Desktop`, using Avalonia 12.1.2 on .NET 8. Menus, pane resizing,
+tabbed list/detail navigation and illustrative explicit-ID links are implemented.
+View preferences persist separately from saves. Live session integration and
+backend narration-reference generation are still open. See the
+[desktop review guide](../../src/StoryWeaver.Desktop/README.md).
+
 ## Purpose and scope
 
 An RPG interface where the player can read and act while inspecting the world.
@@ -105,11 +112,12 @@ The UI must not own gameplay, authoring policy or entity-resolution policy.
 
 ## Next design decisions
 
-1. Draw the Play wireframe, including list, detail, busy and failure states.
+1. Review the implemented Play shell; design and connect real busy/failure states.
 2. Settle tab names, initial contents and in-session correction interactions.
 3. Design reliable narration references against the existing narration pipeline.
 4. Choose visual styling, keyboard navigation and behaviour at narrow window sizes
    or with more tabs than fit, including future mod tabs.
 5. Design library, save selection, player creation and pack-authoring workflows.
-6. Select Avalonia version, runtime requirements, desktop paths and session lifetime
-   before scaffolding. This document does not approve a runtime upgrade.
+6. Design desktop pack/save paths and session lifetime before connecting sessions.
+   Avalonia 12.1.2 and .NET 8 are now implemented; view preferences live under
+   LocalApplicationData/StoryWeaver independently of pack/save paths.

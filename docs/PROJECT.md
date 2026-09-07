@@ -2,7 +2,7 @@
 
 **Status:** approved 2026-08-13
 **Created:** 2026-08-13
-**Latest decision update:** 2026-09-07 — Avalonia selected; first Play UI design recorded
+**Latest decision update:** 2026-09-07 — Avalonia selected; first Play shell implemented
 
 The standing reference for what this project is and where it is going. Written after three
 weeks of post-bootstrap work in which every task was chosen by whatever the last play
@@ -54,7 +54,7 @@ beneath it and is what a client talks to.
 | **Cli** | play UI: the dispatcher, the turn loop, `/edit`, authoring prompts, and the eval *renderer* | Throwaway by design, and **client one of two** — it renders and prompts; `StorySession` owns canon. Now genuinely thin: the instrumentation moved to Harness 2026-09-04 when the Cli was held to the UI rules, so the old "two-thirds eval scaffolding" is gone. 1,813 lines, ~214 of them the eval renderer — client-side by right, since the Harness scores and the CLI draws. |
 | **App** | composition: opening a session out of pack, prompts, provider and save | New 2026-09-04. Exists because opening needs Storage *and* Llm, and Core references neither — no other project could see both. Renders nothing, asks nothing. |
 | **Harness** | instrumentation: the extraction eval, the self-test suites, the live API probes, and the shared world fixture | New 2026-09-04. Everything that measures the engine rather than plays it, pulled out of the Cli because a client — thin by rule — cannot own the benchmark. References Core + Llm + Storage + App (it tests all of them). The eval is UI-bound and returns a structured `EvalReport` a client renders; the self-tests and probes are dev-only and print directly. `ResponseSelfTest` stays in Llm, with the internal wire types it checks. |
-| **UI** | not built | Avalonia selected 2026-09-07. First Play layout recorded in `design/PLAY_UI.md`. See Phase 2. |
+| **Desktop** | Avalonia Play shell | Added 2026-09-07: menus, resizable narration/input and tabbed details, view preferences and illustrative preview. References App; live sessions and authoring are not connected yet. See `design/PLAY_UI.md`. |
 | **Plugins** | not built, not designed | See Phase 3. |
 
 **What the base game is** (decided 2026-08-13): the narrator, and the canon it maintains —
@@ -155,12 +155,13 @@ Two consequences to design for, not to solve here:
 **Stack**
 
 C# / .NET 8 · OpenRouter, per-role models · JSON behind `IWorldRepository`, permanently ·
-Avalonia UI (design stage) · secrets in env vars or gitignored `*.local.json` only.
+Avalonia 12.1.2 (initial shell) · secrets in env vars or gitignored `*.local.json` only.
 
 **Avalonia selected 2026-09-07, at the player's request.** Blazor was selected
 2026-09-05 and reversed 2026-09-06; MAUI Blazor Hybrid remains unselected.
 The application launches in its own desktop window without an external browser.
-Avalonia version, runtime requirements and desktop integration remain to be designed.
+The first shell uses Avalonia 12.1.2 and the existing .NET 8 target. Desktop session
+integration remains to be designed and connected.
 
 The thin-client rule still applies. Presentation owns forms, layout and interaction;
 App composes sessions and Core owns gameplay and canon. Replacing the UI should
@@ -256,19 +257,21 @@ So it is deferred, and it should be sequenced against something that actually ne
 where *"did the narration contradict the roll?"* is the first objectively checkable property of
 prose.
 
-### Phase 2 — Graphical UI — **current: design**
+### Phase 2 — Graphical UI — **current: shell implementation and workflow design**
 
 > Can someone who did not write the engine author a pack and play it, without the CLI?
 
-**Starting point for design (updated 2026-09-07).** Avalonia is selected; no UI
-project exists yet. The [first Play design](design/PLAY_UI.md) records a resizable
+**Current implementation (updated 2026-09-07).** The player approved adding
+`StoryWeaver.Desktop`; the initial Avalonia shell is built and ready for manual
+review. It provides menus, the Play layout, list/detail navigation, explicit
+preview links and presentation preferences. It does not open live sessions yet.
+The [first Play design](design/PLAY_UI.md) records a resizable
 story/details split, tabbed world information, character list-to-detail navigation
 and clickable narration references. Reference generation remains an open backend
 design. Design must distinguish editing a reusable pack from editing a running
 save and cover both authoring and play. Library and editor workflows, desktop
 integration, session lifetime and detailed in-progress/failure feedback remain open.
-The repository currently targets .NET 8; the UI host's SDK/runtime requirements
-and any resulting upgrade are implementation decisions still to make.
+The repository and desktop both target .NET 8; no runtime upgrade was needed.
 
 **The pack format is now settled**, which is what Phase 1 was for: seed, lore, sheets,
 scenario, opening, manifest, prompts. An editor built now is built once.

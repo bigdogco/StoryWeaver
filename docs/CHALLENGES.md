@@ -1120,6 +1120,49 @@ until then; until it exists, check `file`/endings before and after moving a file
 
 ## Resolved
 
+### Secondary text renders black in the dark theme
+
+Reported 2026-09-08 on information-list subtitles. The shared secondary style
+overrode the containing control's foreground through TextFillColorSecondaryBrush.
+Removed that override so secondary text follows the parent text colour, including
+selected-row colours, with 0.8 opacity for emphasis. This applies to list subtitles,
+detail summaries and other secondary labels. Manual theme/selection recheck is
+pending. Release build is clean; Debug output was locked by the running preview.
+
+### Detail values lack clear visible labels
+
+Reported 2026-09-08 during shell review: values such as Marrow Square and Uneasy
+appeared without a clear indication of their meaning. Field names already existed
+in DetailField, but the template presented them separately as smaller secondary
+text. Replaced that presentation with one wrapping label/value line: a bold label,
+colon and value, all using normal text contrast. The shared template covers all
+information tabs. The build passes; visual confirmation is pending manual review.
+
+### Narration links sit above the surrounding text
+
+Reported 2026-09-08 during manual review of the Avalonia shell. An embedded button
+without TextBlock.BaselineOffset uses its full height as its text baseline, so the
+letters sit above surrounding runs by the font's descent. VerticalAlignment on
+the button does not supply its text baseline. Confirmed against Avalonia 12.1.2's
+[EmbeddedControlRun implementation](https://github.com/AvaloniaUI/Avalonia/blob/12.1.2/src/Avalonia.Controls/Documents/InlineRun.cs).
+
+The link button now reports its label's measured TextLayout.Baseline, including
+top insets, on each measure. Its label stays the same TextBlock during hover;
+only underline decoration changes. Font properties follow the narration. The
+solution builds cleanly; the player's visual recheck at different text sizes is
+still pending in FUTURE_WORK.
+
+### Avalonia shell build needs XAML warning review
+
+Found and resolved 2026-09-07 while adding StoryWeaver.Desktop. The C# build's
+TreatWarningsAsErrors did not turn Avalonia XAML diagnostics into build failures:
+an obsolete TextBox.Watermark warning and a warning about MainWindow lacking a
+public default constructor were emitted separately. Use PlaceholderText and keep
+a loader/designer constructor alongside the injected production constructor.
+List item content alignment belongs on ListBoxItem in Avalonia 12, not ListBox.
+The final solution build has zero warnings and errors; review the whole build
+output rather than treating a successful exit code as proof of warning-free XAML.
+
 ### A character could not be renamed
 
 **Resolved 2026-07-23** by the `character_renamed` delta and the `/rename` command.

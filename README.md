@@ -3,10 +3,11 @@
 A long-form text RPG driven by an LLM, built around one idea: **canon and narration are
 separate things.**
 
-> **Status: Phase 2 — UI design.** Bootstrap and Phase 1 (the story layer) are complete.
+> **Status: Phase 2 — initial Avalonia shell.** Bootstrap and Phase 1 (the story layer) are complete.
 > The CLI is playable, packs define a story as well as a world, and a recorded 230-turn
 > session demonstrated persistent canon over long play. The client/backend separation is
-> complete; the next phase is graphical authoring and play. See
+> complete; the graphical Play shell is available for manual review, with live
+> sessions and authoring still to connect. See
 > [docs/PROJECT.md](docs/PROJECT.md) for the standing decisions and phase goals.
 
 ## The idea
@@ -49,17 +50,20 @@ context remain known limits. Model quality also varies by serving provider. See
 | `StoryWeaver.App` | Composes packs, prompts, provider and persistence into a playable session; returns data rather than prompting or rendering. |
 | `StoryWeaver.Harness` | Extraction eval, offline self-tests, live API probes and shared fixtures. |
 | `StoryWeaver.Cli` | First UI client: collects input and renders play and eval results. |
+| `StoryWeaver.Desktop` | Avalonia Play shell: menus, narration/input, tabbed world details and view preferences. Live sessions are not connected yet. |
 
 Dependencies point inward. `Core` references no other project. `App` opens sessions;
 `Core/StorySession` owns canon and guards operations that change it. Clients call those
 shared operations rather than implementing gameplay or authoring policy themselves.
-CLI/graphical feature parity is not required. The graphical client is not built yet.
+CLI/graphical feature parity is not required. The graphical shell currently uses
+explicitly labelled illustrative data for reviewing presentation and navigation.
 
 ## Stack
 
 - **.NET 8** (LTS)
-- **Graphical UI:** Avalonia, selected 2026-09-07. Phase 2 is in design;
-  no UI project exists yet. See the [first Play design](docs/design/PLAY_UI.md).
+- **Graphical UI:** Avalonia 12.1.2, using .NET 8. The first shell is built;
+  see the [Play design](docs/design/PLAY_UI.md) and
+  [desktop review guide](src/StoryWeaver.Desktop/README.md).
 - **OpenRouter** for model access, configured **per role** (narration, extraction,
   summarize, worldgen) rather than per call site, since narration and extraction want very
   different models. Summarize and worldgen are reserved roles, not implemented features.
@@ -83,6 +87,15 @@ Phase 2 aims to make world creation, character and lore authoring, placement, pl
 save/resume and correction possible without a terminal.
 
 ## Getting started
+
+To review the desktop shell (no API key needed):
+
+```powershell
+dotnet run --project src/StoryWeaver.Desktop -- --preview
+```
+
+This opens an illustrative scene with working navigation and view controls.
+Live play remains in the CLI for now.
 
 Requires the .NET 8 SDK and an [OpenRouter](https://openrouter.ai) API key.
 

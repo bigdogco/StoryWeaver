@@ -24,14 +24,20 @@ extraction pass reliable?", and none of these help answer it.
 
 - [ ] **Graphical UI** — **[Phase 2]**. Avalonia selected 2026-09-07.
       [First Play design](../design/PLAY_UI.md) records the agreed layout and
-      remaining proposals. A first interactive conversation wireframe was created
-      2026-09-07 (see TODO_PLAY_WIREFRAME_.md); preview behaviour and layout still
-      need user review. File/Edit/View/Story/Help menus approved in PLAY_UI.md;
-      add them to the wireframe and settle keyboard shortcuts. Next: refine
-      wireframes, tab contents and correction flows,
+      remaining proposals. The first Avalonia shell is implemented (2026-09-07;
+      TODO_AVALONIA_SHELL_.md), superseding the conversation wireframe as the
+      menu/layout review surface. Manual review remains pending, including the
+      2026-09-08 narration-link baseline fix at different text sizes and on hover,
+      explicit detail field labels in light/dark themes and narrow panes, and
+      subtitle contrast on normal/hovered/selected rows after theme changes; see
+      [desktop review guide](../../src/StoryWeaver.Desktop/README.md). Next: connect
+      App/Core session opening and player creation, real turns and state projection,
+      busy/failure feedback, retry/reroll and close behaviour; refine tab contents
+      and correction flows,
       reliable narration references (including persistence and older history),
       visual/keyboard behaviour, library and pack-editor workflows, and desktop
-      lifecycle/path/runtime decisions. The UI must support authoring and play
+      lifecycle and pack/save path decisions. Avalonia 12.1.2 runs on the existing
+      .NET 8 target. The UI must support authoring and play
       without a terminal and launch in its own desktop window.
       Keep host-specific services outside shared interaction logic, and keep
       gameplay/authoring policy in the backend.
