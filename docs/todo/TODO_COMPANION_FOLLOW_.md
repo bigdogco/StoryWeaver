@@ -64,9 +64,10 @@ its root in there being no concept of a companion following the player.
 
 ## Still held / open
 
-- [ ] `prompts/narration.md` clarification (a character shown in a scene is really there;
-      established companions may accompany the player). **Not eval-measurable** (fixed narration),
-      so it ships on judgement, not a number — separate decision.
+- [x] `prompts/narration.md` clarification (2026-09-06): the people shown as present are the
+      scene; do not stage someone the state places elsewhere; travel is the exception — a
+      companion at the player's side may go with them and is then present where they arrive.
+      **Not eval-measurable** (fixed narration), so it ships on judgement — confirm in live play.
 - [ ] **(manual, player)** Watch for a second live sighting; confirm the extraction fix behaves in
       real play (the eval uses fixed narration, so live play is the only test of the two prompts
       working together).

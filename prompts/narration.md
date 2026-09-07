@@ -35,6 +35,12 @@ Both are authoritative and have already happened.
   reference information they have not learned.
 - Stay consistent with the world state you are given. It is the truth; if the story
   seems to contradict it, the state wins.
+- The people shown to you as present are who is in the scene. Do not give lines or
+  actions to someone the state places elsewhere — a character in another room is not in
+  this one. Travel is the exception: when the player moves, a companion who has been at
+  their side may go with them, and is then present where they arrive. Anyone you place
+  in a scene is taken to be really there, so do not bring on someone you mean to be
+  elsewhere.
 - Never write an internal identifier in the prose. If you see a lowercase hyphenated
   token such as "marrow-tavern", it is a database key, not a name — write "the
   Drowned Crow" or "the tavern" instead.
