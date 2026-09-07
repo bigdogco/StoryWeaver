@@ -22,11 +22,13 @@ a reason. Nothing is left stranded in a finished doc.
 These were cut from the bootstrap phase deliberately — bootstrap exists to answer "is the
 extraction pass reliable?", and none of these help answer it.
 
-- [ ] **Graphical UI** — **[Phase 2]**. Framework selection is open again as of
-      2026-09-06: Blazor was selected 2026-09-05 and reversed at the player's
-      request. The UI must support authoring and play without a terminal, and
-      should launch as a standalone desktop application without requiring an
-      external browser. Re-select the framework and host before implementation.
+- [ ] **Graphical UI** — **[Phase 2]**. Avalonia selected 2026-09-07.
+      [First Play design](../design/PLAY_UI.md) records the agreed layout and
+      remaining proposals. Next: wireframes, tab contents and correction flows,
+      reliable narration references (including persistence and older history),
+      visual/keyboard behaviour, library and pack-editor workflows, and desktop
+      lifecycle/path/runtime decisions. The UI must support authoring and play
+      without a terminal and launch in its own desktop window.
       Keep host-specific services outside shared interaction logic, and keep
       gameplay/authoring policy in the backend.
 - [ ] **Streaming narration** — not implemented, but `ILlmClient` is shaped so the

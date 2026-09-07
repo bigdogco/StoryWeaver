@@ -7,6 +7,19 @@ ones that turn out to be non-issues, with the resolution noted.
 
 ## Open
 
+### Narration links need reliable entity identity
+
+Identified during Play UI design, 2026-09-07. Names are mutable and not unique,
+so matching visible narration text against names cannot reliably choose a
+character or location. Narration can also mention an entity before extraction
+has created it. The UI must not infer identity or create canon to make a link work.
+
+Before implementing links, design how references carry permanent IDs, how they
+become available relative to extraction, and how they persist across save/resume.
+Older history without reference metadata and missing targets need graceful
+handling. No linking mechanism has been selected; see
+[Play UI design](design/PLAY_UI.md).
+
 ### A companion narrated beside the player is not moved in canon
 
 **Severity: Medium.** Found 2026-09-06 in the `uno-spike` save, while looking at the UI. One
