@@ -847,6 +847,14 @@ express. The CLI is the first client, not the API.
 
 ### Unscheduled
 
+- [ ] **Custom desktop themes / colour schemes.** Deferred at the player's request
+      2026-09-08; no implementation needed now. Keep the current System/Light/Dark
+      options. Later, consider named schemes (for example Parchment or Midnight)
+      built on Fluent with shared colour resources. Decide whether switching is
+      live or requires restart, and review text contrast across normal, hovered,
+      selected, focused and disabled states. Theme names and visual designs are
+      examples, not selected requirements.
+
 - [ ] **`/item` authoring**, matching `/place` and `/character`. Extraction covers the observed
       cases; add it when a session needs to place an object by hand. *(TODO_ITEMS)*
 - [ ] **`character_described` / `location_described` deltas.** Correctly sized at 3 of 11
