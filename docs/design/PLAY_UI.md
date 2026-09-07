@@ -28,6 +28,27 @@ be able to supply UI here; the extension mechanism belongs to the future mod des
 Characters use **a list with a detail view** for now. Selecting a character opens
 their details in the same pane. Back returns to the list.
 
+## Agreed menu bar
+
+A desktop menu bar sits above both panes. Approved 2026-09-07.
+
+| Menu | Actions |
+|---|---|
+| File | Library, New Playthrough, Open Save, World Editor, Close Playthrough, Exit |
+| Edit | Undo, Redo, Cut, Copy, Paste, Select All, Settings |
+| View | Show/Hide World Panel, Reset Pane Split, Text Size |
+| Story | Retry, Reroll, Update State, Check Canon |
+| Help | Keyboard Shortcuts, About |
+
+Edit's Undo/Redo apply to text fields, not story turns or canon mutations. Story
+actions are enabled only when supported by the current session state; their
+availability and outcomes follow the backend. Frequently used actions can also
+appear near their context, using the same commands as the menu.
+
+The menu provides discoverability and keyboard access. Exact shortcut assignments
+and the detailed workflows behind these entries remain to be designed. Check
+Canon reports integrity findings; it does not silently repair the world.
+
 ## Proposed interaction details
 
 - Preserve list position and filters when returning from details. Each tab keeps

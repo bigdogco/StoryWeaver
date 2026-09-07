@@ -24,7 +24,11 @@ extraction pass reliable?", and none of these help answer it.
 
 - [ ] **Graphical UI** — **[Phase 2]**. Avalonia selected 2026-09-07.
       [First Play design](../design/PLAY_UI.md) records the agreed layout and
-      remaining proposals. Next: wireframes, tab contents and correction flows,
+      remaining proposals. A first interactive conversation wireframe was created
+      2026-09-07 (see TODO_PLAY_WIREFRAME_.md); preview behaviour and layout still
+      need user review. File/Edit/View/Story/Help menus approved in PLAY_UI.md;
+      add them to the wireframe and settle keyboard shortcuts. Next: refine
+      wireframes, tab contents and correction flows,
       reliable narration references (including persistence and older history),
       visual/keyboard behaviour, library and pack-editor workflows, and desktop
       lifecycle/path/runtime decisions. The UI must support authoring and play
