@@ -59,8 +59,32 @@ narrated Mona plainly walking to the tavern with the player ("falls into step at
 "push through the door together") and scored **14/14 clean, 7/7** — measuring a behaviour the
 save never produced. Dropping the explicit travel cues so she is only *discovered present* in the
 room the player entered, matching save turn 5, took it to 6/7 failure with nothing else changed.
-The model handles a stated follow and drops an implied one. First half of the §3 gate met; still
-needs a second live sighting before the prompt change. See
+The model handles a stated follow and drops an implied one.
+
+**Fixed 2026-09-06 by an extraction-prompt rule, measured across two providers.** `extraction.md`
+gained one bullet: a character already in the known ids, present in the scene at the player's side
+but placed elsewhere by the state, came along — emit `character_moved` — explicitly *not* for
+someone merely spoken about, remembered, or named as elsewhere (the mention/arrival line that
+protects `player-absent-character` and `narrator-mention`). Matched before/after, pinned per
+provider:
+
+| | StreamLake | Baidu |
+|---|---|---|
+| `companion-follows` before | Mona missed 7/7 | Mona missed ~2/6 |
+| `companion-follows` after | clean 7/7 | clean 6/6 |
+| scored-set regressions | none | none |
+| absent-person guards | forbidden 0 | forbidden 0 |
+
+**The bug is provider-dependent** — StreamLake fails it hard, Baidu mostly gets it right unaided —
+which is why it matters: the play path routes across both, and the rule lifts the weak one to
+clean without denting the strong one or the scored set. (Baidu was rate-limited during the sweep,
+so its n is smaller; forbidden stayed 0 on every successful run.)
+
+**On the §3 gate:** this shipped on the eval reproduction plus the two-provider measurement rather
+than waiting for a second live session — a deliberate scope call by the player, recorded as such.
+The companion clarification for `narration.md` (a character shown in a scene is really there;
+established companions may accompany the player) is **not** eval-measurable — the eval uses fixed
+narration — and remains a separate, unshipped change. See
 [`todo/TODO_COMPANION_FOLLOW_.md`](todo/TODO_COMPANION_FOLLOW_.md).
 
 **Detection, meanwhile:** an NPC whose `LocationId` disagrees with where recent narration keeps

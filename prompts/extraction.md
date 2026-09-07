@@ -48,6 +48,15 @@ Critical rules:
   are headed. Recording an arrival early is worse than recording it late: the next
   turn, when they really do arrive, has nothing left to report and the journey
   vanishes. Introducing the place they named is fine; moving anyone into it is not.
+- Someone can travel with the player without the prose spelling it out. When a character
+  already in the known ids is present in the scene at the player's side — acting in the
+  room, speaking to them face to face — but the state still places them somewhere the
+  player has left, they came along: emit character_moved to the player's location.
+  Canon only contains what you write down, so a companion the state leaves behind is one
+  the next turn believes is in another room, contradicting the story the player just
+  read. This is only for someone the prose puts in the room NOW. Someone merely spoken
+  about, remembered, or named as being elsewhere has not moved — the same line that
+  separates a mention from an arrival everywhere else.
 - When the story reveals the name of someone already in the known ids — an
   anonymous figure who gives their name, a stranger someone greets — emit
   character_renamed with their EXISTING id. Do not introduce them again as a new

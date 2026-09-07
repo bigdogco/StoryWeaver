@@ -48,16 +48,32 @@ its root in there being no concept of a companion following the player.
 - [ ] **(optional)** Re-run pinned across a second provider / a couple more sweeps for a firmer
       baseline before the fix, per the eval-honesty rules (one routed sweep is one data point)
 
-## Held pending the threshold above (do NOT do yet)
+## Fix — extraction rule (done 2026-09-06)
 
-- [ ] Extraction-reconciliation rule in `prompts/extraction.md`: a character already in canon,
-      shown present with the player somewhere canon does not place them, has moved there — on the
-      existing "where do they END the turn / present vs merely mentioned" discipline
-- [ ] `prompts/narration.md` clarification: established companions may accompany the player
-      between locations; a character shown in a scene is really there
-- [ ] Re-run `companion-follows` (and the full scored set as a regression guard) pinned by
-      provider; promote `companion-follows` into `EvalScenarios.All` only once the behaviour is
-      settled and passing
+- [x] Extraction-reconciliation rule added to `prompts/extraction.md`: a character already in the
+      known ids, present in the scene at the player's side but placed elsewhere by the state, has
+      moved — `character_moved` — explicitly not for someone spoken about, remembered, or named as
+      elsewhere (the mention/arrival line that protects `player-absent-character` /
+      `narrator-mention`).
+- [x] Matched before/after, pinned per provider:
+      - **StreamLake:** `companion-follows` 7/7 fail → clean 7/7; scored set unchanged; guards
+        forbidden 0.
+      - **Baidu:** ~2/6 fail → clean 6/6; scored set unchanged; guards forbidden 0 (rate-limited,
+        smaller n).
+      - Finding: the bug is provider-dependent (StreamLake weak, Baidu strong).
+
+## Still held / open
+
+- [ ] `prompts/narration.md` clarification (a character shown in a scene is really there;
+      established companions may accompany the player). **Not eval-measurable** (fixed narration),
+      so it ships on judgement, not a number — separate decision.
+- [ ] **(manual, player)** Watch for a second live sighting; confirm the extraction fix behaves in
+      real play (the eval uses fixed narration, so live play is the only test of the two prompts
+      working together).
+- [ ] Promote `companion-follows` into `EvalScenarios.All` only once the behaviour is settled and
+      passing across providers (currently a diagnostic; provider-dependent, so premature to fold
+      into the scored baseline).
+- [ ] **(optional)** A second-provider re-run without rate-limiting for a firmer Baidu n.
 
 ## Notes
 
