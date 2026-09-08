@@ -46,6 +46,13 @@ is never opened as a StorySession or written to a save.
 
 ## Manual review
 
+Window placement: resize and move the main window and Library independently,
+close and reopen each (including Library Cancel), then restart the app. Check
+maximized reopening and restoring to the previous normal size. If using multiple
+monitors, disconnect the saved monitor and confirm the window remains accessible.
+Placement is stored in `window-main.json` and `window-library.json` beside the
+desktop view preferences.
+
 Resize Library: the active list should expand or shrink and scroll internally,
 while workspace controls and action buttons remain visible. Minimum size is
 520 × 650.

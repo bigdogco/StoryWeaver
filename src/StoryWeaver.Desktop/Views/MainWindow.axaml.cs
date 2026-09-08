@@ -46,6 +46,7 @@ public sealed partial class MainWindow : Window
         PasteCommand = new(() => Edit(t => t.Paste()), () => _editor is { IsReadOnly: false });
         SelectAllCommand = new(() => Edit(t => t.SelectAll()), () => _editor is not null);
         InitializeComponent();
+        WindowPlacementStore.Attach(this, "main", message => Model.Notice = message);
         DataContext = model;
         DraftEditor.GotFocus += (_, _) => _editor = DraftEditor;
         KeyBindings.Add(new KeyBinding { Gesture = new(Key.W, KeyModifiers.Control | KeyModifiers.Shift), Command = Model.ToggleWorldCommand });

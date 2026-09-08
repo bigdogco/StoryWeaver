@@ -1,5 +1,8 @@
 # Future Work
 
+- [ ] Manually review desktop window placement: main and Library resize/move,
+  maximize/reopen, restore normal size and disconnected-monitor fallback.
+
 **The queue.** Everything that could be done and is not scheduled. Pull from here when
 starting a task.
 

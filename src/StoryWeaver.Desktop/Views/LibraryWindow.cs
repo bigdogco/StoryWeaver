@@ -106,6 +106,7 @@ public sealed class LibraryWindow : Window
         if (!string.IsNullOrWhiteSpace(workspacePath)) SetWorkspace(workspacePath);
         else SetStatus("Choose a workspace to see its worlds and playthroughs.");
         SetMode(initialMode);
+        WindowPlacementStore.Attach(this, "library", SetStatus);
     }
 
     private async Task ChooseWorkspaceAsync()
