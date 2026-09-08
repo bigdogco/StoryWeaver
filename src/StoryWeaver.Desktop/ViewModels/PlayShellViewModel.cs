@@ -125,6 +125,32 @@ public sealed class PlayShellViewModel : ObservableObject
         Raise(nameof(SessionStatus));
     }
 
+    public async Task LoadTranscriptAsync(StorySession session, SessionContext context)
+    {
+        Narration.Clear();
+        if (context.Resumed)
+        {
+            var turns = await session.RecentTurnsAsync(context.HistoryTurns);
+            foreach (var turn in turns)
+            {
+                Narration.Add(new($"YOU · TURN {turn.TurnNumber}", [new(turn.PlayerInput)]));
+                Narration.Add(new($"NARRATION · TURN {turn.TurnNumber}", [new(turn.Narration)]));
+            }
+            if (turns.Count > 0) return;
+            if (session.World.TurnNumber > 0)
+            {
+                Narration.Add(new("HISTORY", [new("No recent narration is available for this playthrough.")]));
+                return;
+            }
+        }
+
+        string? opening = context.Pack.HasOpening
+            ? EntityReferences.Resolve(context.Pack.Opening, session.World)
+            : session.World.PlayerLocationId is { } id ? session.World.FindLocation(id)?.Description : null;
+        Narration.Add(new("OPENING", [new(string.IsNullOrWhiteSpace(opening)
+            ? "This world has no opening scene. Your playthrough is ready." : opening)]));
+    }
+
     public bool CanNavigate(EntityReference reference) => Tabs.Any(tab =>
         tab.Kind == reference.Kind && tab.Entities.Any(e =>
             string.Equals(e.Reference.Id, reference.Id, StringComparison.OrdinalIgnoreCase)));

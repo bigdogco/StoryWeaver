@@ -1,5 +1,8 @@
 # Future Work
 
+- [ ] Manually review desktop transcript: new opening, resumed recent turns,
+  turn-zero reopening and missing-history feedback. Send remains the next implementation.
+
 - [ ] Manually review desktop window placement: main and Library resize/move,
   maximize/reopen, restore normal size and disconnected-monitor fallback.
 

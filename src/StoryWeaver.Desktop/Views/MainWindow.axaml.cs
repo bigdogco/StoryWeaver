@@ -19,6 +19,7 @@ public sealed partial class MainWindow : Window
     private readonly PreferencesStore _preferences;
     private TextBox? _editor;
     private bool _closing;
+    private bool _opening;
     private string? _workspacePath;
     private StoryWeaver.Core.StorySession? _session;
 
@@ -136,6 +137,7 @@ public sealed partial class MainWindow : Window
 
     private async void SaveBeforeClosing(object? sender, WindowClosingEventArgs e)
     {
+        if (_opening) { e.Cancel = true; Model.Notice = "Please wait for the playthrough to finish opening."; return; }
         if (_closing) return;
         CaptureSplit();
         if (_preferences.Save(Model.CapturePreferences(_workspacePath)) is not { } warning) return;
@@ -206,6 +208,7 @@ public sealed partial class MainWindow : Window
 
     private async Task OpenLibraryAsync(LibraryMode mode)
     {
+        if (_opening) return;
         ReleaseActiveSession();
         var library = new LibraryWindow(_workspacePath, mode);
         library.WorkspaceSelected += path => { _workspacePath = path; SavePreferences(); };
@@ -215,6 +218,7 @@ public sealed partial class MainWindow : Window
         _workspacePath = selection.WorkspacePath;
         SavePreferences();
         Model.Notice = "Opening playthrough…";
+        _opening = true;
 
         try
         {
@@ -244,9 +248,19 @@ public sealed partial class MainWindow : Window
 
             _session = session;
             Model.AttachSession(session!, opening.Context!);
+            try
+            {
+                await Model.LoadTranscriptAsync(session!, opening.Context!);
+                Avalonia.Threading.Dispatcher.UIThread.Post(() => NarrationScroll.ScrollToEnd());
+            }
+            catch (Exception error) when (error is IOException or UnauthorizedAccessException or System.Text.Json.JsonException)
+            {
+                Model.Notice = "The playthrough is open, but its narration history could not be read: " + error.Message;
+                return;
+            }
             Model.Notice = opening.Context!.PackHasMoved
                 ? $"Opened {session!.SaveId}. This save began with pack version {opening.Context.PackVersionAtStart}."
-                : $"Opened {session!.SaveId}. Turn submission and narration history are the next desktop work.";
+                : $"Opened {session!.SaveId}. Turn submission is the next desktop work.";
         }
         catch (SettingsException error)
         {
@@ -256,6 +270,7 @@ public sealed partial class MainWindow : Window
         {
             Model.Notice = "Could not open playthrough: " + error.Message;
         }
+        finally { _opening = false; }
     }
 
     private async Task<StoryWeaver.Core.StorySession?> CompletePlayerAsync(PendingPlayer pending)
@@ -319,6 +334,7 @@ public sealed partial class MainWindow : Window
 
     private void ClosePlaythrough(object? sender, RoutedEventArgs e)
     {
+        if (_opening) return;
         ReleaseActiveSession();
         Model.Notice = "Playthrough closed.";
     }

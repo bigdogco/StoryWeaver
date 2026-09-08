@@ -46,6 +46,12 @@ is never opened as a StorySession or written to a save.
 
 ## Manual review
 
+Transcript: start a new playthrough and confirm its authored opening appears with
+resolved names. Resume a save with turns and confirm recent player actions and
+narration appear in order, scrolled to the end. Reopening a turn-zero save should
+still show the opening. Send remains disabled. History loading uses the configured
+history window and reports unreadable history while keeping the session open.
+
 Window placement: resize and move the main window and Library independently,
 close and reopen each (including Library Cancel), then restart the app. Check
 maximized reopening and restoring to the previous normal size. If using multiple
