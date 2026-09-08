@@ -121,3 +121,25 @@ The UI must not own gameplay, authoring policy or entity-resolution policy.
 6. Design desktop pack/save paths and session lifetime before connecting sessions.
    Avalonia 12.1.2 and .NET 8 are now implemented; view preferences live under
    LocalApplicationData/StoryWeaver independently of pack/save paths.
+# Automatic link decision — 2026-09-08
+
+The player approved automatically linking exact unique current names in narration.
+This supersedes the earlier requirement to wait for backend reference metadata:
+Desktop presentation derives character/location/item links from current canon,
+ignoring case and requiring whole-name matches. Duplicate names remain plain;
+longer names take priority. Saved prose remains unchanged. Historical aliases and
+semantically ambiguous mentions are not resolved by this display convenience.
+The desktop also links unique character-name parts such as a first name or
+surname, excluding titles and leaving shared name parts plain.
+
+# Desktop transcript display decision — 2026-09-08
+
+The play UI displays the authored opening at the top when a playthrough is
+opened or reopened, followed by the recent turn transcript when history exists.
+This is a desktop presentation choice only: the opening is still not stored as
+turn zero, and Core's narrator memory continues to let the opening fall out of
+the recent window once real turns fill it.
+
+The Library keeps a desktop-preference MRU list of recently opened playthroughs.
+Each entry records workspace, world and save ID so it can reopen directly without
+asking the player to reselect the current workspace first.

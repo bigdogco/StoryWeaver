@@ -94,14 +94,15 @@
                 BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
           <StackPanel Spacing="8">
             <TextBlock Classes="secondary" FontSize="12"
-                       Text="Session actions are unavailable in this shell. Your draft stays while browsing." />
+                       Text="{Binding ComposerStatus}" />
             <TextBlock Text="What do you do?" />
             <TextBox x:Name="DraftEditor" Text="{Binding Draft, Mode=TwoWay}" AcceptsReturn="True"
+                     IsEnabled="{Binding !IsBusy}"
                      TextWrapping="Wrap" MinHeight="90" MaxHeight="170" FontSize="16"
                      PlaceholderText="Speak, act, or describe your next move…"
                      AutomationProperties.Name="Your next action" />
-            <Button Content="Send" IsEnabled="False" HorizontalAlignment="Right"
-                    ToolTip.Tip="Available when live sessions are connected." />
+            <ProgressBar IsIndeterminate="True" IsVisible="{Binding IsBusy}" Height="3" />
+            <Button Content="Send" IsEnabled="{Binding CanSend}" Click="SendTurn" HorizontalAlignment="Right" />
           </StackPanel>
         </Border>
       </Grid>

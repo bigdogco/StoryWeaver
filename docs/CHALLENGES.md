@@ -1427,6 +1427,12 @@ worst, scored `forbidden 0.00`. A degraded provider produces *missing* deltas, n
 and the validator rejects the garbage. The 51-turn session played on this and canon held.
 # Desktop Library manual review — 2026-09-08
 
+Desktop Send: TurnEngine mutates canon before save/history writes complete.
+A thrown write error can leave memory ahead of disk. The desktop preserves the
+draft and requires reopening if the turn counter changed before an exception;
+it never automatically resubmits that action. Atomic canon/history transactions
+are not introduced by the UI work.
+
 Workspace selection was saved only after opening a playthrough, and window close
 could overwrite it with the startup preference. Persist selection immediately and
 use the current workspace on every preference write. A ComboBox template must
@@ -1435,3 +1441,10 @@ that empty value. Lists inside an outer vertical ScrollViewer grew with their
 contents; constrain list height and let each list own its scrollbar. Historical
 saves lack last-opened timestamps, so display canon modification time as "Last
 saved" rather than inventing usage metadata.
+
+Reloaded desktop playthroughs originally showed either recent turns or the
+opening. That matched Core's memory window but made the player lose the authored
+starting context in the UI. Desktop now renders the opening as presentation
+context before recent turns, without writing it into history or changing narrator
+memory. Recently opened playthroughs belong in desktop preferences rather than
+saves, because "opened recently" is view usage metadata, not story state.

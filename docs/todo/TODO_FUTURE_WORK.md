@@ -1,7 +1,19 @@
 # Future Work
 
+- [ ] Manually review automatic unique-name links in openings and live/resumed
+  narration, including ambiguous names and navigation to newly introduced entities.
+
+- [ ] Manually review desktop Send: one action produces one saved turn, busy
+  close/switch protection, refreshed selected details, narration on extraction
+  failure and retained drafts on errors. Retry/reroll remain to be connected.
+
 - [ ] Manually review desktop transcript: new opening, resumed recent turns,
-  turn-zero reopening and missing-history feedback. Send remains the next implementation.
+  reopened saves showing their opening before recent turns, turn-zero reopening
+  and missing-history feedback.
+
+- [ ] Manually review desktop Library Recent: successful opens appear first,
+  duplicate opens move to the top, and missing workspace/world/save paths refuse
+  with a clear message.
 
 - [ ] Manually review desktop window placement: main and Library resize/move,
   maximize/reopen, restore normal size and disconnected-monitor fallback.

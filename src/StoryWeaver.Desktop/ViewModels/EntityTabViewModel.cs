@@ -25,9 +25,11 @@ public sealed class EntityTabViewModel(string title, EntityKind kind) : Observab
 
     public void Replace(IEnumerable<EntityDetails> entities)
     {
+        var reference = Selected?.Reference;
         Selected = null;
         Entities.Clear();
         foreach (var entity in entities) Entities.Add(entity);
+        if (reference is not null) Selected = Entities.FirstOrDefault(entity => entity.Reference == reference);
         Raise(nameof(IsEmpty));
     }
 }

@@ -1,8 +1,8 @@
 # StoryWeaver desktop shell
 
 Avalonia 12.1.2 on the existing .NET 8 target. The desktop client can open a
-real session from a selected workspace, but live turns and history rendering are
-not connected yet.
+real session from a selected workspace, render its opening and recent turns, and
+send live player actions through the existing session layer.
 
 From the repository root:
 
@@ -18,13 +18,15 @@ is never opened as a StorySession or written to a save.
 
 - File, Edit, View, Story and Help menus. **New Playthrough** starts with a World;
   it requires an unused save ID. **Open Save** starts with a saved playthrough and
-  resumes the world recorded by that save. Library offers both routes. World Editor
+  resumes the world recorded by that save. Library offers Recent, Worlds and
+  Playthroughs views. World Editor
   and turn commands remain disabled.
 - Library selects a workspace that contains `worlds/` and `saves/`, then keeps
   authored worlds and saved playthroughs in separate views. Older saves without
   provenance are labelled **pack unknown** and require an explicit, unverified
   world choice before they can be resumed. The selected workspace path is retained
-  with desktop preferences; content and saves stay in that workspace.
+  with desktop preferences; content and saves stay in that workspace. Successful
+  opens are remembered as recent playthroughs in desktop preferences.
 - Opening calls App's `SessionOpener` with the selected roots. It shows save-lock
   and settings errors, asks for a player name only when a pack does not author the
   player, and releases the pending lock if the form is cancelled. A live session
@@ -45,6 +47,37 @@ is never opened as a StorySession or written to a save.
   when the application exits.
 
 ## Manual review
+
+Recent and reload update: open a playthrough from Worlds or Playthroughs, close
+it, then confirm **File -> Library -> Recent** can reopen it directly. Reopen a
+save with turns and confirm the opening appears before the recent turn transcript.
+Missing recent workspaces/worlds/saves should stay selectable but refuse with a
+clear Library message.
+
+Character links also accept unique name parts (Eddie → Eddie Mercer). Titles are
+excluded; shared surnames such as Vale stay plain. Location/item links still
+require the full name. Check Eddie and Vivian in The Last Lantern narration.
+
+Automatic links: opening and live/resumed narration link exact unique current
+character, location and item names (case-insensitive, whole names). Click one to
+open its detail tab. Duplicate names remain plain, and longer names take priority
+over shorter matches. Aliases and historical names are not inferred. Links are
+display-only and are rebuilt from current canon; saved prose is unchanged.
+
+Send interaction update: submitted input immediately appears as "YOU · SENDING";
+the composer clears and disables until completion. Failure removes that pending
+entry and restores the draft. Authored opening paragraphs reflow across the pane
+instead of retaining single source-file line breaks.
+
+Send is now connected for live sessions (superseding the earlier disabled-Send
+notes below). This uses the configured model APIs. On a disposable playthrough,
+send an action and confirm one narration pair, one advanced turn and refreshed
+details. While waiting, repeated Send must be disabled and close/switch must be
+refused visibly. A new draft typed while waiting should survive completion.
+Blank input and preview must not enable Send. Check a failed provider call keeps
+the draft, and reopen a successful save to confirm the new turn is persisted.
+Extraction failure retains narration with feedback. A save failure after canon
+changes blocks further Send until reopening. Retry/reroll remain disabled.
 
 Transcript: start a new playthrough and confirm its authored opening appears with
 resolved names. Resume a save with turns and confirm recent player actions and

@@ -21,6 +21,7 @@ public sealed partial class MainWindow : Window
     private bool _closing;
     private bool _opening;
     private string? _workspacePath;
+    private IReadOnlyList<ViewRecentPlaythrough> _recentPlaythroughs;
     private StoryWeaver.Core.StorySession? _session;
 
     // Avalonia's runtime XAML loader and designers require a public default constructor.
@@ -32,6 +33,7 @@ public sealed partial class MainWindow : Window
         Model = model;
         _preferences = preferences;
         _workspacePath = model.InitialWorkspacePath;
+        _recentPlaythroughs = model.InitialRecentPlaythroughs;
         ExitCommand = new(Close);
         ResetSplitCommand = new(() => { Model.StoryFraction = 0.52; ApplyPanelLayout(); SavePreferences(); });
         PreviewCommand = new(Model.LoadPreview);
@@ -132,11 +134,13 @@ public sealed partial class MainWindow : Window
 
     private void SavePreferences()
     {
-        if (_preferences.Save(Model.CapturePreferences(_workspacePath)) is { } warning) Model.Notice = warning;
+        if (_preferences.Save(Model.CapturePreferences(_workspacePath) with { RecentPlaythroughs = _recentPlaythroughs }) is { } warning)
+            Model.Notice = warning;
     }
 
     private async void SaveBeforeClosing(object? sender, WindowClosingEventArgs e)
     {
+        if (Model.IsBusy) { e.Cancel = true; Model.Notice = "Please wait for the current turn to finish before closing."; return; }
         if (_opening) { e.Cancel = true; Model.Notice = "Please wait for the playthrough to finish opening."; return; }
         if (_closing) return;
         CaptureSplit();
@@ -208,9 +212,10 @@ public sealed partial class MainWindow : Window
 
     private async Task OpenLibraryAsync(LibraryMode mode)
     {
+        if (Model.IsBusy) { Model.Notice = "Please wait for the current turn to finish before switching playthroughs."; return; }
         if (_opening) return;
         ReleaseActiveSession();
-        var library = new LibraryWindow(_workspacePath, mode);
+        var library = new LibraryWindow(_workspacePath, mode, _recentPlaythroughs);
         library.WorkspaceSelected += path => { _workspacePath = path; SavePreferences(); };
         LibrarySelection? selection = await library.ShowDialog<LibrarySelection?>(this);
         if (selection is null) return;
@@ -260,7 +265,8 @@ public sealed partial class MainWindow : Window
             }
             Model.Notice = opening.Context!.PackHasMoved
                 ? $"Opened {session!.SaveId}. This save began with pack version {opening.Context.PackVersionAtStart}."
-                : $"Opened {session!.SaveId}. Turn submission is the next desktop work.";
+                : $"Opened {session!.SaveId}. Ready for your next action.";
+            RememberRecent(selection);
         }
         catch (SettingsException error)
         {
@@ -334,6 +340,7 @@ public sealed partial class MainWindow : Window
 
     private void ClosePlaythrough(object? sender, RoutedEventArgs e)
     {
+        if (Model.IsBusy) { Model.Notice = "Please wait for the current turn to finish before closing the playthrough."; return; }
         if (_opening) return;
         ReleaseActiveSession();
         Model.Notice = "Playthrough closed.";
@@ -344,6 +351,24 @@ public sealed partial class MainWindow : Window
         _session?.Dispose();
         _session = null;
         Model.DetachSession();
+    }
+
+    private void RememberRecent(LibrarySelection selection)
+    {
+        var opened = new ViewRecentPlaythrough(selection.WorkspacePath, selection.PackId, selection.SaveId, DateTime.UtcNow);
+        _recentPlaythroughs = new ViewPreferences { RecentPlaythroughs = [opened, .. _recentPlaythroughs] }
+            .Normalized()
+            .RecentPlaythroughs;
+        SavePreferences();
+    }
+
+    private async void SendTurn(object? sender, RoutedEventArgs e)
+    {
+        if (_opening || _session is null) return;
+        var sending = Model.SendAsync(_session);
+        Avalonia.Threading.Dispatcher.UIThread.Post(() => NarrationScroll.ScrollToEnd());
+        await sending;
+        Avalonia.Threading.Dispatcher.UIThread.Post(() => NarrationScroll.ScrollToEnd());
     }
 
     private sealed record PlayerAnswer(string Name, string? Description);

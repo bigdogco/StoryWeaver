@@ -14,15 +14,18 @@ public sealed class LibraryWindow : Window
     private static readonly Regex SaveIdPattern = new("^[A-Za-z0-9][A-Za-z0-9_-]*$", RegexOptions.Compiled);
     private readonly TextBlock _workspace = new() { TextWrapping = Avalonia.Media.TextWrapping.Wrap };
     private readonly TextBlock _status = new() { TextWrapping = Avalonia.Media.TextWrapping.Wrap };
+    private readonly ListBox _recent = new();
     private readonly ListBox _worlds = new();
     private readonly ListBox _playthroughs = new();
     private readonly ComboBox _legacyWorld = new() { IsVisible = false };
     private readonly TextBlock _legacyWorldLabel = new() { Text = "Legacy save world", FontWeight = Avalonia.Media.FontWeight.SemiBold, IsVisible = false };
     private readonly TextBox _newSaveId = new() { PlaceholderText = "New save identifier" };
     private readonly Button _primary = new() { HorizontalAlignment = HorizontalAlignment.Right };
+    private readonly Grid _recentPanel = new() { RowDefinitions = new("Auto,Auto,*,Auto,Auto") };
     private readonly Grid _worldsPanel = new() { RowDefinitions = new("Auto,Auto,Auto,*,Auto,Auto") };
     private readonly Grid _playthroughsPanel = new() { RowDefinitions = new("Auto,Auto,Auto,*,Auto,Auto") };
     private WorkspaceContents? _contents;
+    private readonly IReadOnlyList<ViewRecentPlaythrough> _recentPlaythroughs;
     private LibraryMode _mode;
     private readonly ComboBox _sort = new()
     {
@@ -32,19 +35,24 @@ public sealed class LibraryWindow : Window
     };
     public event Action<string>? WorkspaceSelected;
 
-    public LibraryWindow(string? workspacePath, LibraryMode initialMode)
+    public LibraryWindow(string? workspacePath, LibraryMode initialMode, IReadOnlyList<ViewRecentPlaythrough>? recentPlaythroughs = null)
     {
         Title = "StoryWeaver Library";
         Width = 680; Height = 720; MinWidth = 520; MinHeight = 650;
         CanResize = true;
         WindowStartupLocation = WindowStartupLocation.CenterOwner;
         _mode = initialMode;
+        _recentPlaythroughs = recentPlaythroughs ?? [];
 
+        _recent.ItemTemplate = CreateTemplate<RecentPlaythroughItem>(recent => Details(recent.DisplayName, recent.Detail));
         _worlds.ItemTemplate = CreateTemplate<WorkspacePack>(pack => Details(pack.DisplayName, pack.Detail));
         _playthroughs.ItemTemplate = CreateTemplate<WorkspaceSave>(save => Details(save.DisplayName, save.Detail));
         _legacyWorld.ItemTemplate = new FuncDataTemplate<WorkspacePack>((pack, _) => new TextBlock { Text = pack?.DisplayName ?? string.Empty });
+        ScrollViewer.SetVerticalScrollBarVisibility(_recent, Avalonia.Controls.Primitives.ScrollBarVisibility.Auto);
         ScrollViewer.SetVerticalScrollBarVisibility(_worlds, Avalonia.Controls.Primitives.ScrollBarVisibility.Auto);
         ScrollViewer.SetVerticalScrollBarVisibility(_playthroughs, Avalonia.Controls.Primitives.ScrollBarVisibility.Auto);
+        _recent.DoubleTapped += (_, e) => { if (_recent.SelectedItem is not null) OpenRecent(); e.Handled = true; };
+        _recent.SelectionChanged += (_, _) => SelectRecent();
         _worlds.DoubleTapped += (_, e) => { if (_worlds.SelectedItem is not null) StartNewPlaythrough(); e.Handled = true; };
         _playthroughs.DoubleTapped += (_, e) => { if (_playthroughs.SelectedItem is not null) OpenPlaythrough(); e.Handled = true; };
         _playthroughs.SelectionChanged += (_, _) => SelectPlaythrough();
@@ -53,6 +61,8 @@ public sealed class LibraryWindow : Window
 
         var choose = new Button { Content = "Choose workspace…", HorizontalAlignment = HorizontalAlignment.Left };
         choose.Click += async (_, _) => await ChooseWorkspaceAsync();
+        var recent = new Button { Content = "Recent" };
+        recent.Click += (_, _) => SetMode(LibraryMode.Recent);
         var worlds = new Button { Content = "Worlds" };
         worlds.Click += (_, _) => SetMode(LibraryMode.Worlds);
         var playthroughs = new Button { Content = "Playthroughs" };
@@ -60,6 +70,9 @@ public sealed class LibraryWindow : Window
         var cancel = new Button { Content = "Cancel" };
         cancel.Click += (_, _) => Close(null);
 
+        _recentPanel.Children.AddRange([
+            Heading("Recent"), Paragraph("Open one of your recently used playthroughs."),
+            _recent, new TextBlock(), new TextBlock()]);
         _worldsPanel.Children.AddRange([
             Heading("Worlds"), Paragraph("Choose authored content, then create a completely new playthrough."),
             Label("Available worlds"), _worlds, Label("New save identifier (optional — defaults to world and date/time)"), _newSaveId]);
@@ -69,7 +82,7 @@ public sealed class LibraryWindow : Window
                 Children = { new TextBlock { Text = "Sort by", VerticalAlignment = VerticalAlignment.Center }, _sort } },
             _playthroughs, _legacyWorldLabel, _legacyWorld]);
 
-        foreach (var panel in new[] { _worldsPanel, _playthroughsPanel })
+        foreach (var panel in new[] { _recentPanel, _worldsPanel, _playthroughsPanel })
         {
             for (int row = 0; row < panel.Children.Count; row++)
             {
@@ -85,10 +98,10 @@ public sealed class LibraryWindow : Window
             {
                 Heading("Library", 26), Paragraph("Worlds are authored content. Playthroughs are your saved story state."),
                 _workspace, choose,
-                new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Children = { worlds, playthroughs } },
+                new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Children = { recent, worlds, playthroughs } },
             },
         };
-        var body = new Grid { Children = { _worldsPanel, _playthroughsPanel } };
+        var body = new Grid { Children = { _recentPanel, _worldsPanel, _playthroughsPanel } };
         var footer = new StackPanel
         {
             Spacing = 12,
@@ -105,8 +118,24 @@ public sealed class LibraryWindow : Window
 
         if (!string.IsNullOrWhiteSpace(workspacePath)) SetWorkspace(workspacePath);
         else SetStatus("Choose a workspace to see its worlds and playthroughs.");
+        LoadRecent();
         SetMode(initialMode);
         WindowPlacementStore.Attach(this, "library", SetStatus);
+    }
+
+    private void LoadRecent()
+    {
+        _recent.ItemsSource = _recentPlaythroughs.Select(recent =>
+        {
+            bool hasWorkspace = Directory.Exists(recent.WorkspacePath);
+            bool hasWorld = hasWorkspace && Directory.Exists(Path.Combine(WorkspaceLibrary.PackRoot(recent.WorkspacePath), recent.PackId));
+            bool hasSave = hasWorkspace && Directory.Exists(Path.Combine(WorkspaceLibrary.SaveRoot(recent.WorkspacePath), recent.SaveId));
+            string problem = !hasWorkspace ? "Workspace folder not found."
+                : !hasWorld ? "World folder not found in this workspace."
+                : !hasSave ? "Save folder not found in this workspace."
+                : string.Empty;
+            return new RecentPlaythroughItem(recent.WorkspacePath, recent.PackId, recent.SaveId, recent.OpenedUtc, problem.Length == 0, problem);
+        }).ToList();
     }
 
     private async Task ChooseWorkspaceAsync()
@@ -168,15 +197,27 @@ public sealed class LibraryWindow : Window
 
     private void SetMode(LibraryMode mode)
     {
-        _mode = mode is LibraryMode.Library ? LibraryMode.Worlds : mode;
+        _mode = mode is LibraryMode.Library ? LibraryMode.Recent : mode;
+        _recentPanel.IsVisible = _mode == LibraryMode.Recent;
         _worldsPanel.IsVisible = _mode == LibraryMode.Worlds;
         _playthroughsPanel.IsVisible = _mode == LibraryMode.Playthroughs;
         _primary.Content = _mode == LibraryMode.Worlds ? "Start new playthrough" : "Open playthrough";
+        SelectRecent();
         SelectPlaythrough();
+    }
+
+    private void SelectRecent()
+    {
+        if (_mode != LibraryMode.Recent) return;
+        if (_recent.SelectedItem is RecentPlaythroughItem { CanOpen: false } recent)
+            SetStatus(recent.Problem);
+        else if (_recentPlaythroughs.Count == 0) SetStatus("No recent playthroughs yet.");
+        else SetStatus(string.Empty);
     }
 
     private void SelectPlaythrough()
     {
+        if (_mode != LibraryMode.Playthroughs) return;
         bool legacy = _mode == LibraryMode.Playthroughs && _playthroughs.SelectedItem is WorkspaceSave { HasRecordedPack: false };
         _legacyWorld.IsVisible = legacy;
         _legacyWorldLabel.IsVisible = legacy;
@@ -186,9 +227,22 @@ public sealed class LibraryWindow : Window
 
     private void SelectPrimaryAction()
     {
-        if (_contents is null) { SetStatus("Choose a workspace first."); return; }
-        if (_mode == LibraryMode.Worlds) StartNewPlaythrough();
-        else OpenPlaythrough();
+        if (_mode == LibraryMode.Recent) OpenRecent();
+        else
+        {
+            if (_contents is null) { SetStatus("Choose a workspace first."); return; }
+            if (_mode == LibraryMode.Worlds) StartNewPlaythrough();
+            else OpenPlaythrough();
+        }
+    }
+
+    private void OpenRecent()
+    {
+        if (_recent.SelectedItem is not RecentPlaythroughItem recent)
+        { SetStatus("Choose a recent playthrough first."); return; }
+        if (!recent.CanOpen)
+        { SetStatus(recent.Problem); return; }
+        Close(new LibrarySelection(recent.WorkspacePath, recent.PackId, recent.SaveId));
     }
 
     private void StartNewPlaythrough()
@@ -235,5 +289,19 @@ public sealed class LibraryWindow : Window
     private static FuncDataTemplate<T> CreateTemplate<T>(Func<T, Control> build) => new((value, _) => build((T)value!), true);
 }
 
-public enum LibraryMode { Library, Worlds, Playthroughs }
+public enum LibraryMode { Library, Recent, Worlds, Playthroughs }
 public sealed record LibrarySelection(string WorkspacePath, string PackId, string SaveId);
+
+internal sealed record RecentPlaythroughItem(string WorkspacePath, string PackId, string SaveId, DateTime OpenedUtc, bool CanOpen, string Problem)
+{
+    public string DisplayName => SaveId;
+    public string Detail
+    {
+        get
+        {
+            string opened = OpenedUtc.ToLocalTime().ToString("g");
+            string status = CanOpen ? string.Empty : Environment.NewLine + Problem;
+            return $"{PackId} · opened {opened}{Environment.NewLine}{WorkspacePath}{status}";
+        }
+    }
+}

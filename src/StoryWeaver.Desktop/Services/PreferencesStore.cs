@@ -9,13 +9,36 @@ public sealed record ViewPreferences
     public bool ShowWorldPanel { get; init; } = true;
     public string Theme { get; init; } = "System";
     public string? WorkspacePath { get; init; }
+    public IReadOnlyList<ViewRecentPlaythrough> RecentPlaythroughs { get; init; } = [];
 
     public ViewPreferences Normalized() => this with
     {
         StoryFraction = double.IsFinite(StoryFraction) ? Math.Clamp(StoryFraction, 0.25, 0.75) : 0.52,
         NarrationSize = double.IsFinite(NarrationSize) ? Math.Clamp(NarrationSize, 14, 28) : 18,
         Theme = Theme is "Light" or "Dark" ? Theme : "System",
-        WorkspacePath = string.IsNullOrWhiteSpace(WorkspacePath) ? null : WorkspacePath.Trim()
+        WorkspacePath = string.IsNullOrWhiteSpace(WorkspacePath) ? null : WorkspacePath.Trim(),
+        RecentPlaythroughs = RecentPlaythroughs
+            .Where(recent => !string.IsNullOrWhiteSpace(recent.WorkspacePath)
+                && !string.IsNullOrWhiteSpace(recent.PackId)
+                && !string.IsNullOrWhiteSpace(recent.SaveId))
+            .GroupBy(recent => new { Workspace = recent.WorkspacePath.Trim(), Pack = recent.PackId.Trim(), Save = recent.SaveId.Trim() })
+            .Select(group => group.OrderByDescending(recent => recent.OpenedUtc).First().Normalized())
+            .OrderByDescending(recent => recent.OpenedUtc)
+            .Take(12)
+            .ToList()
+    };
+}
+
+public sealed record ViewRecentPlaythrough(string WorkspacePath, string PackId, string SaveId, DateTime OpenedUtc)
+{
+    public ViewRecentPlaythrough Normalized() => this with
+    {
+        WorkspacePath = WorkspacePath.Trim(),
+        PackId = PackId.Trim(),
+        SaveId = SaveId.Trim(),
+        OpenedUtc = OpenedUtc.Kind == DateTimeKind.Unspecified
+            ? DateTime.SpecifyKind(OpenedUtc, DateTimeKind.Utc)
+            : OpenedUtc.ToUniversalTime()
     };
 }
 
