@@ -31,9 +31,10 @@ extraction pass reliable?", and none of these help answer it.
       explicit detail field labels in light/dark themes and narrow panes, and
       subtitle contrast on normal/hovered/selected rows after theme changes; see
       [desktop review guide](../../src/StoryWeaver.Desktop/README.md). Next: connect
-      App/Core session opening and player creation, real turns and state projection,
-      busy/failure feedback, retry/reroll and close behaviour; refine tab contents
-      and correction flows,
+      App/Core session opening and player creation, live state projection and
+      workspace selection are implemented (2026-09-08; TODO_DESKTOP_LIBRARY_.md).
+      Next: real turns and history rendering, busy/failure feedback, retry/reroll
+      and close behaviour; refine tab contents and correction flows,
       reliable narration references (including persistence and older history),
       visual/keyboard behaviour, library and pack-editor workflows, and desktop
       lifecycle and pack/save path decisions. Avalonia 12.1.2 runs on the existing

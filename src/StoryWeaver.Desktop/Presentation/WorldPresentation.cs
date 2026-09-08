@@ -1,0 +1,55 @@
+using StoryWeaver.Core;
+
+namespace StoryWeaver.Desktop.Presentation;
+
+/// <summary>Read-only values rendered from a live world. It does not retain or modify canon.</summary>
+public static class WorldPresentation
+{
+    public static IReadOnlyList<EntityDetails> Characters(WorldState world) => world.Characters.Values
+        .OrderBy(character => character.Name, StringComparer.OrdinalIgnoreCase)
+        .Select(character => new EntityDetails(
+            new(EntityKind.Character, character.Id), character.Name,
+            $"{character.Status} · {character.Mood}", character.Description,
+            [new("Location", Name(world.FindLocation(character.LocationId ?? string.Empty))),
+             new("Status", character.Status), new("Mood", character.Mood),
+             new("Relationship", character.RelationshipToPlayer.Summary),
+             new("Knowledge", Join(world.KnownFacts(character).Select(fact => fact.Text)))]))
+        .ToList();
+
+    public static IReadOnlyList<EntityDetails> Locations(WorldState world) => world.Locations.Values
+        .OrderBy(location => location.Name, StringComparer.OrdinalIgnoreCase)
+        .Select(location => new EntityDetails(
+            new(EntityKind.Location, location.Id), location.Name,
+            string.IsNullOrWhiteSpace(location.Status) ? "Location" : location.Status, location.Description,
+            [new("Status", EmptyAsNone(location.Status)),
+             new("Connections", Join(location.Connections.Select(id => Name(world.FindLocation(id))))),
+             new("Present", Join(world.CharactersIn(location.Id).Select(character => character.Name)))]))
+        .ToList();
+
+    public static IReadOnlyList<EntityDetails> Facts(WorldState world) => world.Facts.Values
+        .OrderBy(fact => fact.EstablishedTurn).ThenBy(fact => fact.Text, StringComparer.OrdinalIgnoreCase)
+        .Select(fact => new EntityDetails(
+            new(EntityKind.Fact, fact.Id), fact.Text,
+            $"Established on turn {fact.EstablishedTurn}", fact.Text,
+            [new("Established", $"Turn {fact.EstablishedTurn}"),
+             new("Source", string.IsNullOrWhiteSpace(fact.SourceId) ? "Narration" : Name(world.FindCharacter(fact.SourceId))),
+             new("Known by", Join(world.Characters.Values.Where(character => character.Knows.Contains(fact.Id)).Select(character => character.Name)))]))
+        .ToList();
+
+    public static IReadOnlyList<EntityDetails> Items(WorldState world) => world.Items.Values
+        .OrderBy(item => item.Name, StringComparer.OrdinalIgnoreCase)
+        .Select(item => new EntityDetails(
+            new(EntityKind.Item, item.Id), item.Name, item.Status, item.Description,
+            [new("Location", item.IsPlaced ? Name(world.FindLocation(item.LocationId ?? string.Empty)) : "None"),
+             new("Holder", item.IsHeld ? Name(world.FindCharacter(item.HolderId ?? string.Empty)) : "None"),
+             new("Condition", item.Status)]))
+        .ToList();
+
+    private static string Name(Entity? entity) => entity?.Name ?? "Unknown";
+    private static string EmptyAsNone(string value) => string.IsNullOrWhiteSpace(value) ? "None" : value;
+    private static string Join(IEnumerable<string?> values) => string.Join(", ", values.Where(value => !string.IsNullOrWhiteSpace(value))) switch
+    {
+        "" => "None",
+        string joined => joined,
+    };
+}

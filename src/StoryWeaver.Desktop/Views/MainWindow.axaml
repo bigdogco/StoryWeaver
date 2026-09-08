@@ -9,12 +9,12 @@
   <Grid RowDefinitions="Auto,Auto,Auto,*">
     <Menu x:Name="MainMenu">
       <MenuItem Header="_File">
-        <MenuItem Header="_Library" IsEnabled="False" />
-        <MenuItem Header="_New Playthrough" IsEnabled="False" />
-        <MenuItem Header="_Open Save" IsEnabled="False" />
+        <MenuItem Header="_Library" Click="OpenLibrary" />
+        <MenuItem Header="_New Playthrough" Click="NewPlaythrough" />
+        <MenuItem Header="_Open Save" Click="OpenSave" />
         <MenuItem Header="_World Editor" IsEnabled="False" />
         <Separator />
-        <MenuItem Header="_Close Playthrough" IsEnabled="False" />
+        <MenuItem Header="_Close Playthrough" Click="ClosePlaythrough" IsEnabled="{Binding HasLiveSession}" />
         <MenuItem Header="E_xit" Command="{Binding #Root.ExitCommand}" />
       </MenuItem>
       <MenuItem Header="_Edit" SubmenuOpened="EditMenuOpened">
@@ -72,7 +72,8 @@
           <StackPanel>
             <StackPanel IsVisible="{Binding IsEmpty}" Spacing="16">
               <TextBlock Classes="heading" Text="Your story starts here" />
-              <TextBlock Text="The Play shell is ready to review. Session opening and live turns will be connected next." />
+              <TextBlock Text="Choose a workspace, then open one of its worlds and playthroughs." />
+              <Button Content="Open Library" Click="OpenLibrary" HorizontalAlignment="Left" />
               <Button Content="Explore a preview scene" Command="{Binding #Root.PreviewCommand}" HorizontalAlignment="Left" />
             </StackPanel>
             <ItemsControl ItemsSource="{Binding Narration}">

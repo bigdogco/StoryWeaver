@@ -8,16 +8,18 @@ public sealed record ViewPreferences
     public double NarrationSize { get; init; } = 18;
     public bool ShowWorldPanel { get; init; } = true;
     public string Theme { get; init; } = "System";
+    public string? WorkspacePath { get; init; }
 
     public ViewPreferences Normalized() => this with
     {
         StoryFraction = double.IsFinite(StoryFraction) ? Math.Clamp(StoryFraction, 0.25, 0.75) : 0.52,
         NarrationSize = double.IsFinite(NarrationSize) ? Math.Clamp(NarrationSize, 14, 28) : 18,
-        Theme = Theme is "Light" or "Dark" ? Theme : "System"
+        Theme = Theme is "Light" or "Dark" ? Theme : "System",
+        WorkspacePath = string.IsNullOrWhiteSpace(WorkspacePath) ? null : WorkspacePath.Trim()
     };
 }
 
-/// <summary>Desktop presentation preferences only. Never reads settings.local.json or saves.</summary>
+/// <summary>Desktop view preferences and the selected workspace path. Never reads settings.local.json or saves.</summary>
 public sealed class PreferencesStore
 {
     public string Path { get; } = System.IO.Path.Combine(

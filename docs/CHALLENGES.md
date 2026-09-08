@@ -1425,3 +1425,13 @@ cannot become a single point of failure.
 **What the architecture got right:** none of this corrupted canon. Every run today, at its
 worst, scored `forbidden 0.00`. A degraded provider produces *missing* deltas, not wrong ones,
 and the validator rejects the garbage. The 51-turn session played on this and canon held.
+# Desktop Library manual review — 2026-09-08
+
+Workspace selection was saved only after opening a playthrough, and window close
+could overwrite it with the startup preference. Persist selection immediately and
+use the current workspace on every preference write. A ComboBox template must
+accept null when its selection is empty; the legacy-world selector dereferenced
+that empty value. Lists inside an outer vertical ScrollViewer grew with their
+contents; constrain list height and let each list own its scrollbar. Historical
+saves lack last-opened timestamps, so display canon modification time as "Last
+saved" rather than inventing usage metadata.

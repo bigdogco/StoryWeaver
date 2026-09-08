@@ -5,9 +5,12 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
+using Avalonia.Media;
 using Avalonia.Styling;
+using StoryWeaver.App;
 using StoryWeaver.Desktop.Services;
 using StoryWeaver.Desktop.ViewModels;
+using StoryWeaver.Llm.Configuration;
 
 namespace StoryWeaver.Desktop.Views;
 
@@ -16,6 +19,8 @@ public sealed partial class MainWindow : Window
     private readonly PreferencesStore _preferences;
     private TextBox? _editor;
     private bool _closing;
+    private string? _workspacePath;
+    private StoryWeaver.Core.StorySession? _session;
 
     // Avalonia's runtime XAML loader and designers require a public default constructor.
     // Production startup injects the preferences loaded by DesktopApplication instead.
@@ -25,12 +30,13 @@ public sealed partial class MainWindow : Window
     {
         Model = model;
         _preferences = preferences;
+        _workspacePath = model.InitialWorkspacePath;
         ExitCommand = new(Close);
         ResetSplitCommand = new(() => { Model.StoryFraction = 0.52; ApplyPanelLayout(); SavePreferences(); });
         PreviewCommand = new(Model.LoadPreview);
         SettingsCommand = new(OpenSettings);
         AboutCommand = new(() => ShowInformation("About StoryWeaver",
-            "StoryWeaver — an LLM-driven text RPG.\n\nAvalonia desktop shell. Session opening, play and authoring are not connected yet.\n\nThe preview scene is illustrative; no save is opened and no model calls are made."));
+            "StoryWeaver — an LLM-driven text RPG.\n\nChoose a workspace in Library to open a world and playthrough. Live turns and authoring are the next desktop work.\n\nThe preview scene is illustrative; no save is opened and no model calls are made."));
         ShortcutsCommand = new(() => ShowInformation("Keyboard shortcuts",
             "Alt+F / E / V / S / H — menus\nCtrl+Shift+W — show/hide world panel\nF1 — this guide\nTab / Shift+Tab — move focus\nLeft / Right on the divider — resize panes\n\nIn a text field:\nCtrl+Z / Ctrl+Y — Undo / Redo\nCtrl+X / Ctrl+C / Ctrl+V — Cut / Copy / Paste\nCtrl+A — Select All\nEnter — insert a new line\n\nUndo affects text only, never a story turn."));
         UndoCommand = new(() => Edit(t => t.Undo()), () => _editor?.CanUndo == true);
@@ -46,7 +52,7 @@ public sealed partial class MainWindow : Window
         KeyBindings.Add(new KeyBinding { Gesture = new(Key.F1), Command = ShortcutsCommand });
         Model.PropertyChanged += ModelChanged;
         Closing += SaveBeforeClosing;
-        Closed += (_, _) => Model.PropertyChanged -= ModelChanged;
+        Closed += (_, _) => { Model.PropertyChanged -= ModelChanged; ReleaseActiveSession(); };
         ApplyPanelLayout();
         ApplyTheme();
     }
@@ -124,14 +130,14 @@ public sealed partial class MainWindow : Window
 
     private void SavePreferences()
     {
-        if (_preferences.Save(Model.CapturePreferences()) is { } warning) Model.Notice = warning;
+        if (_preferences.Save(Model.CapturePreferences(_workspacePath)) is { } warning) Model.Notice = warning;
     }
 
     private async void SaveBeforeClosing(object? sender, WindowClosingEventArgs e)
     {
         if (_closing) return;
         CaptureSplit();
-        if (_preferences.Save(Model.CapturePreferences()) is not { } warning) return;
+        if (_preferences.Save(Model.CapturePreferences(_workspacePath)) is not { } warning) return;
         e.Cancel = true;
         var dialog = Dialog("View preferences were not saved");
         var close = new Button { Content = "Close anyway", HorizontalAlignment = HorizontalAlignment.Right };
@@ -192,4 +198,136 @@ public sealed partial class MainWindow : Window
         Title = title, Width = 470, SizeToContent = SizeToContent.Height, CanResize = false,
         WindowStartupLocation = WindowStartupLocation.CenterOwner
     };
+
+    private async void OpenLibrary(object? sender, RoutedEventArgs e) => await OpenLibraryAsync(LibraryMode.Library);
+    private async void NewPlaythrough(object? sender, RoutedEventArgs e) => await OpenLibraryAsync(LibraryMode.Worlds);
+    private async void OpenSave(object? sender, RoutedEventArgs e) => await OpenLibraryAsync(LibraryMode.Playthroughs);
+
+    private async Task OpenLibraryAsync(LibraryMode mode)
+    {
+        ReleaseActiveSession();
+        var library = new LibraryWindow(_workspacePath, mode);
+        library.WorkspaceSelected += path => { _workspacePath = path; SavePreferences(); };
+        LibrarySelection? selection = await library.ShowDialog<LibrarySelection?>(this);
+        if (selection is null) return;
+
+        _workspacePath = selection.WorkspacePath;
+        SavePreferences();
+        Model.Notice = "Opening playthrough…";
+
+        try
+        {
+            StoryWeaverSettings settings = SettingsLoader.Load();
+            SessionOpening opening = await SessionOpener.OpenAsync(
+                settings, selection.PackId, selection.SaveId, force: false,
+                WorkspaceLibrary.SaveRoot(selection.WorkspacePath), WorkspaceLibrary.PackRoot(selection.WorkspacePath));
+
+            if (opening.WasRefused)
+            {
+                Model.Notice = opening.HeldBy is { Length: > 0 } heldBy
+                    ? $"Could not open: {opening.RefusedBecause}. Held by {heldBy}."
+                    : $"Could not open: {opening.RefusedBecause}.";
+                return;
+            }
+
+            StoryWeaver.Core.StorySession? session = opening.Session;
+            if (opening.IsWaitingForPlayer)
+            {
+                session = await CompletePlayerAsync(opening.NeedsPlayer!);
+                if (session is null)
+                {
+                    Model.Notice = "Player creation was cancelled. No playthrough was opened.";
+                    return;
+                }
+            }
+
+            _session = session;
+            Model.AttachSession(session!, opening.Context!);
+            Model.Notice = opening.Context!.PackHasMoved
+                ? $"Opened {session!.SaveId}. This save began with pack version {opening.Context.PackVersionAtStart}."
+                : $"Opened {session!.SaveId}. Turn submission and narration history are the next desktop work.";
+        }
+        catch (SettingsException error)
+        {
+            Model.Notice = "Could not open because settings need attention: " + error.Message;
+        }
+        catch (Exception error) when (error is IOException or UnauthorizedAccessException or InvalidDataException or ArgumentException)
+        {
+            Model.Notice = "Could not open playthrough: " + error.Message;
+        }
+    }
+
+    private async Task<StoryWeaver.Core.StorySession?> CompletePlayerAsync(PendingPlayer pending)
+    {
+        PlayerAnswer? answer;
+        try
+        {
+            answer = await AskForPlayerAsync(pending);
+            if (answer is null) return null;
+            return await pending.CompleteAsync(answer.Name, answer.Description);
+        }
+        catch (ArgumentException error)
+        {
+            Model.Notice = error.Message;
+            return null;
+        }
+        finally
+        {
+            pending.Dispose();
+        }
+    }
+
+    private async Task<PlayerAnswer?> AskForPlayerAsync(PendingPlayer pending)
+    {
+        var name = new TextBox { PlaceholderText = "Name", Text = pending.Player?.Name ?? string.Empty };
+        var description = new TextBox
+        {
+            PlaceholderText = "Optional description",
+            AcceptsReturn = true,
+            TextWrapping = TextWrapping.Wrap,
+            MinHeight = 90,
+        };
+        var validation = new TextBlock { TextWrapping = TextWrapping.Wrap };
+        var dialog = Dialog("Who are you?");
+        var cancel = new Button { Content = "Cancel" };
+        var begin = new Button { Content = "Begin", HorizontalAlignment = HorizontalAlignment.Right };
+        cancel.Click += (_, _) => dialog.Close(null);
+        begin.Click += (_, _) =>
+        {
+            if (string.IsNullOrWhiteSpace(name.Text))
+            {
+                validation.Text = "The player needs a name.";
+                return;
+            }
+            dialog.Close(new PlayerAnswer(name.Text.Trim(), string.IsNullOrWhiteSpace(description.Text) ? null : description.Text.Trim()));
+        };
+        dialog.Content = new StackPanel
+        {
+            Margin = new Thickness(24), Spacing = 12,
+            Children =
+            {
+                new TextBlock { Text = "This world does not author its protagonist. Choose who you are for this playthrough.", TextWrapping = TextWrapping.Wrap },
+                new TextBlock { Text = "Name" }, name,
+                new TextBlock { Text = "Description (optional — leave blank to keep the seeded description)" }, description,
+                validation,
+                new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Spacing = 8, Children = { cancel, begin } },
+            },
+        };
+        return await dialog.ShowDialog<PlayerAnswer?>(this);
+    }
+
+    private void ClosePlaythrough(object? sender, RoutedEventArgs e)
+    {
+        ReleaseActiveSession();
+        Model.Notice = "Playthrough closed.";
+    }
+
+    private void ReleaseActiveSession()
+    {
+        _session?.Dispose();
+        _session = null;
+        Model.DetachSession();
+    }
+
+    private sealed record PlayerAnswer(string Name, string? Description);
 }
