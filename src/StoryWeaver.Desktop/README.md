@@ -20,7 +20,7 @@ is never opened as a StorySession or written to a save.
   it requires an unused save ID. **Open Save** starts with a saved playthrough and
   resumes the world recorded by that save. Library offers Recent, Worlds and
   Playthroughs views. World Editor
-  and Retry/Reroll remain disabled. Story → Update State and Check Canon are connected.
+  remains disabled. Story → Retry, Reroll, Update State and Check Canon are connected.
 - Library selects a workspace that contains `worlds/` and `saves/`, then keeps
   authored worlds and saved playthroughs in separate views. Older saves without
   provenance are labelled **pack unknown** and require an explicit, unverified
@@ -47,6 +47,32 @@ is never opened as a StorySession or written to a save.
   when the application exits.
 
 ## Manual review
+
+Retry and Reroll (2026-09-09; these use the configured model APIs):
+
+1. In the empty shell, preview and a new turn-zero playthrough, confirm both actions
+   are disabled. Open a disposable save with a displayed turn; both become available.
+2. Keep a draft, then use Retry. Confirm the draft and narration remain unchanged,
+   the turn number does not advance, and the report shows the latest extraction's
+   no-ops/rejections and the turn's cumulative applied changes. World details and
+   narration links refresh. Reopen to verify the repaired turn was persisted once.
+3. On a turn with applied changes, use Reroll: expect a refusal without a model call
+   or transcript change. Retry that turn, then Reroll again: earlier applied changes
+   must still prevent reroll even when Retry adds nothing or extraction fails.
+4. On a turn with no applied changes, use Reroll. Confirm it replaces the last
+   narration, retains the player input and draft, and does not append or advance a
+   turn. Reopen to confirm the replacement persists. If the reroll applies changes,
+   the next Reroll must refuse.
+5. During either operation, Send and Story actions are disabled, and close/switch
+   requests are refused. Reports support selecting/copying text, resizing and Escape.
+6. Extraction failure retains the saved narration and reports the error. An unexpected
+   exception requires reopening before Send/Retry/Reroll: these operations can fail
+   saving without changing the turn number, and the API does not identify the failure
+   stage. This conservatively includes narrator-call exceptions. Reload/check remain
+   available but do not remove the reopen requirement.
+
+Release build passed with zero warnings/errors. The player reported Retry/Reroll
+testing complete on 2026-09-09; no automated tests or agent-run model calls were performed.
 
 Canon actions (2026-09-09):
 
@@ -100,7 +126,7 @@ refused visibly. A new draft typed while waiting should survive completion.
 Blank input and preview must not enable Send. Check a failed provider call keeps
 the draft, and reopen a successful save to confirm the new turn is persisted.
 Extraction failure retains narration with feedback. A save failure after canon
-changes blocks further Send until reopening. Retry/reroll remain disabled.
+changes blocks further Send until reopening. Retry/reroll review is described above.
 
 Transcript: start a new playthrough and confirm its authored opening appears with
 resolved names. Resume a save with turns and confirm recent player actions and
@@ -187,8 +213,8 @@ presentation state; Presentation records are immutable display values, not canon
 the real session. Preview supplies explicit sample references. No backend project
 references Avalonia.
 
-Next: real narration/history, turn/retry/reroll feedback, canon editing, pack
-editing, and reliable backend narration-reference generation/persistence. The
+Next: canon editing, pack editing, and reliable backend narration-reference
+generation/persistence. The
 shell's explicit sample links are not a solution to that last backend question.
 Future mod UI remains part of the mod-system design.
 

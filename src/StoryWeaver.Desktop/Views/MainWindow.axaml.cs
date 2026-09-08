@@ -373,6 +373,16 @@ public sealed partial class MainWindow : Window
 
     private async void UpdateState(object? sender, RoutedEventArgs e) => await InspectCanonAsync(reload: true);
     private async void CheckCanon(object? sender, RoutedEventArgs e) => await InspectCanonAsync(reload: false);
+    private async void RetryLastTurn(object? sender, RoutedEventArgs e) => await ReviseLastTurnAsync(reroll: false);
+    private async void RerollLastTurn(object? sender, RoutedEventArgs e) => await ReviseLastTurnAsync(reroll: true);
+
+    private async Task ReviseLastTurnAsync(bool reroll)
+    {
+        if (_opening || _session is null) return;
+        string? report = await Model.ReviseLastTurnAsync(_session, reroll);
+        if (report is null) return;
+        await ShowReportAsync(reroll ? "Reroll" : "Retry extraction", report);
+    }
 
     private async Task InspectCanonAsync(bool reload)
     {
@@ -383,9 +393,14 @@ public sealed partial class MainWindow : Window
         if (reload)
             Avalonia.Threading.Dispatcher.UIThread.Post(() => NarrationScroll.Offset = offset);
 
+        await ShowReportAsync(reload ? "Update State" : "Check Canon", report);
+    }
+
+    private async Task ShowReportAsync(string title, string report)
+    {
         var dialog = new Window
         {
-            Title = reload ? "Update State" : "Check Canon",
+            Title = title,
             Width = 680, Height = 500, MinWidth = 420, MinHeight = 300,
             WindowStartupLocation = WindowStartupLocation.CenterOwner
         };

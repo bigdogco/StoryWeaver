@@ -7,6 +7,26 @@ ones that turn out to be non-issues, with the resolution noted.
 
 ## Open
 
+### Retry could erase the evidence that prevents reroll — fixed 2026-09-09
+
+Inspection while connecting desktop Retry/Reroll found `ReExtractAsync` replaced
+`TurnRecord.Applied` with only the latest accepted deltas. A retry consisting entirely
+of no-ops (or a failed extraction) left an empty list despite earlier changes still
+being in canon. Reroll checks that list, so it could then replace a story whose effects
+it cannot undo. Retry now retains earlier applied changes and appends newly accepted
+ones. Rejections/no-ops/raw extraction continue to describe the latest attempt.
+Older records already stripped by a retry cannot be reconstructed from that record;
+this fix preserves evidence going forward, without rewriting existing saves.
+
+### Last-turn operations can fail saving without advancing the turn number
+
+Identified 2026-09-09. Retry and Reroll save canon then replace the history record, both
+at the existing turn number. Desktop Send's counter-based failure detection cannot be
+used for them. The desktop conservatively requires reopening on an unexpected exception
+because the API does not distinguish a provider failure from a partially saved result.
+Reported extraction failures and refusals remain ordinary outcomes. A typed backend
+failure stage could narrow that recovery requirement in future.
+
 ### Desktop canon checks need session lore and operation ownership — resolved 2026-09-09
 
 Calling `CanonRefresh.Check(world)` without the pack's lore would incorrectly report

@@ -38,8 +38,10 @@
         </MenuItem>
       </MenuItem>
       <MenuItem Header="_Story">
-        <MenuItem Header="_Retry" IsEnabled="False" />
-        <MenuItem Header="Re_roll" IsEnabled="False" />
+        <MenuItem Header="_Retry" IsEnabled="{Binding CanReviseLastTurn}" Click="RetryLastTurn"
+                  ToolTip.Tip="Retry extraction on the last narration without rewriting the story." />
+        <MenuItem Header="Re_roll" IsEnabled="{Binding CanReviseLastTurn}" Click="RerollLastTurn"
+                  ToolTip.Tip="Rewrite the last narration. Only turns with no applied canon changes can be rerolled." />
         <MenuItem Header="_Update State" IsEnabled="{Binding CanInspectCanon}" Click="UpdateState" />
         <MenuItem Header="_Check Canon" IsEnabled="{Binding CanInspectCanon}" Click="CheckCanon" />
       </MenuItem>

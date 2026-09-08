@@ -5,7 +5,16 @@
 
 - [ ] Manually review desktop Send: one action produces one saved turn, busy
   close/switch protection, refreshed selected details, narration on extraction
-  failure and retained drafts on errors. Retry/reroll remain to be connected.
+  failure and retained drafts on errors. Retry/reroll are connected (2026-09-09).
+
+- [x] Manually review desktop Retry/Reroll using the desktop README, including retained
+  drafts, replacement rather than appended turns, refusal after a retry of a changed
+  turn, extraction failures and reopen protection on unexpected exceptions.
+  The player reported all testing complete on 2026-09-09.
+
+- [ ] Consider typed failure-stage reporting for last-turn session operations if the
+  conservative desktop reopen requirement becomes disruptive. Retry/Reroll can partially
+  save without advancing the turn number; see CHALLENGES.md.
 
 - [ ] Manually review desktop transcript: new opening, resumed recent turns,
   reopened saves showing their opening before recent turns, turn-zero reopening
@@ -51,8 +60,9 @@ extraction pass reliable?", and none of these help answer it.
       [desktop review guide](../../src/StoryWeaver.Desktop/README.md). Next: connect
       App/Core session opening and player creation, live state projection and
       workspace selection are implemented (2026-09-08; TODO_DESKTOP_LIBRARY_.md).
-      Next: real turns and history rendering, busy/failure feedback, retry/reroll
-      and close behaviour; refine tab contents and correction flows,
+      Live turns/history, busy/close protection and canon actions are implemented;
+      Retry/Reroll are connected (2026-09-09; TODO_DESKTOP_RETRY_REROLL_.md).
+      Next: refine tab contents and correction flows,
       reliable narration references (including persistence and older history),
       visual/keyboard behaviour, library and pack-editor workflows, and desktop
       lifecycle and pack/save path decisions. Avalonia 12.1.2 runs on the existing

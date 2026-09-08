@@ -209,7 +209,9 @@ public sealed class TurnEngine
         // extracted again.
         TurnRecord repaired = turn with
         {
-            Applied = validation.Accepted,
+            // Retry does not undo earlier changes. Retain them for the audit trail
+            // and Reroll's refusal to replace a turn that has changed canon.
+            Applied = [.. turn.Applied, .. validation.Accepted],
             NoOps = validation.NoOps,
             Rejected = validation.Rejected,
             RawExtraction = extraction.Raw,

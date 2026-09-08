@@ -19,10 +19,12 @@ public sealed class PlayShellViewModel : ObservableObject
     public bool IsBusy
     {
         get => _isBusy;
-        private set { if (Set(ref _isBusy, value)) { Raise(nameof(CanSend)); Raise(nameof(CanInspectCanon)); Raise(nameof(ComposerStatus)); } }
+        private set { if (Set(ref _isBusy, value)) { Raise(nameof(CanSend)); Raise(nameof(CanInspectCanon)); Raise(nameof(CanReviseLastTurn)); Raise(nameof(ComposerStatus)); } }
     }
     public bool CanSend => HasLiveSession && !IsBusy && !_needsReopen && !string.IsNullOrWhiteSpace(Draft);
     public bool CanInspectCanon => HasLiveSession && !IsBusy;
+    public bool CanReviseLastTurn => HasLiveSession && !IsBusy && !_needsReopen
+        && Narration.Any(paragraph => paragraph.Label.StartsWith("NARRATION · TURN ", StringComparison.Ordinal));
     public string ComposerStatus => IsBusy ? _busyStatus
         : _needsReopen ? "Reopen this playthrough before sending another turn."
         : HasLiveSession ? "Send takes a turn and saves the result." : "Open a playthrough to send an action.";
@@ -49,6 +51,7 @@ public sealed class PlayShellViewModel : ObservableObject
         SmallerTextCommand = new(() => NarrationSize -= 2, () => NarrationSize > 14);
         ResetTextCommand = new(() => NarrationSize = 18);
         DismissNoticeCommand = new(() => Notice = string.Empty);
+        Narration.CollectionChanged += (_, _) => Raise(nameof(CanReviseLastTurn));
     }
 
     public EntityTabViewModel Characters { get; } = new("Characters", EntityKind.Character);
@@ -199,6 +202,63 @@ public sealed class PlayShellViewModel : ObservableObject
             }
             IsBusy = false;
         }
+    }
+
+    public async Task<string?> ReviseLastTurnAsync(StorySession session, bool reroll)
+    {
+        if (!CanReviseLastTurn) return null;
+        string action = reroll ? "Reroll" : "Retry extraction";
+        _busyStatus = reroll ? "Rewriting the last narration and updating the world…"
+            : "Retrying extraction on the last narration…";
+        IsBusy = true;
+        Notice = string.Empty;
+        try
+        {
+            var result = reroll ? await session.RerollLastAsync() : await session.ReExtractLastAsync();
+            if (result.WasRefused)
+            {
+                Notice = $"{action} could not run: {result.RefusedBecause}";
+                return Notice;
+            }
+            var outcome = result.Value!;
+            var turn = outcome.Turn;
+            ReplaceTurnParagraph($"YOU · TURN {turn.TurnNumber}", turn.PlayerInput);
+            ReplaceTurnParagraph($"NARRATION · TURN {turn.TurnNumber}", turn.Narration);
+            RefreshWorld(session);
+            LinkNarrationNames();
+            Notice = outcome.ExtractionFailed
+                ? $"{action}: narration saved, but extraction failed."
+                : $"{action} saved for turn {turn.TurnNumber} · {turn.Rejected.Count} rejected changes.";
+            return $"Playthrough: {session.SaveId}\nTurn: {turn.TurnNumber}\n\n"
+                + (reroll ? "The last narration was replaced. No new turn was added."
+                    : "Extraction was retried. Narration and the turn number are unchanged.")
+                + $"\n\nRecorded applied changes for this turn (including earlier extraction attempts): {turn.Applied.Count}"
+                + $"\nLatest extraction: {turn.NoOps.Count} already-true changes, {turn.Rejected.Count} rejected changes."
+                + (outcome.ExtractionFailed ? "\n\nExtraction failed\n" + outcome.ExtractionError : string.Empty)
+                + (turn.Rejected.Count > 0 ? "\n\nRejected changes\n"
+                    + string.Join("\n", turn.Rejected.Select(rejected => "• " + rejected.Reason)) : string.Empty);
+        }
+        catch (Exception error)
+        {
+            // These operations can save canon and then fail writing history without
+            // advancing the turn counter. An exception supplies no completion outcome.
+            _needsReopen = true;
+            Notice = $"{action} did not complete. Reopen the playthrough and inspect its state before continuing.";
+            return Notice + "\n\nThe previous narration and your draft are retained on screen."
+                + " Saving may have been incomplete.\n\n" + error.Message;
+        }
+        finally { IsBusy = false; }
+    }
+
+    private void ReplaceTurnParagraph(string label, string text)
+    {
+        for (int index = 0; index < Narration.Count; index++)
+        {
+            if (Narration[index].Label != label) continue;
+            Narration[index] = new(label, [new(text)]);
+            return;
+        }
+        Narration.Add(new(label, [new(text)]));
     }
 
     public async Task<string?> InspectCanonAsync(StorySession session, bool reload)

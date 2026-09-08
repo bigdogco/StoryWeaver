@@ -19,7 +19,9 @@ public sealed record TurnRecord
     /// <summary>The prose shown to the player.</summary>
     public required string Narration { get; init; }
 
-    /// <summary>Deltas that passed validation and changed canon.</summary>
+    /// <summary>Deltas that passed validation and changed canon, including earlier
+    /// attempts when extraction has been retried. NoOps, Rejected and RawExtraction
+    /// describe the latest extraction attempt.</summary>
     public IReadOnlyList<StateDelta> Applied { get; init; } = [];
 
     /// <summary>Deltas that were valid but restated something already true. Not applied,

@@ -153,3 +153,17 @@ Story → Check Canon checks in-memory canon against the session's lore without
 reloading, saving or repairing it. Both operations use the session guard and are
 disabled in preview, without a live session and while an operation is busy.
 Neither clears the desktop's reopen requirement after a partial save failure.
+
+# Desktop Retry and Reroll — 2026-09-09
+
+Both menu actions call the existing last-turn session operations. They are available
+with a displayed live turn while idle, unless reopening is required after an error.
+Retry extracts the stored prose again; Reroll replaces that prose only if the backend
+finds no applied changes. The backend supplies refusal reasons. Neither adds a turn
+or consumes the draft. Results use the same selectable report dialog as canon actions.
+
+Retry preserves earlier applied deltas in the turn record because they still affect
+canon and must continue to prevent reroll. Unexpected exceptions require reopening:
+the operation can partially save without advancing the turn counter, and the current
+API supplies no failure-stage information. Normal refusals and reported extraction
+failures do not impose that requirement.
