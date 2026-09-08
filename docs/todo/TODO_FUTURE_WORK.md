@@ -807,6 +807,11 @@ completeness.
 
 ### Phase 2 — UI
 
+- [x] **Desktop Update State and Check Canon.** Connected 2026-09-09 with guarded,
+      lore-aware checking, world/link refresh and selectable result reports.
+      Manual review steps are in the desktop README; implementation tracked in
+      `TODO_DESKTOP_CANON_ACTIONS_.md`.
+
 **Update State is built (2026-09-02)** — `Core/CanonRefresh` plus `/reload`, answering the
 phase's open question with *both surfaces*. Re-read canon after editing it by hand; the session
 no longer overwrites the edit. See [`TODO_UPDATE_STATE.md`](TODO_UPDATE_STATE.md).

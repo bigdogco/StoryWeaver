@@ -20,7 +20,7 @@ is never opened as a StorySession or written to a save.
   it requires an unused save ID. **Open Save** starts with a saved playthrough and
   resumes the world recorded by that save. Library offers Recent, Worlds and
   Playthroughs views. World Editor
-  and turn commands remain disabled.
+  and Retry/Reroll remain disabled. Story → Update State and Check Canon are connected.
 - Library selects a workspace that contains `worlds/` and `saves/`, then keeps
   authored worlds and saved playthroughs in separate views. Older saves without
   provenance are labelled **pack unknown** and require an explicit, unverified
@@ -47,6 +47,29 @@ is never opened as a StorySession or written to a save.
   when the application exits.
 
 ## Manual review
+
+Canon actions (2026-09-09):
+
+1. With no session or with the preview, confirm Update State and Check Canon are disabled.
+   Open a disposable playthrough and run Check Canon. Its selectable, scrollable report
+   checks current in-memory state with the pack's lore; it does not reload or write files.
+2. Keep a draft and an entity detail open. Edit that entity's description in the save's
+   canon JSON, then choose Update State. Confirm the report lists the changed entity,
+   its details refresh, and the draft, selected tab and narration position are retained.
+   Rename an entity and confirm narration links reflect current names.
+3. Reload unchanged canon, then try a missing canon file and malformed JSON (restore it
+   afterwards). Expect distinct unchanged/missing/error results; missing or unreadable
+   files keep the current world. No automatic repair or save is performed.
+4. Introduce a dangling location or knowledge reference in the disposable save and reload.
+   Confirm the world is adopted with an integrity warning. Check Canon should report the
+   same warning; valid lore references must not be reported as missing facts.
+5. During a live turn, both actions must be disabled. During reload, Send is disabled
+   and close/switch requests are refused. After an earlier partial-save failure, neither
+   action removes the requirement to reopen before sending another turn.
+6. Resize the result dialog and inspect/copy a long report. Close it with Escape or Close.
+
+Release build passed with zero warnings/errors on 2026-09-09. The player tested
+the canon actions and reported everything working on 2026-09-09.
 
 Recent and reload update: open a playthrough from Worlds or Playthroughs, close
 it, then confirm **File -> Library -> Recent** can reopen it directly. Reopen a

@@ -7,6 +7,14 @@ ones that turn out to be non-issues, with the resolution noted.
 
 ## Open
 
+### Desktop canon checks need session lore and operation ownership — resolved 2026-09-09
+
+Calling `CanonRefresh.Check(world)` without the pack's lore would incorrectly report
+known lore IDs as dangling facts. `StorySession.CheckCanonAsync` now supplies its
+own lore and takes the existing guard so checking cannot overlap a canon mutation.
+Desktop reload/check also preserve the partial-save failure reopen requirement:
+reloading canon alone does not establish that history and canon saved consistently.
+
 ### Narration links need reliable entity identity
 
 Identified during Play UI design, 2026-09-07. Names are mutable and not unique,

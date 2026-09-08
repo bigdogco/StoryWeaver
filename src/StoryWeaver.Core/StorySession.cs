@@ -216,6 +216,12 @@ public sealed class StorySession : IDisposable
                 return report;
             });
 
+    /// <summary>Check current canon with this session's lore, without reloading or writing it.</summary>
+    public Task<SessionResult<EditReport>> CheckCanonAsync() =>
+        GuardedAsync(
+            "canon is being changed right now",
+            () => Task.FromResult(new EditReport(CanonRefresh.Check(_world, _lore))));
+
     /// <summary>
     /// Author canon with deltas — the ordinary way it changes, and the one to reach for first.
     ///

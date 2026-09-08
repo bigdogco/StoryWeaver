@@ -15,13 +15,15 @@ public sealed class PlayShellViewModel : ObservableObject
     private bool _hasLiveSession;
     private bool _isBusy;
     private bool _needsReopen;
+    private string _busyStatus = "Writing narration and updating the world…";
     public bool IsBusy
     {
         get => _isBusy;
-        private set { if (Set(ref _isBusy, value)) { Raise(nameof(CanSend)); Raise(nameof(ComposerStatus)); } }
+        private set { if (Set(ref _isBusy, value)) { Raise(nameof(CanSend)); Raise(nameof(CanInspectCanon)); Raise(nameof(ComposerStatus)); } }
     }
     public bool CanSend => HasLiveSession && !IsBusy && !_needsReopen && !string.IsNullOrWhiteSpace(Draft);
-    public string ComposerStatus => IsBusy ? "Writing narration and updating the world…"
+    public bool CanInspectCanon => HasLiveSession && !IsBusy;
+    public string ComposerStatus => IsBusy ? _busyStatus
         : _needsReopen ? "Reopen this playthrough before sending another turn."
         : HasLiveSession ? "Send takes a turn and saves the result." : "Open a playthrough to send an action.";
     private string _sceneTitle = "StoryWeaver";
@@ -101,6 +103,7 @@ public sealed class PlayShellViewModel : ObservableObject
         Raise(nameof(IsPreview));
         Raise(nameof(IsEmpty));
         Raise(nameof(HasLiveSession));
+        Raise(nameof(CanInspectCanon));
         Raise(nameof(SceneTitle));
         Raise(nameof(SessionStatus));
     }
@@ -122,6 +125,7 @@ public sealed class PlayShellViewModel : ObservableObject
         Raise(nameof(IsPreview));
         Raise(nameof(IsEmpty));
         Raise(nameof(HasLiveSession));
+        Raise(nameof(CanInspectCanon));
         Raise(nameof(SceneTitle));
         Raise(nameof(SessionStatus));
         Raise(nameof(CanSend));
@@ -139,6 +143,7 @@ public sealed class PlayShellViewModel : ObservableObject
         _sessionStatus = "No active session · choose Library to begin";
         Raise(nameof(IsEmpty));
         Raise(nameof(HasLiveSession));
+        Raise(nameof(CanInspectCanon));
         Raise(nameof(SceneTitle));
         Raise(nameof(SessionStatus));
         Raise(nameof(CanSend));
@@ -151,6 +156,7 @@ public sealed class PlayShellViewModel : ObservableObject
         string input = Draft.Trim();
         string originalDraft = Draft;
         int before = session.World.TurnNumber;
+        _busyStatus = "Writing narration and updating the world…";
         IsBusy = true;
         Notice = string.Empty;
         var pending = new NarrativeParagraph("YOU · SENDING", [new(input)]);
@@ -193,6 +199,68 @@ public sealed class PlayShellViewModel : ObservableObject
             }
             IsBusy = false;
         }
+    }
+
+    public async Task<string?> InspectCanonAsync(StorySession session, bool reload)
+    {
+        if (!CanInspectCanon) return null;
+        _busyStatus = reload ? "Reloading canon from disk…" : "Checking current canon…";
+        IsBusy = true;
+        string title = reload ? "Update State" : "Check Canon";
+        bool adopted = false;
+        try
+        {
+            IReadOnlyList<string> warnings;
+            string summary;
+            string changes = string.Empty;
+            if (reload)
+            {
+                var result = await session.UpdateStateAsync();
+                if (result.WasRefused)
+                {
+                    Notice = $"{title} could not run: {result.RefusedBecause}";
+                    return Notice;
+                }
+                var report = result.Value!;
+                if (report.NothingOnDisk)
+                {
+                    Notice = "No canon save was found on disk. The current world was kept.";
+                    return Notice;
+                }
+                adopted = true;
+                RefreshWorld(session);
+                LinkNarrationNames();
+                warnings = report.Warnings;
+                summary = report.Unchanged ? "Canon reloaded. No changes found." : $"Canon reloaded · {report.Changes.Count} changes.";
+                if (report.Changes.Count > 0)
+                    changes = "\n\nChanges\n" + string.Join("\n", report.Changes.Select(change => "• " + change));
+            }
+            else
+            {
+                var result = await session.CheckCanonAsync();
+                if (result.WasRefused)
+                {
+                    Notice = $"{title} could not run: {result.RefusedBecause}";
+                    return Notice;
+                }
+                warnings = result.Value!.Warnings;
+                summary = "Checked the current in-memory canon. Nothing was reloaded or written.";
+            }
+            string findings = warnings.Count == 0 ? "No integrity warnings found."
+                : $"{warnings.Count} integrity warnings\n" + string.Join("\n", warnings.Select(warning => "• " + warning));
+            Notice = $"{title} complete · {warnings.Count} integrity warnings.";
+            return $"Playthrough: {session.SaveId}\n\n{summary}{changes}\n\n{findings}"
+                + (_needsReopen ? "\n\nThe earlier save failure still requires reopening this playthrough before sending a turn." : string.Empty);
+        }
+        catch (Exception error)
+        {
+            Notice = adopted
+                ? "Canon was reloaded, but the desktop could not refresh. Reopen the playthrough."
+                : $"{title} failed. The current world was kept.";
+            if (adopted) _needsReopen = true;
+            return Notice + "\n\n" + error.Message;
+        }
+        finally { IsBusy = false; }
     }
 
     private void RefreshWorld(StorySession session)

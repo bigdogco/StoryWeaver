@@ -140,7 +140,7 @@ public sealed partial class MainWindow : Window
 
     private async void SaveBeforeClosing(object? sender, WindowClosingEventArgs e)
     {
-        if (Model.IsBusy) { e.Cancel = true; Model.Notice = "Please wait for the current turn to finish before closing."; return; }
+        if (Model.IsBusy) { e.Cancel = true; Model.Notice = "Please wait for the current operation to finish before closing."; return; }
         if (_opening) { e.Cancel = true; Model.Notice = "Please wait for the playthrough to finish opening."; return; }
         if (_closing) return;
         CaptureSplit();
@@ -212,7 +212,7 @@ public sealed partial class MainWindow : Window
 
     private async Task OpenLibraryAsync(LibraryMode mode)
     {
-        if (Model.IsBusy) { Model.Notice = "Please wait for the current turn to finish before switching playthroughs."; return; }
+        if (Model.IsBusy) { Model.Notice = "Please wait for the current operation to finish before switching playthroughs."; return; }
         if (_opening) return;
         ReleaseActiveSession();
         var library = new LibraryWindow(_workspacePath, mode, _recentPlaythroughs);
@@ -340,7 +340,7 @@ public sealed partial class MainWindow : Window
 
     private void ClosePlaythrough(object? sender, RoutedEventArgs e)
     {
-        if (Model.IsBusy) { Model.Notice = "Please wait for the current turn to finish before closing the playthrough."; return; }
+        if (Model.IsBusy) { Model.Notice = "Please wait for the current operation to finish before closing the playthrough."; return; }
         if (_opening) return;
         ReleaseActiveSession();
         Model.Notice = "Playthrough closed.";
@@ -369,6 +369,40 @@ public sealed partial class MainWindow : Window
         Avalonia.Threading.Dispatcher.UIThread.Post(() => NarrationScroll.ScrollToEnd());
         await sending;
         Avalonia.Threading.Dispatcher.UIThread.Post(() => NarrationScroll.ScrollToEnd());
+    }
+
+    private async void UpdateState(object? sender, RoutedEventArgs e) => await InspectCanonAsync(reload: true);
+    private async void CheckCanon(object? sender, RoutedEventArgs e) => await InspectCanonAsync(reload: false);
+
+    private async Task InspectCanonAsync(bool reload)
+    {
+        if (_opening || _session is null) return;
+        var offset = NarrationScroll.Offset;
+        string? report = await Model.InspectCanonAsync(_session, reload);
+        if (report is null) return;
+        if (reload)
+            Avalonia.Threading.Dispatcher.UIThread.Post(() => NarrationScroll.Offset = offset);
+
+        var dialog = new Window
+        {
+            Title = reload ? "Update State" : "Check Canon",
+            Width = 680, Height = 500, MinWidth = 420, MinHeight = 300,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner
+        };
+        var close = new Button { Content = "Close", IsCancel = true, HorizontalAlignment = HorizontalAlignment.Right };
+        close.Click += (_, _) => dialog.Close();
+        var content = new Grid { Margin = new Thickness(20), RowDefinitions = new RowDefinitions("*,Auto") };
+        content.Children.Add(new ScrollViewer
+        {
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
+            VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+            Content = new SelectableTextBlock { Text = report, TextWrapping = TextWrapping.Wrap }
+        });
+        Grid.SetRow(close, 1);
+        close.Margin = new Thickness(0, 16, 0, 0);
+        content.Children.Add(close);
+        dialog.Content = content;
+        await dialog.ShowDialog(this);
     }
 
     private sealed record PlayerAnswer(string Name, string? Description);

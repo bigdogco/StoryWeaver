@@ -143,3 +143,13 @@ the recent window once real turns fill it.
 The Library keeps a desktop-preference MRU list of recently opened playthroughs.
 Each entry records workspace, world and save ID so it can reopen directly without
 asking the player to reselect the current workspace first.
+
+# Desktop canon actions — 2026-09-09
+
+Story → Update State reloads through StorySession, refreshes world details and
+display links, and presents changes and integrity warnings in a resizable,
+scrollable, selectable report. Missing/unreadable canon keeps the existing world.
+Story → Check Canon checks in-memory canon against the session's lore without
+reloading, saving or repairing it. Both operations use the session guard and are
+disabled in preview, without a live session and while an operation is busy.
+Neither clears the desktop's reopen requirement after a partial save failure.

@@ -40,8 +40,8 @@
       <MenuItem Header="_Story">
         <MenuItem Header="_Retry" IsEnabled="False" />
         <MenuItem Header="Re_roll" IsEnabled="False" />
-        <MenuItem Header="_Update State" IsEnabled="False" />
-        <MenuItem Header="_Check Canon" IsEnabled="False" />
+        <MenuItem Header="_Update State" IsEnabled="{Binding CanInspectCanon}" Click="UpdateState" />
+        <MenuItem Header="_Check Canon" IsEnabled="{Binding CanInspectCanon}" Click="CheckCanon" />
       </MenuItem>
       <MenuItem Header="_Help">
         <MenuItem Header="_Keyboard Shortcuts" InputGesture="F1" Command="{Binding #Root.ShortcutsCommand}" />
