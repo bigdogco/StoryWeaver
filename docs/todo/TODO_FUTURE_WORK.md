@@ -1,5 +1,18 @@
 # Future Work
 
+- [ ] **Review the player-discovery design, then authorize implementation.**
+  Requested after The Last Lantern revealed Julian's hidden state in the canon UI.
+  `docs/design/PLAYER_DISCOVERY.md` proposes Player/Author views, remembered entity
+  observations, explicit discovery rules, starting knowledge and automatic extraction
+  updates. Review legacy-save behaviour and discovery-only Reroll refusal as part of
+  the decision. This is a draft; no discovery code or pack changes have been made.
+- [ ] **Implement and run discovery/departure evals with the feature.** Explicitly
+  requested by the player. `docs/design/PLAYER_DISCOVERY_EVALS.md` specifies required
+  and forbidden actual-canon/player-view outcomes, including null-location departures,
+  hidden items, failed searches, false reports, return from offstage and stale memories.
+  Include repeated provider-labelled model runs and the existing extraction regression
+  set; retain manual narrator/UI/lifecycle review. Fixtures/results do not exist yet.
+
 - [x] **Review and implement in-session canon editing.** Four-form design approved and
   implemented 2026-09-09, with Core-owned corrections, lore-aware pickers and one-save
   submission. See `docs/design/CANON_EDITOR_UI.md` and `TODO_CANON_EDITOR_.md`.
@@ -7,9 +20,15 @@
   reference filtering, common lore, directed connections, draft cancellation,
   persistence and failure handling. The player reported testing looked good on
   2026-09-09. No runtime review by the agent.
-- [ ] **Design in-session entity creation/removal and metadata correction controls.**
-  Separate actions from the existing-entity editing forms; reuse Core policy
-  for IDs and removal consequences. Stable IDs remain immutable.
+- [x] **Design and implement in-session Add/Remove.** Approved and implemented
+  2026-09-09: full forms, Core complete-form creation, typed consequence plans,
+  stale-preview protection and the player-removal safeguard. See
+  `docs/design/CANON_ADD_REMOVE_UI.md` and `TODO_CANON_ADD_REMOVE_.md`.
+- [ ] **Manually review Add/Remove** using the desktop README: four forms, ID suggestions
+  and collisions, complete-form persistence, knowledge, removal cascades, malformed
+  references, draft cancellation and recovery after save failure.
+- [ ] **Design metadata correction controls.** Source attribution, established turn
+  and last-seen turn correction remain separate from existing Edit and Add/Remove.
 
 - [ ] Manually review automatic unique-name links in openings and live/resumed
   narration, including ambiguous names and navigation to newly introduced entities.

@@ -7,6 +7,37 @@ ones that turn out to be non-issues, with the resolution noted.
 
 ## Open
 
+### Canon inspection exposes information the protagonist has not learned
+
+Reported by the player in The Last Lantern, 2026-09-09: Julian Vale must be found,
+but the Characters panel shows his actual location, hidden status and desperate mood.
+WorldPresentation projects all canon without consulting player knowledge. Location
+occupants, item holders, source labels and full-canon name links are additional paths;
+filtering only the character list would not close them.
+
+Code inspection also found the hidden black ledger held by Vivian in the opening
+scene. The item panel exposes its holder/description, and ContextAssembler includes
+co-located characters' carried items in scene truth. This identifies a narrator-context
+hazard, not a measured claim that the narrator spoiled it in a particular turn.
+Status is free prose; no structured visibility rule exists. LastSeenTurn also touches
+co-located characters regardless of whether the player perceived them.
+
+The opening ends before Vivian explains the case, and the seeded player knows none
+of its facts. Initial discovery cannot honestly be inferred from all seed entries,
+all present characters' knowledge, or the scenario premise. The proposed design is
+`design/PLAYER_DISCOVERY.md`: persisted observations, Player/Author projections and
+explicit presentation rules. No fix is implemented by the design task. Automatic
+discovery would change extraction and saved state, including Retry/Reroll semantics;
+those proposals still need approval and measured/manual validation.
+
+Follow-up clarification: the current engine has no autonomous offscreen movement or
+private LLM action channel. Its movement delta requires a destination, so a narrated
+departure with no destination can leave the NPC incorrectly at their old location.
+The proposed change allows an explicitly established NPC departure to set LocationId
+to null, separately from player-observed whereabouts. Merely losing sight inside a
+location must not do so. The player requested evaluation of these distinctions;
+required fixtures are specified in `design/PLAYER_DISCOVERY_EVALS.md` and remain unbuilt.
+
 ### Canon forms cannot reconstruct editable state from display text
 
 Identified during editor design, 2026-09-09. WorldPresentation character knowledge
@@ -1501,3 +1532,38 @@ starting context in the UI. Desktop now renders the opening as presentation
 context before recent turns, without writing it into history or changing narrator
 memory. Recently opened playthroughs belong in desktop preferences rather than
 saves, because "opened recently" is view usage metadata, not story state.
+# Add/Remove design findings — 2026-09-09
+
+`Authoring.IdConflict` checks characters, locations and facts, but omits items and
+pack lore. The delta validator has broader collision checks, so using this helper
+alone for an Add form would show misleading availability. New creation also needs
+dictionary-key/stored-ID checks for malformed canon. `Authoring.Slug` accepts Unicode
+letters while `EntityId.IsWellFormed` accepts ASCII; a suggestion is not proof of validity.
+
+`Authoring.CommitAsync` persists accepted deltas even if others were rejected. That
+is intentional for its existing path but cannot provide a complete Add form: creation
+and supplemental fields need validation before mutation and one save. Chaining an
+authoring save with an edit save could leave half the form persisted.
+
+Legacy removal resolves bare IDs by kind precedence and its preview has no revision
+check. The desktop needs a typed target plus a consequence plan checked under the
+session guard. Its warning text must also distinguish an actual dangling holder or
+location ID from a field cleared to null. These are implementation prerequisites in
+`design/CANON_ADD_REMOVE_UI.md`, not fixes made by the design task.
+
+Implemented after approval on 2026-09-09: the new creation path checks all namespaces,
+keys and stored IDs, validates the complete form before live mutation, and saves once.
+Typed removal plans compare both state and object identity inside the guard; changed
+dependencies return a new preview without writing, and a replaced target refuses.
+Legacy CLI helpers retain their earlier behaviour. Manual desktop review is pending.
+
+Reusing an ID which existed only as dangling knowledge could silently teach a new
+fact to unselected characters. Full-form creation now makes Known by authoritative,
+removing those old memberships from unselected characters; the form explains this.
+ID suggestion tracking uses synchronous Text-property changes so programmatic slug
+updates cannot be mistaken for manual edits by a later routed TextChanged event.
+
+Detached catalog/candidate copies must preserve case-insensitive collections. Core's
+model-facing StoryJson options do not install Storage's dictionary/set converters;
+a plain JSON round trip would lose those comparers. The new creation path copies the
+domain values into fresh case-insensitive collections without referencing Storage.

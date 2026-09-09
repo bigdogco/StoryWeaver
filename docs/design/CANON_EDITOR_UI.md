@@ -141,8 +141,9 @@ its last reload are not automatically incorporated.
 
 The editor covers existing character, location, fact and item details,
 including placement, connections and knowledge. Creation and deletion are separate
-actions, not implicit effects of clearing a form. They remain future work, along
-with reusable pack authoring. Removing a knowledge/connection selection edits that
+actions, not implicit effects of clearing a form. Add/Remove was subsequently approved
+and implemented in `CANON_ADD_REMOVE_UI.md` on 2026-09-09; reusable pack authoring
+remains future work. Removing a knowledge/connection selection edits that
 reference; it never deletes the referenced entity.
 
 The player approved the modal layout and field coverage, including read-only metadata

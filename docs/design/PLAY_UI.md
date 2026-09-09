@@ -176,3 +176,11 @@ unresolved references, expose explicit/common lore separately, and submit typed
 corrections through StorySession. Core owns identity checks and cross-entity updates.
 Save changes affects the running playthrough, with no turn or pack edit. The player
 reported manual testing looked good on 2026-09-09.
+
+# Player discovery proposal — 2026-09-09
+
+The player found that full-canon details spoil The Last Lantern's missing-person
+case. `PLAYER_DISCOVERY.md` proposes a normal Player view of learned information
+and an explicit Author view for full canon and corrections. This would supersede
+the earlier full-cast/full-state Play presentation and restrict automatic links to
+learned labels. The design is awaiting approval; current behaviour is unchanged.

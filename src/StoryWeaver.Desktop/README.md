@@ -36,6 +36,8 @@ is never opened as a StorySession or written to a save.
 - Characters, Locations, Canon and Items tabs, each retaining list/detail navigation.
   **Edit** opens the corresponding live-canon form with Save/Cancel. Changes affect
   this playthrough, not the pack, turn number or historical narration.
+  Each list offers **Add**; each detail offers **Remove** with a concrete consequence
+  preview. The player can be edited but cannot be removed through this workflow.
   Tabs wrap when the world pane becomes narrow. The desktop window has minimum
   dimensions of 800 × 560; this is not a mobile layout.
 - Preview narration references select a tab and open the entity by kind and stable
@@ -49,6 +51,74 @@ is never opened as a StorySession or written to a save.
   when the application exits.
 
 ## Manual review
+
+Canon Add/Remove (2026-09-09; no model calls; manual review pending):
+
+1. Open a disposable playthrough. Each of the four lists offers Add, including an
+   empty list. Add/Remove are disabled in preview or while an operation runs.
+   Add opens the matching form with playthrough identity and a permanent-ID field.
+   Resize it and review light/dark themes: content scrolls; the footer stays visible.
+2. Type a name (or fact text). Its ID suggestion follows until you edit the ID;
+   further name changes must preserve your custom ID. **Use suggested ID** resumes
+   automatic suggestions. Empty names/text, malformed IDs, `player`, and collisions
+   with characters, locations, facts, items or lore disable Add with a field message.
+   Duplicate display names with different IDs are allowed. A Unicode name may need
+   a manually entered ASCII ID. Enter in descriptions/fact text inserts a newline.
+3. Add a location with status and outgoing connections. Confirm only A → B exists,
+   and B → A was not created. Add a character there with description, status, mood,
+   relationship and knowledge; check all fields persist together. Also add an
+   offstage character. Standing must accept only whole numbers from -100 to 100.
+4. Select facts and lore, filter them out of view and back, then add/reopen the
+   character. Selections remain; common lore is labelled as known through the pack.
+   With a pack sheet whose character is absent from this disposable save, use its
+   ID and confirm the sheet/attitudes appear read-only with the identity explanation.
+   No sheet file is created or changed by Add.
+5. Add a fact with no knowers, then another with several selected knowers. Verify
+   only those selected know it, including the player only if selected. Source is
+   null and EstablishedTurn is the current turn. For an ID previously present only
+   as dangling knowledge, the new fact's explicit Known by choices are authoritative.
+6. Add one held item and one placed item. Each requires choosing a mode and a target;
+   only one placement field is stored. Name, description and condition persist.
+7. Cancel an untouched form: it closes directly. Change fields (including invalid
+   standing or a placement mode without a target), then Cancel/Escape/window close:
+   Keep editing retains the draft and Discard makes no write. An unsuccessful Add
+   retains the entire draft. A successful Add opens the new entry's details.
+8. Remove an item: preview identifies it; Cancel makes no change. Confirm removal
+   and check the tab returns to its list. Remove a fact known by several people:
+   the preview names every knower and confirmation removes those memberships.
+9. Remove a placed character with held items: preview shows their exact before/after
+   placement, and items drop at the character's location. Facts attributed to that
+   character stay, including SourceId. Repeat with an offstage character: held items
+   retain the missing holder ID and the resulting integrity warning is reported.
+10. Remove a location with occupants, incoming connections and lying items. Preview
+    names all affected entries. Occupants become offstage; incoming links disappear;
+    lying items keep the missing location ID; held items remain held. Review warnings.
+    Player Remove is disabled with an explanation; player Edit still works.
+11. In an externally edited disposable save, use Update State before opening a
+    form. Review key/ID mismatches and cross-kind collisions: Remove targets only
+    the selected kind/key and changes references resolving by that key. Existing
+    unresolved references remain untouched. A character with a missing location or
+    a held item with both placement fields must show the exact proposed result.
+    With a fact/lore collision, the pack entry remains and common lore still applies.
+12. Keep a story draft and scroll position throughout Add/Remove. Confirm they survive,
+    details/links refresh, turns and historical prose do not change, and reopening
+    the save preserves the results. Pack files remain unchanged. Modal actions block
+    play, reload, close and save switching; saving disables dialog controls/closing.
+    If a write fails, copy needed Add text and reopen the playthrough. Closing does
+    not roll back a partial write; Remove must not retry automatically.
+
+Backend review (requires an in-process caller; normal modal interaction cannot
+create these races): capture an Add baseline, then change/remove/replace a selected
+reference before submitting. Expect refusal with no form fields persisted. Capture a
+removal plan, then add an incoming reference or change a dependency; the result must
+contain an updated plan with no write. Submit only after reviewing that plan. A missing
+or replaced target refuses. Both operations reject a baseline from another session.
+Manual JSON edits remain explicit Update State operations, with no watcher or merge.
+The world lists currently have no search filter; reference-picker filtering is covered
+above. No list-filter UI was introduced by this task.
+
+Release build passes with zero warnings/errors. No runtime tests or live model calls
+were run by the agent. Design: `docs/design/CANON_ADD_REMOVE_UI.md`.
 
 Canon editing (2026-09-09; no model calls):
 
@@ -267,7 +337,7 @@ presentation state; Presentation records are immutable display values, not canon
 the real session. Preview supplies explicit sample references. No backend project
 references Avalonia.
 
-Next: entity creation/removal, pack editing, and reliable backend narration-reference
+Next: manual Add/Remove review, pack editing, and reliable backend narration-reference
 generation/persistence. The
 shell's explicit sample links are not a solution to that last backend question.
 Future mod UI remains part of the mod-system design.
