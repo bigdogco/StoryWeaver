@@ -7,7 +7,10 @@
   <Grid Margin="20">
     <!-- Keep both controls alive: Back and tab changes preserve list scroll position. -->
     <Grid RowDefinitions="Auto,Auto,*" IsVisible="{Binding IsListVisible}">
-      <TextBlock Classes="heading" Text="{Binding Title}" Margin="0,0,0,12" />
+      <WrapPanel Margin="0,0,0,12">
+        <TextBlock Classes="heading" Text="{Binding Title}" Margin="0,0,12,4" />
+        <Button Content="{Binding AddLabel}" Click="AddEntity" IsEnabled="{Binding CanEdit}" />
+      </WrapPanel>
       <TextBlock Grid.Row="1" Text="No information to display yet." Classes="secondary"
                  IsVisible="{Binding IsEmpty}" />
       <ListBox Grid.Row="2" ItemsSource="{Binding Entities}" SelectedItem="{Binding Selected}"
@@ -29,10 +32,13 @@
       </ListBox>
     </Grid>
     <Grid RowDefinitions="Auto,*" IsVisible="{Binding IsDetailVisible}">
-      <StackPanel Orientation="Horizontal" Spacing="12" Margin="0,0,0,16">
-        <Button Content="← Back to list" Click="BackToList" />
-        <Button Content="Edit" Click="EditEntity" IsEnabled="{Binding CanEdit}" />
-      </StackPanel>
+      <WrapPanel Margin="0,0,0,16">
+        <Button Content="← Back to list" Click="BackToList" Margin="0,0,8,6" />
+        <Button Content="Edit" Click="EditEntity" IsEnabled="{Binding CanEdit}" Margin="0,0,8,6" />
+        <Button Content="Remove" Click="RemoveEntity" IsEnabled="{Binding CanRemove}" ToolTip.Tip="{Binding RemoveHint}" Margin="0,0,0,6" />
+        <TextBlock Text="The playthrough needs its player character. Use Edit to correct them."
+                   IsVisible="{Binding IsPlayer}" TextWrapping="Wrap" />
+      </WrapPanel>
       <ScrollViewer x:Name="DetailScroll" Grid.Row="1" HorizontalScrollBarVisibility="Disabled">
         <StackPanel Spacing="14">
           <TextBlock Classes="heading" Text="{Binding Selected.Name}" />

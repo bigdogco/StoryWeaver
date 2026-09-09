@@ -3,8 +3,9 @@
 Approved for implementation by the player, 2026-09-09. Extends `CANON_EDITOR_UI.md`.
 Implementation is tracked in `TODO_CANON_ADD_REMOVE_.md`.
 
-Implemented 2026-09-09; Release build passes with zero warnings/errors. Manual review
-is pending in `src/StoryWeaver.Desktop/README.md`. No runtime tests were run by the agent.
+Implemented 2026-09-09; Release build passes with zero warnings/errors. The player
+reported UI testing looked good and requested committing the implementation.
+The manual guide remains in `src/StoryWeaver.Desktop/README.md`. No runtime tests were run by the agent.
 The full forms, player safeguard and removal rules below are implemented. The world
 lists currently have no filter; their filter-preservation rule applies if one is added.
 Reference pickers already filter without changing selections.

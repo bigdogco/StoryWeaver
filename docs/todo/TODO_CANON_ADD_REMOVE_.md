@@ -9,8 +9,8 @@ Approved 2026-09-09: implement `docs/design/CANON_ADD_REMOVE_UI.md` in full.
 - [x] Update design and backlog with implementation status and manual review handoff.
 
 Implementation complete 2026-09-09. Release build passes with zero warnings/errors;
-diff whitespace review is clean. No runtime tests or model calls were run. Manual
-review is handed to the player through the desktop README and tracked in
-`TODO_FUTURE_WORK.md`. No new projects, packages or save-format changes.
+diff whitespace review is clean. No runtime tests or model calls were run by the
+agent. The player reported UI testing looked good on 2026-09-09 and requested
+committing the implementation. No new projects, packages or save-format changes.
 
 No commit or push until requested by the player.

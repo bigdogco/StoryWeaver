@@ -213,18 +213,30 @@ public sealed class PlayShellViewModel : ObservableObject
         }
     }
 
-    public async Task<SessionResult<EditReport>> SaveCanonEditAsync(StorySession session, CanonEditSnapshot baseline, CanonFields fields)
+    public Task<SessionResult<EditReport>> SaveCanonEditAsync(StorySession session, CanonEditSnapshot baseline, CanonFields fields) =>
+        SaveCanonActionAsync(session, () => session.EditAsync(baseline, fields), report => report, "Changes saved");
+
+    public Task<SessionResult<EditReport>> CreateCanonAsync(StorySession session, CanonCreationSnapshot baseline, string id, CanonFields fields) =>
+        SaveCanonActionAsync(session, () => session.CreateCanonAsync(baseline, id, fields), report => report, "Added");
+
+    public Task<SessionResult<CanonRemovalOutcome>> RemoveCanonAsync(StorySession session, CanonRemovalPlan plan) =>
+        SaveCanonActionAsync(session, () => session.RemoveCanonAsync(plan), outcome => outcome.Report, "Removed");
+
+    private async Task<SessionResult<T>> SaveCanonActionAsync<T>(StorySession session, Func<Task<SessionResult<T>>> action,
+        Func<T, EditReport?> reportOf, string success) where T : class
     {
-        if (!CanEditCanon) return SessionResult<EditReport>.Refused("Editing is unavailable. Wait for the current operation or reopen the playthrough.");
+        if (!CanEditCanon) return SessionResult<T>.Refused("Editing is unavailable. Wait for the current operation or reopen the playthrough.");
         _busyStatus = "Saving canon corrections…";
         IsBusy = true;
         try
         {
-            var result = await session.EditAsync(baseline, fields);
+            var result = await action();
             if (result.WasRefused) return result;
+            var report = reportOf(result.Value!);
+            if (report is null) return result;
             RefreshWorld(session);
             LinkNarrationNames();
-            Notice = result.Value!.IsClean ? "Changes saved." : "Saved with integrity warnings.";
+            Notice = report.IsClean ? success + "." : success + " with integrity warnings.";
             return result;
         }
         catch

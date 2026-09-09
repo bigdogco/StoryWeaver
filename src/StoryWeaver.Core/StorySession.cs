@@ -59,6 +59,7 @@ public sealed class StorySession : IDisposable
 
     private WorldState _world;
     private bool _disposed;
+    private readonly Guid _canonFormSession = Guid.NewGuid();
 
     public StorySession(
         string saveId,
@@ -272,6 +273,62 @@ public sealed class StorySession : IDisposable
             CanonCorrection.Capture(_world, target) is { } snapshot
                 ? SessionResult<CanonEditSnapshot>.Ok(snapshot)
                 : SessionResult<CanonEditSnapshot>.Refused("The selected entity no longer exists with the same identity.")));
+
+    /// <summary>Capture a detached form/catalog baseline belonging to this session.</summary>
+    public Task<SessionResult<CanonCreationSnapshot>> BeginCanonCreationAsync(CanonKind kind) =>
+        GuardedAsync("canon is being changed right now", () => Task.FromResult(
+            new CanonCreationSnapshot(_world, _lore, kind, _canonFormSession)));
+
+    /// <summary>Validate and apply the complete authored form, then save once without advancing the story.</summary>
+    public Task<SessionResult<EditReport>> CreateCanonAsync(CanonCreationSnapshot baseline, string id, CanonFields fields,
+        CancellationToken cancellationToken = default) =>
+        GuardedAsync<EditReport>("canon is being changed right now", async () =>
+        {
+            if (baseline.Session != _canonFormSession) return SessionResult<EditReport>.Refused("This form belongs to another playthrough.");
+            if (CanonCreation.Validate(_world, _lore, baseline, id, fields) is { } error)
+                return SessionResult<EditReport>.Refused(error);
+            var deltas = CanonCreation.Deltas(id, fields);
+            var validation = DeltaValidator.Validate(_world, deltas, _lore, authored: true);
+            if (validation.Rejected.Count != 0)
+                return SessionResult<EditReport>.Refused(string.Join("\n", validation.Rejected.Select(r => r.Reason)));
+            // Validate the final form as a whole too: a future applier/no-op change must not
+            // turn a successful Add into a partially represented draft.
+            var candidate = CanonCreation.Copy(_world);
+            DeltaApplier.Apply(candidate, validation.Accepted);
+            CanonCreation.ApplyFields(candidate, id, fields);
+            var created = CanonCorrection.Capture(candidate, new(baseline.Kind, id, id));
+            if (created is null || !CanonCorrection.Same(created.Fields, fields))
+                return SessionResult<EditReport>.Refused("The complete form could not be applied. Nothing was added.");
+            DeltaApplier.Apply(_world, validation.Accepted);
+            CanonCreation.ApplyFields(_world, id, fields);
+            await _repository.SaveAsync(SaveId, _world, cancellationToken).ConfigureAwait(false);
+            return SessionResult<EditReport>.Ok(new EditReport(CanonRefresh.Check(_world, _lore)));
+        });
+
+    /// <summary>Describe the precise removal effects without changing canon.</summary>
+    public Task<SessionResult<CanonRemovalPlan>> PreviewCanonRemovalAsync(CanonTarget target) =>
+        GuardedAsync<CanonRemovalPlan>("canon is being changed right now", () => Task.FromResult(
+            CanonRemoval.Capture(_world, _lore, target, _canonFormSession) is { } plan
+                ? SessionResult<CanonRemovalPlan>.Ok(plan)
+                : SessionResult<CanonRemovalPlan>.Refused("The selected entity no longer exists with the same identity.")));
+
+    /// <summary>Apply only the reviewed plan; a changed plan is returned for a new confirmation without writing.</summary>
+    public Task<SessionResult<CanonRemovalOutcome>> RemoveCanonAsync(CanonRemovalPlan baseline,
+        CancellationToken cancellationToken = default) =>
+        GuardedAsync<CanonRemovalOutcome>("canon is being changed right now", async () =>
+        {
+            if (baseline.Session != _canonFormSession) return SessionResult<CanonRemovalOutcome>.Refused("This preview belongs to another playthrough.");
+            var current = CanonRemoval.Capture(_world, _lore, baseline.Target, _canonFormSession);
+            if (current is null) return SessionResult<CanonRemovalOutcome>.Refused("The selected entity no longer exists with the same identity. Close this preview.");
+            if (!ReferenceEquals(current.Identity, baseline.Identity))
+                return SessionResult<CanonRemovalOutcome>.Refused("The selected entry was replaced after this preview opened. Close and reopen Remove to review its identity.");
+            if (current.RefusedBecause is { } reason) return SessionResult<CanonRemovalOutcome>.Refused(reason);
+            if (current.Revision != baseline.Revision || !current.Dependencies.SequenceEqual(baseline.Dependencies, ReferenceEqualityComparer.Instance))
+                return SessionResult<CanonRemovalOutcome>.Ok(new(null, current));
+            CanonRemoval.Apply(_world, current);
+            await _repository.SaveAsync(SaveId, _world, cancellationToken).ConfigureAwait(false);
+            return SessionResult<CanonRemovalOutcome>.Ok(new(new EditReport(CanonRefresh.Check(_world, _lore)), null));
+        });
 
     /// <summary>A complete typed correction, checked after and saved once under the same guard as direct edits.</summary>
     public Task<SessionResult<EditReport>> EditAsync(CanonEditSnapshot baseline, CanonFields fields,

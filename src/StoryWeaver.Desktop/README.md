@@ -52,7 +52,7 @@ is never opened as a StorySession or written to a save.
 
 ## Manual review
 
-Canon Add/Remove (2026-09-09; no model calls; manual review pending):
+Canon Add/Remove (2026-09-09; no model calls; player reported UI testing looked good):
 
 1. Open a disposable playthrough. Each of the four lists offers Add, including an
    empty list. Add/Remove are disabled in preview or while an operation runs.

@@ -24,9 +24,11 @@
   2026-09-09: full forms, Core complete-form creation, typed consequence plans,
   stale-preview protection and the player-removal safeguard. See
   `docs/design/CANON_ADD_REMOVE_UI.md` and `TODO_CANON_ADD_REMOVE_.md`.
-- [ ] **Manually review Add/Remove** using the desktop README: four forms, ID suggestions
+- [x] **Manually review Add/Remove** using the desktop README: four forms, ID suggestions
   and collisions, complete-form persistence, knowledge, removal cascades, malformed
-  references, draft cancellation and recovery after save failure.
+  references, draft cancellation and recovery after save failure. The player reported
+  UI testing looked good on 2026-09-09 and requested committing the implementation;
+  individual backend failure/race cases were not separately reported as tested.
 - [ ] **Design metadata correction controls.** Source attribution, established turn
   and last-seen turn correction remain separate from existing Edit and Add/Remove.
 

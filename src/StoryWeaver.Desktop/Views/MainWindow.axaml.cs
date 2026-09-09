@@ -412,6 +412,69 @@ public sealed partial class MainWindow : Window
         finally { _editing = false; }
     }
 
+    private static CanonKind CanonKindFor(EntityKind kind) => kind switch
+    {
+        EntityKind.Character => CanonKind.Character, EntityKind.Location => CanonKind.Location,
+        EntityKind.Fact => CanonKind.Fact, EntityKind.Item => CanonKind.Item,
+        _ => throw new InvalidOperationException("Unknown entity kind.")
+    };
+
+    private async void AddCanonEntity(object? sender, EventArgs e)
+    {
+        if (_opening || _editing || !Model.CanEditCanon || _session is null || _sessionContext is null
+            || sender is not EntityBrowser { DataContext: EntityTabViewModel tab }) return;
+        _editing = true;
+        try
+        {
+            var session = _session;
+            var opening = await session.BeginCanonCreationAsync(CanonKindFor(tab.Kind));
+            if (opening.WasRefused) { Model.Notice = opening.RefusedBecause!; return; }
+            var baseline = opening.Value!;
+            var dialog = new CanonEditorWindow(baseline, _sessionContext, session.SaveId, async (id, fields) =>
+            {
+                var offset = NarrationScroll.Offset;
+                var result = await Model.CreateCanonAsync(session, baseline, id, fields);
+                Avalonia.Threading.Dispatcher.UIThread.Post(() => NarrationScroll.Offset = offset);
+                return result;
+            });
+            var report = await dialog.ShowDialog<EditReport?>(this);
+            if (report is null) return;
+            tab.Selected = tab.Entities.FirstOrDefault(entity => entity.CanonKey == dialog.CreatedId);
+            if (!report.IsClean)
+                await ShowReportAsync("Added with integrity warnings", string.Join("\n", report.Warnings.Select(w => "• " + w)));
+        }
+        catch (Exception error) { Model.Notice = "Could not open or display Add: " + error.Message; }
+        finally { _editing = false; }
+    }
+
+    private async void RemoveCanonEntity(object? sender, EventArgs e)
+    {
+        if (_opening || _editing || !Model.CanEditCanon || _session is null || _sessionContext is null
+            || sender is not EntityBrowser { DataContext: EntityTabViewModel { Selected: { } entity } tab }) return;
+        _editing = true;
+        try
+        {
+            var session = _session;
+            var opening = await session.PreviewCanonRemovalAsync(new(CanonKindFor(tab.Kind), entity.CanonKey ?? entity.Reference.Id, entity.Reference.Id));
+            if (opening.WasRefused) { Model.Notice = opening.RefusedBecause!; return; }
+            var dialog = new CanonRemovalWindow(opening.Value!, _sessionContext.Pack.Manifest?.Name ?? _sessionContext.Pack.Id,
+                session.SaveId, async plan =>
+                {
+                    var offset = NarrationScroll.Offset;
+                    var result = await Model.RemoveCanonAsync(session, plan);
+                    Avalonia.Threading.Dispatcher.UIThread.Post(() => NarrationScroll.Offset = offset);
+                    return result;
+                });
+            var report = await dialog.ShowDialog<EditReport?>(this);
+            if (report is null) return;
+            tab.Selected = null;
+            if (!report.IsClean)
+                await ShowReportAsync("Removed with integrity warnings", string.Join("\n", report.Warnings.Select(w => "• " + w)));
+        }
+        catch (Exception error) { Model.Notice = "Could not open or display removal: " + error.Message; }
+        finally { _editing = false; }
+    }
+
     private async void UpdateState(object? sender, RoutedEventArgs e) => await InspectCanonAsync(reload: true);
     private async void CheckCanon(object? sender, RoutedEventArgs e) => await InspectCanonAsync(reload: false);
     private async void RetryLastTurn(object? sender, RoutedEventArgs e) => await ReviseLastTurnAsync(reroll: false);

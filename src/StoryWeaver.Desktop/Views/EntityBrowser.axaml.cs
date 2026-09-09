@@ -9,6 +9,10 @@ public sealed partial class EntityBrowser : UserControl
 {
     private EntityTabViewModel? _model;
     public event EventHandler? EditRequested;
+    public event EventHandler? AddRequested;
+    public event EventHandler? RemoveRequested;
+    private void AddEntity(object? sender, RoutedEventArgs args) => AddRequested?.Invoke(this, EventArgs.Empty);
+    private void RemoveEntity(object? sender, RoutedEventArgs args) => RemoveRequested?.Invoke(this, EventArgs.Empty);
     private void EditEntity(object? sender, RoutedEventArgs args) => EditRequested?.Invoke(this, EventArgs.Empty);
 
     public EntityBrowser()
