@@ -8,6 +8,8 @@ using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Styling;
 using StoryWeaver.App;
+using StoryWeaver.Core;
+using StoryWeaver.Desktop.Presentation;
 using StoryWeaver.Desktop.Services;
 using StoryWeaver.Desktop.ViewModels;
 using StoryWeaver.Llm.Configuration;
@@ -23,6 +25,8 @@ public sealed partial class MainWindow : Window
     private string? _workspacePath;
     private IReadOnlyList<ViewRecentPlaythrough> _recentPlaythroughs;
     private StoryWeaver.Core.StorySession? _session;
+    private SessionContext? _sessionContext;
+    private bool _editing;
 
     // Avalonia's runtime XAML loader and designers require a public default constructor.
     // Production startup injects the preferences loaded by DesktopApplication instead.
@@ -140,6 +144,7 @@ public sealed partial class MainWindow : Window
 
     private async void SaveBeforeClosing(object? sender, WindowClosingEventArgs e)
     {
+        if (_editing) { e.Cancel = true; Model.Notice = "Close the canon editor before closing the playthrough."; return; }
         if (Model.IsBusy) { e.Cancel = true; Model.Notice = "Please wait for the current operation to finish before closing."; return; }
         if (_opening) { e.Cancel = true; Model.Notice = "Please wait for the playthrough to finish opening."; return; }
         if (_closing) return;
@@ -212,6 +217,7 @@ public sealed partial class MainWindow : Window
 
     private async Task OpenLibraryAsync(LibraryMode mode)
     {
+        if (_editing) { Model.Notice = "Close the canon editor before switching playthroughs."; return; }
         if (Model.IsBusy) { Model.Notice = "Please wait for the current operation to finish before switching playthroughs."; return; }
         if (_opening) return;
         ReleaseActiveSession();
@@ -252,6 +258,7 @@ public sealed partial class MainWindow : Window
             }
 
             _session = session;
+            _sessionContext = opening.Context;
             Model.AttachSession(session!, opening.Context!);
             try
             {
@@ -340,6 +347,7 @@ public sealed partial class MainWindow : Window
 
     private void ClosePlaythrough(object? sender, RoutedEventArgs e)
     {
+        if (_editing) { Model.Notice = "Close the canon editor before closing the playthrough."; return; }
         if (Model.IsBusy) { Model.Notice = "Please wait for the current operation to finish before closing the playthrough."; return; }
         if (_opening) return;
         ReleaseActiveSession();
@@ -350,6 +358,7 @@ public sealed partial class MainWindow : Window
     {
         _session?.Dispose();
         _session = null;
+        _sessionContext = null;
         Model.DetachSession();
     }
 
@@ -364,11 +373,43 @@ public sealed partial class MainWindow : Window
 
     private async void SendTurn(object? sender, RoutedEventArgs e)
     {
-        if (_opening || _session is null) return;
+        if (_opening || _editing || _session is null) return;
         var sending = Model.SendAsync(_session);
         Avalonia.Threading.Dispatcher.UIThread.Post(() => NarrationScroll.ScrollToEnd());
         await sending;
         Avalonia.Threading.Dispatcher.UIThread.Post(() => NarrationScroll.ScrollToEnd());
+    }
+
+    private async void EditCanonEntity(object? sender, EventArgs e)
+    {
+        if (_opening || _editing || !Model.CanEditCanon || _session is null || _sessionContext is null
+            || sender is not EntityBrowser { DataContext: EntityTabViewModel { Selected: { } entity } }) return;
+        _editing = true;
+        try
+        {
+            var kind = entity.Reference.Kind switch
+            {
+                EntityKind.Character => CanonKind.Character, EntityKind.Location => CanonKind.Location,
+                EntityKind.Fact => CanonKind.Fact, EntityKind.Item => CanonKind.Item,
+                _ => throw new InvalidOperationException("Unknown entity kind.")
+            };
+            var session = _session;
+            var opening = await session.BeginCanonEditAsync(new(kind, entity.CanonKey ?? entity.Reference.Id, entity.Reference.Id));
+            if (opening.WasRefused) { Model.Notice = opening.RefusedBecause!; return; }
+            var baseline = opening.Value!;
+            var dialog = new CanonEditorWindow(baseline, session.World, _sessionContext, session.SaveId, async fields =>
+            {
+                var offset = NarrationScroll.Offset;
+                var result = await Model.SaveCanonEditAsync(session, baseline, fields);
+                Avalonia.Threading.Dispatcher.UIThread.Post(() => NarrationScroll.Offset = offset);
+                return result;
+            });
+            var report = await dialog.ShowDialog<EditReport?>(this);
+            if (report is { IsClean: false })
+                await ShowReportAsync("Saved with integrity warnings", string.Join("\n", report.Warnings.Select(w => "• " + w)));
+        }
+        catch (Exception error) { Model.Notice = "Could not open or display the canon editor: " + error.Message; }
+        finally { _editing = false; }
     }
 
     private async void UpdateState(object? sender, RoutedEventArgs e) => await InspectCanonAsync(reload: true);
@@ -378,7 +419,7 @@ public sealed partial class MainWindow : Window
 
     private async Task ReviseLastTurnAsync(bool reroll)
     {
-        if (_opening || _session is null) return;
+        if (_opening || _editing || _session is null) return;
         string? report = await Model.ReviseLastTurnAsync(_session, reroll);
         if (report is null) return;
         await ShowReportAsync(reroll ? "Reroll" : "Retry extraction", report);
@@ -386,7 +427,7 @@ public sealed partial class MainWindow : Window
 
     private async Task InspectCanonAsync(bool reload)
     {
-        if (_opening || _session is null) return;
+        if (_opening || _editing || _session is null) return;
         var offset = NarrationScroll.Offset;
         string? report = await Model.InspectCanonAsync(_session, reload);
         if (report is null) return;

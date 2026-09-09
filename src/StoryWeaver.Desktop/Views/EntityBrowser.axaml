@@ -29,7 +29,10 @@
       </ListBox>
     </Grid>
     <Grid RowDefinitions="Auto,*" IsVisible="{Binding IsDetailVisible}">
-      <Button Content="← Back to list" Click="BackToList" HorizontalAlignment="Left" Margin="0,0,0,16" />
+      <StackPanel Orientation="Horizontal" Spacing="12" Margin="0,0,0,16">
+        <Button Content="← Back to list" Click="BackToList" />
+        <Button Content="Edit" Click="EditEntity" IsEnabled="{Binding CanEdit}" />
+      </StackPanel>
       <ScrollViewer x:Name="DetailScroll" Grid.Row="1" HorizontalScrollBarVisibility="Disabled">
         <StackPanel Spacing="14">
           <TextBlock Classes="heading" Text="{Binding Selected.Name}" />

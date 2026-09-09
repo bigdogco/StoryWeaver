@@ -267,6 +267,26 @@ public sealed class StorySession : IDisposable
                 return new EditReport(CanonRefresh.Check(_world, _lore));
             });
 
+    public Task<SessionResult<CanonEditSnapshot>> BeginCanonEditAsync(CanonTarget target) =>
+        GuardedAsync<CanonEditSnapshot>("canon is being changed right now", () => Task.FromResult(
+            CanonCorrection.Capture(_world, target) is { } snapshot
+                ? SessionResult<CanonEditSnapshot>.Ok(snapshot)
+                : SessionResult<CanonEditSnapshot>.Refused("The selected entity no longer exists with the same identity.")));
+
+    /// <summary>A complete typed correction, checked after and saved once under the same guard as direct edits.</summary>
+    public Task<SessionResult<EditReport>> EditAsync(CanonEditSnapshot baseline, CanonFields fields,
+        CancellationToken cancellationToken = default) =>
+        GuardedAsync<EditReport>("canon is being changed right now", async () =>
+        {
+            if (CanonCorrection.Validate(_world, baseline, fields) is { } reason)
+                return SessionResult<EditReport>.Refused(reason);
+            if (CanonCorrection.Same(baseline.Fields, fields))
+                return SessionResult<EditReport>.Ok(new EditReport(CanonRefresh.Check(_world, _lore)));
+            CanonCorrection.Apply(_world, baseline, fields);
+            await _repository.SaveAsync(SaveId, _world, cancellationToken).ConfigureAwait(false);
+            return SessionResult<EditReport>.Ok(new EditReport(CanonRefresh.Check(_world, _lore)));
+        });
+
     /// <summary>
     /// Take the guard, run, release — releasing on failure as well, or one thrown exception
     /// would wedge the session shut for the rest of the run.

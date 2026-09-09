@@ -19,10 +19,16 @@ public sealed class PlayShellViewModel : ObservableObject
     public bool IsBusy
     {
         get => _isBusy;
-        private set { if (Set(ref _isBusy, value)) { Raise(nameof(CanSend)); Raise(nameof(CanInspectCanon)); Raise(nameof(CanReviseLastTurn)); Raise(nameof(ComposerStatus)); } }
+        private set { if (Set(ref _isBusy, value)) { Raise(nameof(CanSend)); Raise(nameof(CanInspectCanon)); Raise(nameof(CanReviseLastTurn)); Raise(nameof(ComposerStatus)); RefreshEditAvailability(); } }
     }
     public bool CanSend => HasLiveSession && !IsBusy && !_needsReopen && !string.IsNullOrWhiteSpace(Draft);
     public bool CanInspectCanon => HasLiveSession && !IsBusy;
+    public bool CanEditCanon => CanInspectCanon && !_needsReopen;
+    private void RefreshEditAvailability()
+    {
+        foreach (var tab in Tabs) tab.CanEdit = CanEditCanon;
+        Raise(nameof(CanEditCanon));
+    }
     public bool CanReviseLastTurn => HasLiveSession && !IsBusy && !_needsReopen
         && Narration.Any(paragraph => paragraph.Label.StartsWith("NARRATION · TURN ", StringComparison.Ordinal));
     public string ComposerStatus => IsBusy ? _busyStatus
@@ -101,6 +107,7 @@ public sealed class PlayShellViewModel : ObservableObject
         foreach (var paragraph in PreviewScene.Paragraphs) Narration.Add(paragraph);
         _preview = true;
         _hasLiveSession = false;
+        RefreshEditAvailability();
         _sceneTitle = "Marrow · The Drowned Crow";
         _sessionStatus = "Preview scene · illustrative data · no active session";
         Raise(nameof(IsPreview));
@@ -121,6 +128,7 @@ public sealed class PlayShellViewModel : ObservableObject
         Narration.Clear();
         _preview = false;
         _hasLiveSession = true;
+        RefreshEditAvailability();
         _sceneTitle = context.Pack.Manifest?.Name is { Length: > 0 } name ? name : context.Pack.Id;
         _sessionStatus = context.Resumed
             ? $"Live save · {session.SaveId} · resumed at turn {context.TurnNumber}"
@@ -142,6 +150,7 @@ public sealed class PlayShellViewModel : ObservableObject
         Narration.Clear();
         _hasLiveSession = false;
         _needsReopen = false;
+        RefreshEditAvailability();
         _sceneTitle = "StoryWeaver";
         _sessionStatus = "No active session · choose Library to begin";
         Raise(nameof(IsEmpty));
@@ -202,6 +211,29 @@ public sealed class PlayShellViewModel : ObservableObject
             }
             IsBusy = false;
         }
+    }
+
+    public async Task<SessionResult<EditReport>> SaveCanonEditAsync(StorySession session, CanonEditSnapshot baseline, CanonFields fields)
+    {
+        if (!CanEditCanon) return SessionResult<EditReport>.Refused("Editing is unavailable. Wait for the current operation or reopen the playthrough.");
+        _busyStatus = "Saving canon corrections…";
+        IsBusy = true;
+        try
+        {
+            var result = await session.EditAsync(baseline, fields);
+            if (result.WasRefused) return result;
+            RefreshWorld(session);
+            LinkNarrationNames();
+            Notice = result.Value!.IsClean ? "Changes saved." : "Saved with integrity warnings.";
+            return result;
+        }
+        catch
+        {
+            _needsReopen = true;
+            Notice = "The correction did not complete. Reopen this playthrough before making further changes.";
+            throw;
+        }
+        finally { IsBusy = false; }
     }
 
     public async Task<string?> ReviseLastTurnAsync(StorySession session, bool reroll)

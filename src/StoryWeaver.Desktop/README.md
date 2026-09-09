@@ -34,6 +34,8 @@ is never opened as a StorySession or written to a save.
   disposed when it is closed, replaced or the app exits.
 - Resizable narration and world panes, with an input composer below the transcript.
 - Characters, Locations, Canon and Items tabs, each retaining list/detail navigation.
+  **Edit** opens the corresponding live-canon form with Save/Cancel. Changes affect
+  this playthrough, not the pack, turn number or historical narration.
   Tabs wrap when the world pane becomes narrow. The desktop window has minimum
   dimensions of 800 × 560; this is not a mobile layout.
 - Preview narration references select a tab and open the entity by kind and stable
@@ -47,6 +49,58 @@ is never opened as a StorySession or written to a save.
   when the application exits.
 
 ## Manual review
+
+Canon editing (2026-09-09; no model calls):
+
+1. Open a disposable playthrough, select an entity and click **Edit** beside Back.
+   Confirm the playthrough label, read-only ID and appropriate fields. Preview Edit
+   is disabled. Resize the form; fields scroll while Save/Cancel remain visible.
+2. Open and cancel an unchanged form: Save should be disabled and no write occurs.
+   Change a field, press Escape/Cancel/window close, choose Keep editing, then try
+   Discard. The world and story draft must stay unchanged. Typing the original value
+   back should disable Save again. Enter in a multiline field inserts a newline.
+3. Character: change name, description, status, mood and location. Use Offstage/unknown.
+   For an NPC, change relationship summary and standing; non-integer/out-of-range
+   edits should show an inline message. The player's relationship field is hidden.
+   Last-seen turn and the authored sheet are read-only; the sheet is pack content.
+4. Knowledge: add/remove facts and explicit lore, filter selections out of view and
+   back, then save/reopen. The selections must survive filtering. Common lore remains
+   labelled as known by everyone even after removing an explicit learned membership.
+   Expand a lore entry to read its text. A character description edit must not lose
+   existing lore knowledge. The main detail summary still lists saved facts only;
+   the editor shows the full explicit/common knowledge view.
+5. Location: edit name, description, status and outgoing connections. Confirm saving
+   A → B does not add B → A. Present characters are read-only context.
+6. Fact: change its text and Known by selections. Confirm character knowledge updates,
+   while fact ID, source and established turn remain unchanged. Rewording a fact
+   updates its text for every existing knower without duplicating it.
+7. Item: edit name, description and condition. Switch Held by character / At location
+   and select a target; saving should clear the other placement field. Keep current
+   placement should preserve it exactly. Missing a required selection shows a message.
+8. In a disposable save, introduce unresolved knowledge/connection/location IDs with
+   an external editor and use Update State before opening a form. The form must retain
+   and label them, allow removing/replacing them, and not erase them on an unrelated
+   edit. An item with both/neither placement remains unchanged unless explicitly fixed.
+   Saving inconsistent state reports integrity warnings after saving, without repair.
+9. Duplicate display names must have distinct picker IDs. If inspecting deliberately
+   malformed canon with cross-kind collisions or a key/ID mismatch, edit the intended
+   row and confirm only that entity changes; the ID/key themselves remain untouched.
+10. Save and confirm selected details and narration links refresh, the story draft and
+    narration position remain, and no turn is appended/advanced. Close/reopen the
+    playthrough to verify persistence. Clean saves show a notice; warning reports
+    are scrollable/selectable and list all current findings.
+11. The modal editor blocks play/reload/switch actions. Closing the main window must
+    refuse until the editor closes. During save, fields and closing are disabled.
+    If a save failure occurs, the form retains copyable draft text and the desktop
+    requires reopening before further mutations; closing the form does not roll back.
+
+Backend review note: typed corrections also reject a missing/stale target under the
+session guard, including concurrent fact-knower changes. That cannot normally be
+triggered through the modal UI; external files follow explicit Update State and are
+not watched or merged. No automated runtime harness was run for this task.
+
+Release build passed with zero warnings/errors. The player reported canon-editor
+testing looked good on 2026-09-09. Implementation/design: `docs/design/CANON_EDITOR_UI.md`.
 
 Retry and Reroll (2026-09-09; these use the configured model APIs):
 
@@ -213,7 +267,7 @@ presentation state; Presentation records are immutable display values, not canon
 the real session. Preview supplies explicit sample references. No backend project
 references Avalonia.
 
-Next: canon editing, pack editing, and reliable backend narration-reference
+Next: entity creation/removal, pack editing, and reliable backend narration-reference
 generation/persistence. The
 shell's explicit sample links are not a solution to that last backend question.
 Future mod UI remains part of the mod-system design.

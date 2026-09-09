@@ -1,5 +1,16 @@
 # Future Work
 
+- [x] **Review and implement in-session canon editing.** Four-form design approved and
+  implemented 2026-09-09, with Core-owned corrections, lore-aware pickers and one-save
+  submission. See `docs/design/CANON_EDITOR_UI.md` and `TODO_CANON_EDITOR_.md`.
+- [x] **Manually review canon editing** using the desktop README: all four forms,
+  reference filtering, common lore, directed connections, draft cancellation,
+  persistence and failure handling. The player reported testing looked good on
+  2026-09-09. No runtime review by the agent.
+- [ ] **Design in-session entity creation/removal and metadata correction controls.**
+  Separate actions from the existing-entity editing forms; reuse Core policy
+  for IDs and removal consequences. Stable IDs remain immutable.
+
 - [ ] Manually review automatic unique-name links in openings and live/resumed
   narration, including ambiguous names and navigation to newly introduced entities.
 

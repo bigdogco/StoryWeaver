@@ -167,3 +167,12 @@ canon and must continue to prevent reroll. Unexpected exceptions require reopeni
 the operation can partially save without advancing the turn counter, and the current
 API supplies no failure-stage information. Normal refusals and reported extraction
 failures do not impose that requirement.
+
+# In-session canon editor — 2026-09-09
+
+The player approved the four-form design in `CANON_EDITOR_UI.md`; it is implemented
+with Edit beside Back on each detail view. Modal forms use detached values, preserve
+unresolved references, expose explicit/common lore separately, and submit typed
+corrections through StorySession. Core owns identity checks and cross-entity updates.
+Save changes affects the running playthrough, with no turn or pack edit. The player
+reported manual testing looked good on 2026-09-09.

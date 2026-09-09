@@ -6,6 +6,8 @@ namespace StoryWeaver.Desktop.ViewModels;
 public sealed class EntityTabViewModel(string title, EntityKind kind) : ObservableObject
 {
     private EntityDetails? _selected;
+    private bool _canEdit;
+    public bool CanEdit { get => _canEdit; set => Set(ref _canEdit, value); }
     public string Title { get; } = title;
     public EntityKind Kind { get; } = kind;
     public ObservableCollection<EntityDetails> Entities { get; } = [];
@@ -26,10 +28,11 @@ public sealed class EntityTabViewModel(string title, EntityKind kind) : Observab
     public void Replace(IEnumerable<EntityDetails> entities)
     {
         var reference = Selected?.Reference;
+        var key = Selected?.CanonKey;
         Selected = null;
         Entities.Clear();
         foreach (var entity in entities) Entities.Add(entity);
-        if (reference is not null) Selected = Entities.FirstOrDefault(entity => entity.Reference == reference);
+        if (reference is not null) Selected = Entities.FirstOrDefault(entity => entity.Reference == reference && entity.CanonKey == key);
         Raise(nameof(IsEmpty));
     }
 }

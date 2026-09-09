@@ -8,6 +8,8 @@ namespace StoryWeaver.Desktop.Views;
 public sealed partial class EntityBrowser : UserControl
 {
     private EntityTabViewModel? _model;
+    public event EventHandler? EditRequested;
+    private void EditEntity(object? sender, RoutedEventArgs args) => EditRequested?.Invoke(this, EventArgs.Empty);
 
     public EntityBrowser()
     {

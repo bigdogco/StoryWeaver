@@ -118,10 +118,10 @@
         <TabControl.ItemsPanel>
           <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
         </TabControl.ItemsPanel>
-        <TabItem Header="Characters"><views:EntityBrowser DataContext="{Binding Characters}" /></TabItem>
-        <TabItem Header="Locations"><views:EntityBrowser DataContext="{Binding Locations}" /></TabItem>
-        <TabItem Header="Canon"><views:EntityBrowser DataContext="{Binding Canon}" /></TabItem>
-        <TabItem Header="Items"><views:EntityBrowser DataContext="{Binding Items}" /></TabItem>
+        <TabItem Header="Characters"><views:EntityBrowser DataContext="{Binding Characters}" EditRequested="EditCanonEntity" /></TabItem>
+        <TabItem Header="Locations"><views:EntityBrowser DataContext="{Binding Locations}" EditRequested="EditCanonEntity" /></TabItem>
+        <TabItem Header="Canon"><views:EntityBrowser DataContext="{Binding Canon}" EditRequested="EditCanonEntity" /></TabItem>
+        <TabItem Header="Items"><views:EntityBrowser DataContext="{Binding Items}" EditRequested="EditCanonEntity" /></TabItem>
       </TabControl>
     </Grid>
   </Grid>

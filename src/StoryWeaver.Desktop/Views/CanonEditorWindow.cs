@@ -1,0 +1,238 @@
+using Avalonia;
+using Avalonia.Automation;
+using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
+using Avalonia.Input;
+using Avalonia.Layout;
+using Avalonia.Media;
+using StoryWeaver.App;
+using StoryWeaver.Core;
+
+namespace StoryWeaver.Desktop.Views;
+
+/// <summary>A detached form. World and pack are read once to build choices; saving delegates to the session.</summary>
+public sealed class CanonEditorWindow : Window
+{
+    private readonly CanonEditSnapshot _baseline;
+    private readonly Func<CanonFields, Task<SessionResult<EditReport>>> _save;
+    private readonly StackPanel _fields = new() { Spacing = 12 };
+    private readonly SelectableTextBlock _error = new() { TextWrapping = TextWrapping.Wrap };
+    private readonly Button _saveButton = new() { Content = "Save changes" };
+    private readonly Button _cancel = new() { Content = "Cancel" };
+    private Func<CanonFields> _read;
+    private Func<bool> _valid = () => true;
+    private bool _saving, _failed, _allowClose, _confirming;
+
+    public CanonEditorWindow(CanonEditSnapshot baseline, WorldState world, SessionContext context,
+        string saveId, Func<CanonFields, Task<SessionResult<EditReport>>> save)
+    {
+        _baseline = baseline; _save = save; _read = () => baseline.Fields;
+        string label = baseline.Fields switch
+        {
+            CharacterFields c => c.Name, LocationFields l => l.Name,
+            ItemFields i => i.Name, FactFields f => f.Text.Length > 80 ? f.Text[..80] + "…" : f.Text,
+            _ => baseline.Target.Id
+        };
+        Title = $"Edit {baseline.Target.Kind.ToString().ToLowerInvariant()} · {label}";
+        Width = 720; Height = 680; MinWidth = 400; MinHeight = 320;
+        WindowStartupLocation = WindowStartupLocation.CenterOwner;
+        var layout = new Grid { Margin = new Thickness(20), RowDefinitions = new RowDefinitions("Auto,*,Auto") };
+        var header = new StackPanel { Spacing = 5, Margin = new Thickness(0, 0, 0, 16) };
+        header.Children.Add(new TextBlock { Text = $"{context.Pack.Manifest?.Name ?? context.Pack.Id} · {saveId}", FontWeight = FontWeight.SemiBold });
+        header.Children.Add(new TextBlock { Text = "Changes apply to this playthrough", TextWrapping = TextWrapping.Wrap });
+        header.Children.Add(new SelectableTextBlock { Text = $"ID: {baseline.Target.Id}", TextWrapping = TextWrapping.Wrap });
+        if (baseline.Target.Key != baseline.Target.Id)
+            header.Children.Add(new SelectableTextBlock { Text = $"Stored under key: {baseline.Target.Key}", TextWrapping = TextWrapping.Wrap });
+        layout.Children.Add(header);
+        var scroll = new ScrollViewer { Content = _fields, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled };
+        Grid.SetRow(scroll, 1); layout.Children.Add(scroll);
+        var footer = new StackPanel { Spacing = 8, Margin = new Thickness(0, 14, 0, 0) };
+        footer.Children.Add(new ScrollViewer { Content = _error, MaxHeight = 120,
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled });
+        footer.Children.Add(new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right,
+            Spacing = 10, Children = { _cancel, _saveButton } });
+        Grid.SetRow(footer, 2); layout.Children.Add(footer); Content = layout;
+
+        var locations = world.Locations.Select(p => new CanonChoice(p.Key, p.Value.Name)).ToArray();
+        var people = world.Characters.Select(p => new CanonChoice(p.Key, p.Value.Name)).ToArray();
+        switch (baseline.Fields)
+        {
+            case CharacterFields c:
+                CharacterForm(c, world, context, locations); break;
+            case LocationFields l:
+                var ln = TextField("Name", l.Name); var ld = TextField("Description", l.Description, true);
+                var ls = TextField("Status", l.Status);
+                var links = Multiple("Reachable from here · outgoing connections only", locations, l.Connections);
+                _read = () => new LocationFields(ln.Text ?? "", ld.Text ?? "", ls.Text ?? "", links.SelectedIds);
+                break;
+            case FactFields f:
+                var ft = TextField("Fact text", f.Text, true);
+                var knowers = Multiple("Known by", people, f.KnownBy);
+                _read = () => new FactFields(ft.Text ?? "", knowers.SelectedIds);
+                break;
+            case ItemFields i:
+                ItemForm(i, people, locations); break;
+        }
+        string metadata = baseline.Target.Kind switch
+        {
+            CanonKind.Character => $"Last seen: {(baseline.Metadata.LastSeenTurn is { } turn ? $"turn {turn}" : "never")}",
+            CanonKind.Fact => $"Established: turn {baseline.Metadata.EstablishedTurn}\nSource: "
+                + (baseline.Metadata.SourceId is { } source ? $"{world.FindCharacter(source)?.Name ?? "Missing reference"} ({source})" : "Narration"),
+            CanonKind.Location => "Present: " + string.Join(", ", world.CharactersIn(baseline.Target.Id).Select(c => $"{c.Name} ({c.Id})")),
+            _ => string.Empty
+        };
+        if (!string.IsNullOrEmpty(metadata))
+            _fields.Children.Add(new SelectableTextBlock { Text = metadata, TextWrapping = TextWrapping.Wrap });
+        _saveButton.Click += async (_, _) => await SaveAsync();
+        _cancel.Click += (_, _) => Close();
+        Closing += OnClosing;
+        KeyDown += (_, e) => { if (e.Key == Key.Escape) { e.Handled = true; Close(); } };
+        Opened += (_, _) =>
+        {
+            if (Screens.ScreenFromWindow(this) is { } screen)
+            {
+                double width = screen.WorkingArea.Width / screen.Scaling;
+                double height = screen.WorkingArea.Height / screen.Scaling;
+                MinWidth = Math.Min(MinWidth, width); MinHeight = Math.Min(MinHeight, height);
+                Width = Math.Min(Width, width); Height = Math.Min(Height, height);
+                Position = new PixelPoint(
+                    Math.Clamp(Position.X, screen.WorkingArea.X, Math.Max(screen.WorkingArea.X, screen.WorkingArea.Right - (int)Math.Ceiling(Width * screen.Scaling))),
+                    Math.Clamp(Position.Y, screen.WorkingArea.Y, Math.Max(screen.WorkingArea.Y, screen.WorkingArea.Bottom - (int)Math.Ceiling(Height * screen.Scaling))));
+            }
+        };
+        Update();
+    }
+
+    private void CharacterForm(CharacterFields c, WorldState world, SessionContext context, CanonChoice[] locations)
+    {
+        var name = TextField("Name", c.Name); var description = TextField("Description · this save", c.Description, true);
+        var place = Single("Location", locations, c.LocationId, "Offstage / unknown");
+        var status = TextField("Status", c.Status); var mood = TextField("Mood", c.Mood);
+        TextBox? standing = null, summary = null;
+        var standingError = new TextBlock { TextWrapping = TextWrapping.Wrap };
+        if (!world.Characters[_baseline.Target.Key].IsPlayer)
+        {
+            standing = TextField("Relationship standing (-100 to 100)", c.Relationship.Standing.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            _fields.Children.Add(standingError);
+            summary = TextField("Relationship to player", c.Relationship.Summary, true);
+        }
+        var facts = world.Facts.Select(p => new CanonChoice(p.Key, p.Value.Text)).ToArray();
+        var lore = context.Pack.Lore.All.Select(l => new CanonChoice(l.Id, l.Title + (l.Common ? " · common lore; explicit learning only" : ""), l.Body)).ToArray();
+        var factIds = facts.Select(f => f.Id).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var loreIds = lore.Select(l => l.Id).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var knownFacts = Multiple("Knowledge · facts", facts, c.Knowledge.Where(id => factIds.Contains(id)).ToArray());
+        var knownLore = Multiple("Knowledge · explicitly learned lore", lore, c.Knowledge.Where(id => !factIds.Contains(id) && loreIds.Contains(id)).ToArray());
+        var missingIds = c.Knowledge.Where(id => !factIds.Contains(id) && !loreIds.Contains(id)).ToArray();
+        CanonReferencePicker? missing = missingIds.Length == 0 ? null : Multiple("Knowledge · missing references", [], missingIds);
+        foreach (var entry in context.Pack.Lore.All)
+            _fields.Children.Add(new Expander
+            {
+                Header = entry.Common ? $"{entry.Title} · Known by everyone · from world pack" : $"Read lore: {entry.Title}",
+                Content = new SelectableTextBlock { Text = entry.Body, TextWrapping = TextWrapping.Wrap }
+            });
+        if (context.Pack.Lore.All.Any(l => l.Common))
+            _fields.Children.Add(new TextBlock { Text = "Removing explicit learning of common lore does not remove common knowledge.", TextWrapping = TextWrapping.Wrap });
+        if (context.Pack.Sheets.TryGetValue(_baseline.Target.Id, out var sheet))
+            _fields.Children.Add(new Expander { Header = "Authored character sheet · from world pack",
+                Content = new SelectableTextBlock { Text = sheet.Body + (sheet.Attitudes.Count == 0 ? "" : "\n\nAttitudes\n" + string.Join("\n", sheet.Attitudes.Select(p => $"{p.Key}: {p.Value}"))), TextWrapping = TextWrapping.Wrap } });
+        _valid = () =>
+        {
+            bool valid = standing is null || standing.Text == c.Relationship.Standing.ToString(System.Globalization.CultureInfo.InvariantCulture)
+                || (int.TryParse(standing.Text, out int number) && number is >= -100 and <= 100);
+            standingError.Text = valid ? "" : "Enter a whole number between -100 and 100.";
+            return valid;
+        };
+        _read = () => new CharacterFields(name.Text ?? "", description.Text ?? "", place.SelectedId, status.Text ?? "", mood.Text ?? "",
+            standing is null ? c.Relationship : new Relationship(int.TryParse(standing.Text, out int number) ? number : c.Relationship.Standing, summary!.Text ?? ""),
+            knownFacts.SelectedIds.Concat(knownLore.SelectedIds).Concat(missing?.SelectedIds ?? []).Distinct(StringComparer.OrdinalIgnoreCase).ToArray());
+    }
+
+    private void ItemForm(ItemFields i, CanonChoice[] people, CanonChoice[] locations)
+    {
+        var name = TextField("Name", i.Name); var description = TextField("Description", i.Description, true);
+        var status = TextField("Condition", i.Status);
+        var mode = new ComboBox { ItemsSource = new[] { "Keep current placement", "Held by character", "At location" }, SelectedIndex = 0, HorizontalAlignment = HorizontalAlignment.Stretch };
+        Add("Placement", mode);
+        _fields.Children.Add(new SelectableTextBlock { Text = $"Current holder: {i.HolderId ?? "none"}\nCurrent location: {i.LocationId ?? "none"}", TextWrapping = TextWrapping.Wrap });
+        if ((i.HolderId is null) == (i.LocationId is null))
+            _fields.Children.Add(new TextBlock { Text = "Current placement is inconsistent. Keep it unchanged or explicitly choose a holder/location to correct it.", TextWrapping = TextWrapping.Wrap });
+        var holder = Single("Holder", people, i.HolderId, "Choose a character");
+        var location = Single("Location", locations, i.LocationId, "Choose a location");
+        var placementError = new TextBlock { TextWrapping = TextWrapping.Wrap }; _fields.Children.Add(placementError);
+        void Show() { ((Control)holder.Parent!).IsVisible = mode.SelectedIndex == 1; ((Control)location.Parent!).IsVisible = mode.SelectedIndex == 2; Update(); }
+        mode.SelectionChanged += (_, _) => Show();
+        _valid = () =>
+        {
+            bool valid = mode.SelectedIndex == 0 || (mode.SelectedIndex == 1 ? holder.SelectedId is not null : location.SelectedId is not null);
+            placementError.Text = valid ? "" : "Select a holder or location."; return valid;
+        };
+        _read = () => new ItemFields(name.Text ?? "", description.Text ?? "", status.Text ?? "",
+            mode.SelectedIndex == 0 ? i.LocationId : mode.SelectedIndex == 2 ? location.SelectedId : null,
+            mode.SelectedIndex == 0 ? i.HolderId : mode.SelectedIndex == 1 ? holder.SelectedId : null);
+        Show();
+    }
+
+    private TextBox TextField(string label, string value, bool multiline = false)
+    {
+        var field = new TextBox { Text = value, AcceptsReturn = multiline, TextWrapping = TextWrapping.Wrap,
+            MinHeight = multiline ? 95 : 0 };
+        field.TextChanged += (_, _) => Update(); Add(label, field); return field;
+    }
+    private void Add(string label, Control control)
+    {
+        AutomationProperties.SetName(control, label);
+        _fields.Children.Add(new StackPanel { Spacing = 5, Children =
+        {
+            new TextBlock { Text = label, FontWeight = FontWeight.SemiBold, TextWrapping = TextWrapping.Wrap }, control
+        } });
+    }
+    private CanonReferencePicker Multiple(string label, IEnumerable<CanonChoice> choices, IEnumerable<string> selected)
+    {
+        var picker = new CanonReferencePicker(choices, selected); picker.Changed += Update; Add(label, picker); return picker;
+    }
+    private CanonReferencePicker Single(string label, IEnumerable<CanonChoice> choices, string? selected, string empty)
+    {
+        var picker = new CanonReferencePicker(choices, selected, empty); picker.Changed += Update; Add(label, picker); return picker;
+    }
+    private bool Dirty => !_valid() || !CanonCorrection.Same(_baseline.Fields, _read());
+    private void Update() => _saveButton.IsEnabled = !_saving && !_failed && _valid() && Dirty;
+
+    private async Task SaveAsync()
+    {
+        if (!_saveButton.IsEnabled) return;
+        _saving = true; _fields.IsEnabled = false; _cancel.IsEnabled = false; Update(); _error.Text = "Saving changes…";
+        try
+        {
+            var result = await _save(_read());
+            if (result.WasRefused) { _error.Text = result.RefusedBecause; return; }
+            _allowClose = true; Close(result.Value);
+        }
+        catch (Exception error)
+        {
+            _failed = true; _cancel.Content = "Close";
+            _error.Text = "Saving did not complete. Copy any draft text you need, then close and reopen the playthrough before making further changes. Cancel cannot undo changes already applied in memory.\n" + error.Message;
+        }
+        finally { _saving = false; _fields.IsEnabled = true; _cancel.IsEnabled = true; Update(); }
+    }
+
+    private async void OnClosing(object? sender, WindowClosingEventArgs e)
+    {
+        if (_saving && !_allowClose) { e.Cancel = true; return; }
+        if (_allowClose || !Dirty) return;
+        e.Cancel = true;
+        if (_confirming) return;
+        _confirming = true;
+        var dialog = new Window { Title = _failed ? "Close editor?" : "Discard changes?", Width = 400,
+            SizeToContent = SizeToContent.Height, CanResize = false, WindowStartupLocation = WindowStartupLocation.CenterOwner };
+        var keep = new Button { Content = "Keep editing", IsCancel = true };
+        var discard = new Button { Content = _failed ? "Close editor" : "Discard" };
+        keep.Click += (_, _) => dialog.Close(false); discard.Click += (_, _) => dialog.Close(true);
+        dialog.Content = new StackPanel { Margin = new Thickness(20), Spacing = 16, Children =
+        {
+            new TextBlock { Text = _failed ? "Closing loses the form draft. It does not undo changes that may already be in memory or on disk." : "Discard the unsaved changes in this form?", TextWrapping = TextWrapping.Wrap },
+            new StackPanel { Orientation = Orientation.Horizontal, Spacing = 10, Children = { keep, discard } }
+        } };
+        try { if (await dialog.ShowDialog<bool>(this)) { _allowClose = true; Close(); } }
+        finally { _confirming = false; }
+    }
+}

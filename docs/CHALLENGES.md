@@ -7,6 +7,31 @@ ones that turn out to be non-issues, with the resolution noted.
 
 ## Open
 
+### Canon forms cannot reconstruct editable state from display text
+
+Identified during editor design, 2026-09-09. WorldPresentation character knowledge
+currently includes saved facts only, but Character.Knows can also contain lore IDs,
+and common lore is supplied by the pack without explicit membership. A form built
+from that display would lose lore or imply that common knowledge can be removed.
+Use typed IDs plus the pack catalog, preserve unresolved values and distinguish
+explicit knowledge from common lore. Location connections are directed; pickers
+must not silently create reverse links.
+
+Implemented 2026-09-09: the editor reads typed canon values and the loaded pack
+catalog. Search filters retain selection independently of displayed rows; unresolved
+IDs remain selectable, and common lore is shown separately from explicit learning.
+
+### Bare-ID correction helpers can target the wrong kind in hand-edited canon
+
+Identified during editor design, 2026-09-09. CanonEdits.Describe/Remove search kinds
+in order by ID. Cross-kind collisions in a hand-edited save could make a location
+editor affect a character with the same ID. Typed form corrections must address
+the selected kind and identity explicitly and report missing/stale targets. See
+`design/CANON_EDITOR_UI.md`. Implemented 2026-09-09 for the new forms through typed
+CanonTarget addresses carrying kind, dictionary key and permanent ID. The older
+CLI bare-ID helpers are unchanged. Form corrections reject missing/stale targets
+under the session guard and preserve unrelated fields.
+
 ### Retry could erase the evidence that prevents reroll — fixed 2026-09-09
 
 Inspection while connecting desktop Retry/Reroll found `ReExtractAsync` replaced
