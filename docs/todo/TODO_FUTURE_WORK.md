@@ -31,13 +31,22 @@
   scores partial credit for the surrounding deltas — which is why three runs read as
   variance between 6/9 and 8/9 and hid a defect that is total. Retained raw responses in
   `devlog/2026-09-10_discovery-v8-runs5-before.json`.
-  **A wording fix is known to work, and is the highest-value single edit available.**
-  This item first said the rule was stated twice and overridden, so no wording pass would
-  help. That was wrong: the consolidation attempt stated the lore rule once, clearly, as
-  "being told the substance of a listed lore topic is fact_learned against that topic's
-  id; a new fact stating the topic exists records nothing", and the scenario went to 14/15
-  and then 15/15. The two competing statements were the cause. Port that single wording
-  onto the current prompt and verify at five runs before considering anything structural.
+  **The cause is not known. Two explanations have been tried and both were wrong.**
+  First this item said the rule was stated twice and overridden, so no wording pass could
+  help. Then, after the consolidation attempt took the scenario to 15/15, it said stating
+  the rule once was the fix and named the new wording as the highest-value edit available.
+  Both were wrong. v9/v10 did not state the rule once — they kept both canon-rules bullets
+  unchanged, three mentions in total, exactly as many as now. The only lore difference was
+  the final-checks wording, and porting *just* those two lines onto the current prompt on
+  2026-09-11 changed nothing: still 10/15, still missing 5/5, and the raw proposals are
+  the same invented `lantern-society-exists` fact character for character. Measured in
+  `devlog/2026-09-11_discovery-v8lore-runs5.txt`.
+  So the fix in v9/v10 came from somewhere else in that restructure and has not been
+  isolated. Bisecting it costs about 130 calls per step and is the only honest way to find
+  it. Candidates worth a step each: the section headings and nesting, the reduced overall
+  length, and the rewritten discovery prose that sits between the lore bullets and the
+  final checks. Do not describe this defect as a known wording fix again without a
+  measurement behind it.
 - [ ] **Improve measured discovery extraction reliability.** Still open after v8:
   `discovery-unnamed` fabricates evidence in 3/5 runs, rejected by the validator every
   time so nothing reaches the world, and `discovery-briefing` copies speaker details in

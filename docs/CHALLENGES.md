@@ -1668,3 +1668,20 @@ versions above sit within one run of each other on it while differing sharply in
 rules fail, so a change can look neutral and still trade a working behaviour for a broken
 one. Read the per-rule misses, and treat a headline that does not move as a reason to look
 closer rather than a pass.
+
+The lore-topic defect resisted a targeted wording fix, and the two explanations offered
+for it were both wrong. It is not caused by the rule being stated twice: the consolidation
+attempt that fixed the scenario also stated it three times, exactly as the current prompt
+does. Nor is it carried by the final-checks wording: porting those two lines alone onto the
+current prompt changed nothing at five runs, leaving the scenario at 10/15 with the rule
+missing 5/5 and the raw proposals producing the same invented `lantern-society-exists` fact
+character for character. Something else in that restructure fixed it and has not been
+isolated. The general shape of the mistake is worth keeping: an improvement observed in a
+version that changed many things at once cannot be attributed to whichever change looks
+most relevant, and reading a diff is not a measurement.
+
+The `$.connections` deserialization failure returned. One call in the 2026-09-11 discovery
+run failed with "The JSON value could not be converted to IReadOnlyList<RouteObservation>",
+the same shape seen in the first discovery eval and absent from every run in between. So it
+is intermittent rather than fixed, and a clean run is not evidence that the schema and the
+model have converged on the connections field.
