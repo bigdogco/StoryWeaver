@@ -1635,3 +1635,36 @@ protagonist as "not yet identified" to themselves; the player's own name is not 
 discovery. Ids compare case-insensitively across the codebase, and a stray `==` on
 `LocationId` in the narrator's presentation rules dropped an item's discovery rule
 whenever its stored id differed from the current location id only in case.
+
+Consolidating the extraction prompt was attempted twice and reverted both times. The
+restructure was not the problem: sections nested correctly, each rule got one home, the
+movement contradiction went away, and `player-arrival` and `two-stage-entry` held at
+10/10 with the duplicated opening movement text deleted — which confirmed the original
+canon rules alone are sufficient and that v5's failure had been contradiction rather than
+absence. What defeated it was that discovery clean stayed at 117/130, 117/130 and 116/130
+across the three versions while the *composition* of failures changed completely every
+time. v8 fails lore-topic 5/5. v9 fixed lore-topic and lost hotel identity 5/5 and
+identification 3/5. v10 fixed both of those and lost ledger identity 3/5, reported purpose
+3/5 and public alias 4/5. Three consecutive edits each did exactly what they were aimed at
+and cost about as much elsewhere, which suggests a roughly fixed error budget at this
+prompt size: editing redistributes failures rather than reducing them. Reverted to the
+version with the fewest rules failing at three or more runs in five, which was v8.
+
+Two specific lessons survive that attempt. What reads as redundancy in this prompt is
+often the same rule stated abstractly in one place and concretely in another, and the
+concrete instance is the one doing the work. Replacing four statements of the
+location-identity rule with a single abstract sentence cost `discovery-found` its hotel
+identity in 5/5 runs; restoring one concrete example — finding Julian at the Hotel Argent
+is TWO observations — fixed it to 20/20 immediately. Deduplicate toward the example, never
+toward the principle. And a scenario can pass for a reason the prompt never states:
+`discovery-identification` scored 15/15 under v8 with nothing anywhere saying that a
+person naming themselves is Observed rather than Reported. The rule was implicit in the
+fixtures and absent from the prompt, and a restructure that disturbed the surrounding
+wording exposed it. A green scenario is not evidence that the rule behind it is written
+down.
+
+The aggregate clean count is the wrong number to steer a prompt change by. All three
+versions above sit within one run of each other on it while differing sharply in which
+rules fail, so a change can look neutral and still trade a working behaviour for a broken
+one. Read the per-rule misses, and treat a headline that does not move as a reason to look
+closer rather than a pass.

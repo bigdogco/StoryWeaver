@@ -1,0 +1,99 @@
+StoryWeaver - console client
+
+Settings loaded and validated.
+
+  Endpoint : https://openrouter.ai/api/v1/chat/completions
+  API key  : sk-o...b0bf
+  Timeout  : 120s
+
+  Roles:
+    extraction   deepseek/deepseek-v3.2  [temp 0, JsonSchema, require_parameters]
+    narration    qwen/qwen3.7-plus  [temp 0.9, Text]
+    summarize    deepseek/deepseek-v3.2  [temp 0.3, Text]
+    worldgen     deepseek/deepseek-v3.2  [temp 1, JsonSchema, require_parameters]
+
+Scenarios: 26, models: 1, providers: StreamLake, runs each: 5
+Calls: 130
+Logging to logs\session-2026-09-10_15-27-25.log
+
+=== deepseek/deepseek-v3.2 via StreamLake ===
+  discovery-briefing required 25/25   forbidden 2
+  discovery-failed-search required 15/15   forbidden 0
+  discovery-hidden-item required 20/20   forbidden 0
+  discovery-item-mentioned required 20/20   forbidden 0
+  discovery-closed-container required 10/10   forbidden 0
+  discovery-found  required 13/20   forbidden 0
+  discovery-departure required 25/25   forbidden 0
+  discovery-visible-departure required 15/15   forbidden 0
+  discovery-lose-sight required 15/15   forbidden 1
+  discovery-no-departure required 15/15   forbidden 0
+  discovery-return required 20/20   forbidden 0
+  discovery-false-report required 20/20   forbidden 0
+  discovery-unnamed required 15/15   forbidden 1
+  discovery-identification required 9/15    forbidden 0
+  discovery-ambiguous required 10/10   forbidden 0
+  discovery-routes required 20/20   forbidden 0
+  discovery-partial required 15/15   forbidden 0
+  discovery-introduction required 10/10   forbidden 0
+  discovery-facts  required 10/10   forbidden 0
+  discovery-repeat required 15/15   forbidden 0
+  discovery-stale-memory required 15/15   forbidden 0
+  discovery-same-turn-retry required 10/10   forbidden 0
+  discovery-older-retry required 10/10   forbidden 0
+  discovery-author-protected required 10/10   forbidden 0
+  discovery-lore-topic required 14/15   forbidden 0
+  discovery-unsupported required 10/10   forbidden 0
+
+==============================================================================
+SUMMARY
+==============================================================================
+prompts   caecda87
+
+model                               required  forbidden  rejects   tokens
+------------------------------------------------------------------------------
+…seek/deepseek-v3.2 via StreamLake      96%       0.03     0.21      176
+
+required  = share of must-have deltas produced (higher is better)
+forbidden = must-not-happen deltas per run    (lower is better)
+rejects   = deltas the validator threw out    (lower is better)
+tokens    = mean completion tokens per call   (cost proxy)
+
+--- deepseek/deepseek-v3.2 via StreamLake ---
+  discovery-briefing required 25/25   forbidden 2
+      DID:    Speaker details copied without disclosure (2/5)
+  discovery-failed-search required 15/15   forbidden 0
+  discovery-hidden-item required 20/20   forbidden 0
+  discovery-item-mentioned required 20/20   forbidden 0
+  discovery-closed-container required 10/10   forbidden 0
+  discovery-found  required 13/20   forbidden 0
+      MISSED: Hotel identity learned (5/5)
+      MISSED: Julian sighted at hotel (1/5)
+      MISSED: Visible condition learned (1/5)
+  discovery-departure required 25/25   forbidden 0
+  discovery-visible-departure required 15/15   forbidden 0
+  discovery-lose-sight required 15/15   forbidden 1
+      DID:    Invented movement (1/5)
+  discovery-no-departure required 15/15   forbidden 0
+  discovery-return required 20/20   forbidden 0
+  discovery-false-report required 20/20   forbidden 0
+  discovery-unnamed required 15/15   forbidden 1
+      DID:    Observation evidence absent from narration (1/5)
+  discovery-identification required 9/15    forbidden 0
+      MISSED: Name revealed on same identity (3/5)
+      MISSED: Old public alias retained (3/5)
+  discovery-ambiguous required 10/10   forbidden 0
+  discovery-routes required 20/20   forbidden 0
+  discovery-partial required 15/15   forbidden 0
+  discovery-introduction required 10/10   forbidden 0
+  discovery-facts  required 10/10   forbidden 0
+  discovery-repeat required 15/15   forbidden 0
+  discovery-stale-memory required 15/15   forbidden 0
+  discovery-same-turn-retry required 10/10   forbidden 0
+  discovery-older-retry required 10/10   forbidden 0
+  discovery-author-protected required 10/10   forbidden 0
+  discovery-lore-topic required 14/15   forbidden 0
+      MISSED: Topic learned (1/5)
+  discovery-unsupported required 10/10   forbidden 0
+  by provider:
+    StreamLake             130 run(s), clean 117/130, forbidden/run 0.03
+

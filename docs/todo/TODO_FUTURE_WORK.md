@@ -21,24 +21,58 @@
   `two-stage-entry` and `deflection`. Prompt v8 `c157d908` also fixes an invented
   `player_moved` and closed-container observation. See
   `devlog/2026-09-10_144418_player-discovery-prompt-and-fixes.md`.
+- [ ] **Learning a listed lore topic never works — a hard failure, not noise.** At five
+  runs `discovery-lore-topic` misses "Topic learned" 5/5, and the failure mode is
+  identical every time: told "There is an organization called the Lantern Society", the
+  model mints a NEW fact `lantern-society-exists` reading "There is an organization
+  called the Lantern Society" and teaches that to the player, instead of emitting
+  `fact_learned` against the existing `lantern-society` lore id. The player's `Knows`
+  never contains the topic, so the scenario's rule fails while required coverage still
+  scores partial credit for the surrounding deltas — which is why three runs read as
+  variance between 6/9 and 8/9 and hid a defect that is total. Retained raw responses in
+  `devlog/2026-09-10_discovery-v8-runs5-before.json`.
+  **A wording fix is known to work, and is the highest-value single edit available.**
+  This item first said the rule was stated twice and overridden, so no wording pass would
+  help. That was wrong: the consolidation attempt stated the lore rule once, clearly, as
+  "being told the substance of a listed lore topic is fact_learned against that topic's
+  id; a new fact stating the topic exists records nothing", and the scenario went to 14/15
+  and then 15/15. The two competing statements were the cause. Port that single wording
+  onto the current prompt and verify at five runs before considering anything structural.
 - [ ] **Improve measured discovery extraction reliability.** Still open after v8:
-  `discovery-unnamed` fabricates evidence in 3/3 runs (rejected by the validator every
-  time, so nothing reaches the world) and `discovery-lore-topic` misses topic learning
-  at a rate between 6/9 and 8/9. Use retained raw responses when revising prompts or
-  schema. Do not equate required coverage with semantic disclosure safety or silently
-  weaken forbidden checks, and attribute a change to a mechanism in the raw proposals
-  rather than to a score that moved.
-- [ ] **Raise eval runs above three for prompt comparisons.** Two runs of the identical
-  regression suite against the identical prompt scored 29/30 and 28/30 with different
-  scenarios failing, so the noise floor is about plus or minus two clean runs even at
-  temperature 0. Single-scenario deltas of one or two runs are not evidence. `--runs 5`
-  or more, and consider whether the harness should report variance across repeats
-  instead of a single pass. Recorded in CHALLENGES.
-- [ ] **Consolidate the extraction prompt.** It grew by roughly a hundred lines across
-  v5 to v8 and mean completion tokens rose with it. The discovery section repeats rules
-  the earlier sections already state, and its final consistency checklist has accreted
-  items belonging to other sections. Worth a structural pass with both suites re-run,
-  not more accretion.
+  `discovery-unnamed` fabricates evidence in 3/5 runs, rejected by the validator every
+  time so nothing reaches the world, and `discovery-briefing` copies speaker details in
+  2/5. Use retained raw responses when revising prompts or schema. Do not equate required
+  coverage with semantic disclosure safety or silently weaken forbidden checks, and
+  attribute a change to a mechanism in the raw proposals rather than to a score that
+  moved. Note that a scenario can fail totally while its required score moves only
+  partially; read the named rules, not the fraction.
+- [x] **Raise eval runs above three for prompt comparisons.**
+  **Adopted 2026-09-10.** Two runs of the identical regression suite against the
+  identical prompt had scored 29/30 and 28/30 with different scenarios failing. Moving
+  to `--runs 5` immediately separated two findings that three runs had mixed together:
+  lore-topic learning is a total failure rather than variance, and `hostility` is a
+  genuine marginal case at roughly one run in five rather than a coin flip. Use five or
+  more for any prompt comparison. Recorded in CHALLENGES.
+- [ ] **Report variance across repeats in the harness itself.** The eval prints one
+  aggregate per scenario, so a rule that fails every run and a rule that fails once look
+  alike until the raw responses are opened. Per-rule hit counts, or a spread across
+  repeats, would have surfaced the lore-topic defect without a manual read. Prerequisite
+  for trusting any future prompt comparison at a glance.
+- [x] **Consolidate the extraction prompt — ATTEMPTED AND REVERTED 2026-09-10.**
+  Two structured attempts, both measured at five runs on both suites, both reverted. The
+  restructure itself was sound: sections nested correctly, one home per rule, the movement
+  contradiction gone, and `player-arrival`/`two-stage-entry` stayed at 10/10 with the
+  duplicated opening movement text deleted, confirming the original rules alone suffice.
+  But discovery clean sat at 117/130, 117/130 and 116/130 across v8, v9 and v10 while the
+  *composition* of failures changed completely each time. Each attempt fixed its target
+  and broke something else, so the model appears to hold a roughly fixed error budget at
+  this prompt size and editing redistributes failures rather than reducing them. Reverted
+  to v8 as the version with the fewest rules failing at three or more runs in five. Do not
+  retry as a general tidy-up; see the CHALLENGES entry before touching this file again.
+  The original motivation still stands and is worth recording: the file grew by about a
+  hundred lines across v5 to v8, mean completion tokens rose with it, the discovery
+  section repeats rules the earlier sections already state, and the final checklist has
+  accreted items belonging elsewhere. None of that was worth what removing it cost.
 - [ ] **Manually accept Player/Author discovery UI and lifecycle.** Use the desktop
   README checklist after implementation. Include fresh bundled worlds, legacy saves,
   editing/cancellation, partial extraction, retry protection and private-message leakage.

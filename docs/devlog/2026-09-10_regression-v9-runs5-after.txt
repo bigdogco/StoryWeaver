@@ -1,0 +1,59 @@
+StoryWeaver - console client
+
+Settings loaded and validated.
+
+  Endpoint : https://openrouter.ai/api/v1/chat/completions
+  API key  : sk-o...b0bf
+  Timeout  : 120s
+
+  Roles:
+    extraction   deepseek/deepseek-v3.2  [temp 0, JsonSchema, require_parameters]
+    narration    qwen/qwen3.7-plus  [temp 0.9, Text]
+    summarize    deepseek/deepseek-v3.2  [temp 0.3, Text]
+    worldgen     deepseek/deepseek-v3.2  [temp 1, JsonSchema, require_parameters]
+
+Scenarios: 10, models: 1, providers: StreamLake, runs each: 5
+Calls: 50
+Logging to logs\session-2026-09-10_15-15-17.log
+
+=== deepseek/deepseek-v3.2 via StreamLake ===
+  deflection       required n/a     forbidden 1
+  revelation       required 15/15   forbidden 0
+  movement         required 5/5     forbidden 0
+  hostility        required 10/10   forbidden 0
+  new-character    required 5/5     forbidden 0
+  redescription    required n/a     forbidden 0
+  atmosphere       required n/a     forbidden 0
+  player-arrival   required 10/10   forbidden 0
+  two-stage-entry  required 10/10   forbidden 0
+  name-reveal      required 15/15   forbidden 0
+
+==============================================================================
+SUMMARY
+==============================================================================
+prompts   caecda87
+
+model                               required  forbidden  rejects   tokens
+------------------------------------------------------------------------------
+…seek/deepseek-v3.2 via StreamLake     100%       0.02     0.66      374
+
+required  = share of must-have deltas produced (higher is better)
+forbidden = must-not-happen deltas per run    (lower is better)
+rejects   = deltas the validator threw out    (lower is better)
+tokens    = mean completion tokens per call   (cost proxy)
+
+--- deepseek/deepseek-v3.2 via StreamLake ---
+  deflection       required n/a     forbidden 1
+      DID:    any fact established (1/5)
+  revelation       required 15/15   forbidden 0
+  movement         required 5/5     forbidden 0
+  hostility        required 10/10   forbidden 0
+  new-character    required 5/5     forbidden 0
+  redescription    required n/a     forbidden 0
+  atmosphere       required n/a     forbidden 0
+  player-arrival   required 10/10   forbidden 0
+  two-stage-entry  required 10/10   forbidden 0
+  name-reveal      required 15/15   forbidden 0
+  by provider:
+    StreamLake              50 run(s), clean 49/50, forbidden/run 0.02
+
