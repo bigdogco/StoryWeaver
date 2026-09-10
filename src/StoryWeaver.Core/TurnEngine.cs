@@ -129,7 +129,7 @@ public sealed class TurnEngine
             extractionError = ex.Message;
         }
 
-        ValidationOutcome validation = DeltaValidator.Validate(world, extraction.Deltas, _lore);
+        ValidationOutcome validation = DeltaValidator.Validate(world, extraction.Deltas, _lore, narration: narration, observationTurn: world.TurnNumber + 1);
 
         // Commit order: mutate, bump the turn counter, then persist. Nothing here can fail
         // partway in the in-memory case; the JSON repository is what makes the write atomic,
@@ -142,6 +142,7 @@ public sealed class TurnEngine
         // Found while auditing which turn produced a run of misfiled facts, and the off-by-one
         // made the trail read wrong.
         world.TurnNumber++;
+        world.Discovery ??= DiscoveryState.Minimal(world);
         DeltaApplier.Apply(world, validation.Accepted);
         TouchPresentCharacters(world);
 
@@ -202,8 +203,8 @@ public sealed class TurnEngine
             extractionError = ex.Message;
         }
 
-        ValidationOutcome validation = DeltaValidator.Validate(world, extraction.Deltas, _lore);
-        DeltaApplier.Apply(world, validation.Accepted);
+        ValidationOutcome validation = DeltaValidator.Validate(world, extraction.Deltas, _lore, narration: turn.Narration, observationTurn: turn.TurnNumber);
+        DeltaApplier.Apply(world, validation.Accepted, turn.TurnNumber);
 
         // The turn number is not advanced and no record is appended: this is the same turn,
         // extracted again.
@@ -286,8 +287,8 @@ public sealed class TurnEngine
             extractionError = ex.Message;
         }
 
-        ValidationOutcome validation = DeltaValidator.Validate(world, extraction.Deltas, _lore);
-        DeltaApplier.Apply(world, validation.Accepted);
+        ValidationOutcome validation = DeltaValidator.Validate(world, extraction.Deltas, _lore, narration: narration, observationTurn: turn.TurnNumber);
+        DeltaApplier.Apply(world, validation.Accepted, turn.TurnNumber);
 
         // The turn number does not advance and no record is appended. This is the same turn,
         // told differently.

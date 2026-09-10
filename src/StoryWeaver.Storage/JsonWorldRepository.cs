@@ -48,8 +48,10 @@ public sealed class JsonWorldRepository : IWorldRepository
         }
 
         string json = await File.ReadAllTextAsync(path, cancellationToken).ConfigureAwait(false);
-        return JsonSerializer.Deserialize<WorldState>(json, SaveJson.Canon)
+        var world = JsonSerializer.Deserialize<WorldState>(json, SaveJson.Canon)
                ?? throw new InvalidDataException($"Canon file for world '{worldId}' deserialized to null: {path}");
+        DiscoveryState.RequireSupported(world);
+        return world;
     }
 
     public async Task SaveAsync(
@@ -57,6 +59,7 @@ public sealed class JsonWorldRepository : IWorldRepository
         WorldState state,
         CancellationToken cancellationToken = default)
     {
+        DiscoveryState.RequireSupported(state);
         string directory = WorldDirectory(worldId);
         Directory.CreateDirectory(directory);
 

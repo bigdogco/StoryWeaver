@@ -20,7 +20,8 @@ public static class DeltaSchema
 {
     public const string Name = "state_deltas";
 
-    public const string Json = """
+    public static readonly string Json = DiscoverySchema.Extend(BaseJson);
+    private const string BaseJson = """
     {
       "type": "object",
       "properties": {

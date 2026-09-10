@@ -27,6 +27,44 @@ public static partial class EntityReferences
     /// themselves.</summary>
     public const string PlayerToken = "player";
 
+    /// <summary>Resolve authored player-facing references through disclosed labels only.</summary>
+    public static string ResolveForPlayer(string text, WorldState world)
+    {
+        if (string.IsNullOrEmpty(text) || !text.Contains("{{", StringComparison.Ordinal))
+        {
+            return text;
+        }
+
+        var discovery = world.Discovery ?? DiscoveryState.Minimal(world);
+
+        return Reference().Replace(text, match =>
+        {
+            string id = match.Groups[1].Value.Trim();
+
+            // The protagonist always knows their own name. It is not a discovery, and routing
+            // it through the memories rendered the player as "not yet identified" to themselves.
+            if (string.Equals(id, PlayerToken, StringComparison.OrdinalIgnoreCase))
+            {
+                return world.Player?.Name ?? string.Empty;
+            }
+
+            // Settle which kind the id names in canon first, in the precedence Resolve uses.
+            // Trying each kind's memories in turn instead let a character and a location that
+            // share an id borrow each other's label — the id is not namespaced, the keys are.
+            DiscoveryKind? kind =
+                world.FindCharacter(id) is not null ? DiscoveryKind.Character
+                : world.FindLocation(id) is not null ? DiscoveryKind.Location
+                : world.FindItem(id) is not null ? DiscoveryKind.Item
+                : null;
+
+            return kind is { } k
+                   && discovery.Find(k, id) is { } memory
+                   && DiscoveryEngine.SafeName(memory) is { } name
+                ? name
+                : "someone or something not yet identified";
+        });
+    }
+
     /// <summary>
     /// Replaces every reference with the entity's current name.
     ///

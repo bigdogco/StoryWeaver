@@ -1,8 +1,10 @@
 # Player discovery and private canon
 
-Draft for player review, 2026-09-09. Requested after The Last Lantern exposed
-Julian Vale's hidden state in the world panel. This is a proposal, not an approved
-schema or implementation. PROJECT.md's locked decisions remain unchanged.
+Approved by the player, 2026-09-09. Requested after The Last Lantern exposed
+Julian Vale's hidden state in the world panel. Implementation and repeated extraction
+evaluation are complete, with measured model limitations recorded in the 2026-09-10
+implementation devlog; desktop acceptance remains manual. Older-save compatibility
+is best-effort, and discovery changes block Reroll without snapshot undo.
 
 ## The observed problem
 
@@ -314,6 +316,13 @@ references need explicit findings or refusal at the relevant boundary.
 
 ## Starting state, legacy saves and author controls
 
+Review decision, 2026-09-09: older-save compatibility is best-effort for this major
+change; full backward compatibility is not an acceptance requirement. Do not add
+history reconstruction or substantial migration work to preserve old playthroughs.
+The minimal-view fallback below is the proposed simple handling where practical;
+a clear incompatibility message is acceptable where safe loading is not practical.
+Fresh saves and correct persistence of the new format take priority.
+
 New packs can author starting discovery in seed JSON beside canonical state. Load it
 as separate values; never generate it by copying every entity's current fields.
 Authors provide safe labels/descriptions, known connections, provenance and initial
@@ -396,7 +405,15 @@ and desktop interaction stays under manual review. No model calls or runtime tes
 run for this design. Do not claim a planned case has passed or equate schema validity
 with correct perception.
 
-Review decisions: the Player/Author split, snapshot observations rather than visibility
-bits over live fields, explicit presentation rules, three new extraction kinds in the
-existing call, the conservative legacy-save behaviour, and the Reroll consequence.
-They are recommendations awaiting the player's approval, not locked decisions yet.
+Review decisions confirmed by the player, 2026-09-09:
+
+- Older-save compatibility is best-effort; full compatibility is not required for
+  this major change. Avoid substantial migration/reconstruction work.
+- Discovery changes block Reroll, including refreshed sightings. The player views
+  Reroll primarily as recovery after a failed LLM connection and accepts stricter
+  restrictions. Snapshot-based undo remains outside this task. Failure alone does
+  not authorize reroll if changes were applied; existing recovery guards remain.
+
+The player subsequently approved the complete design and implementation, including
+Player/Author views, snapshot observations, presentation rules and three extraction
+kinds in the existing call. Work is tracked in `../todo/TODO_PLAYER_DISCOVERY_.md`.

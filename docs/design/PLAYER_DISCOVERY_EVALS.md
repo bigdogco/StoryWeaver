@@ -1,8 +1,9 @@
 # Player discovery evaluation plan
 
 Required by the player, 2026-09-09, during discovery design review. Companion to
-`PLAYER_DISCOVERY.md`. These are specified cases, not implemented or passed evals.
-Create the fixtures with the feature, before tuning its extraction prompts.
+`PLAYER_DISCOVERY.md`. The Harness now implements 26 discovery fixtures, including
+retry and author-protection cases. Provider-labelled reports live in `docs/devlog`;
+implementation of a fixture is not a claim that it passes. Desktop acceptance remains manual.
 
 ## Scoring and execution
 
@@ -78,7 +79,7 @@ extraction score proves them. Any extra automated code-test runner needs separat
 | Retry after a newer sighting or author correction | Older evidence cannot overwrite newer/protected information; conflicts are visible for author review |
 | Discovery-only turn then Reroll | Reroll refuses because saved discovery changed, even if physical canon did not |
 | Partial/failed extraction or persistence | Prose remains; missing discoveries never fall back to private fields; failure/reopen behaviour is explicit |
-| Opening/new save/legacy save/reopen | Authored opening knowledge initializes new saves; legacy unknowns stay unknown; observations persist; no automatic reconstruction from current private canon |
+| Opening/new save/legacy save/reopen | Authored opening knowledge initializes new saves and observations persist on reopen; legacy support is best-effort, with a minimal unknown view or clear incompatibility message; no automatic reconstruction from current private canon |
 | Player → Author → Player | Full data is deliberately accessible in Author view; returning clears private cached rows, labels, tooltips, links and reports |
 | Indirect navigation | Occupants, item holders, connections, source names, counts and name-part links reveal only the player projection |
 | Canon rename/edit/remove after observation | Remembered information does not silently change; missing targets remain readable from recorded public text |

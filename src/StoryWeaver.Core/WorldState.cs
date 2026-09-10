@@ -16,6 +16,7 @@ namespace StoryWeaver.Core;
 /// </summary>
 public sealed class WorldState
 {
+    public DiscoveryState? Discovery { get; set; }
     /// <summary>Turns completed. Deltas stamp facts with this, and it drives
     /// <see cref="Character.LastSeenTurn"/>.</summary>
     public int TurnNumber { get; set; }

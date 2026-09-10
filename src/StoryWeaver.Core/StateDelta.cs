@@ -39,7 +39,7 @@ public abstract record StateDelta
 }
 
 /// <summary>An existing character changed location.</summary>
-public sealed record CharacterMoved(string CharacterId, string ToLocationId) : StateDelta;
+public sealed record CharacterMoved(string CharacterId, string? ToLocationId) : StateDelta;
 
 /// <summary>The player changed location.</summary>
 public sealed record PlayerMoved(string ToLocationId) : StateDelta;

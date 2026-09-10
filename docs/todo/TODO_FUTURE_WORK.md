@@ -1,17 +1,47 @@
 # Future Work
 
-- [ ] **Review the player-discovery design, then authorize implementation.**
+- [x] **Review the player-discovery design, then authorize implementation.**
   Requested after The Last Lantern revealed Julian's hidden state in the canon UI.
   `docs/design/PLAYER_DISCOVERY.md` proposes Player/Author views, remembered entity
   observations, explicit discovery rules, starting knowledge and automatic extraction
-  updates. Review legacy-save behaviour and discovery-only Reroll refusal as part of
-  the decision. This is a draft; no discovery code or pack changes have been made.
-- [ ] **Implement and run discovery/departure evals with the feature.** Explicitly
+  updates. The player accepted best-effort older-save compatibility and discovery-only
+  Reroll refusal on 2026-09-09, then approved the full design and implementation.
+  Implementation is tracked in `TODO_PLAYER_DISCOVERY_.md`.
+- [x] **Implement and run discovery/departure evals with the feature.** Explicitly
   requested by the player. `docs/design/PLAYER_DISCOVERY_EVALS.md` specifies required
   and forbidden actual-canon/player-view outcomes, including null-location departures,
   hidden items, failed searches, false reports, return from offstage and stale memories.
   Include repeated provider-labelled model runs and the existing extraction regression
-  set; retain manual narrator/UI/lifecycle review. Fixtures/results do not exist yet.
+  set; retain manual narrator/UI/lifecycle review. Twenty-six fixtures and repeated
+  reports now exist. Full v5: discovery 71/78 clean; regression 26/30 clean.
+  Superseded by v8 on 2026-09-10: discovery 70/78 clean, regression restored to 30/30.
+- [x] **Repair the extraction regression the discovery prompt caused.**
+  **Completed 2026-09-10.** The v5 rewrite restrained player movement and player
+  knowledge claims with one sentence; separating them restored `player-arrival`,
+  `two-stage-entry` and `deflection`. Prompt v8 `c157d908` also fixes an invented
+  `player_moved` and closed-container observation. See
+  `devlog/2026-09-10_144418_player-discovery-prompt-and-fixes.md`.
+- [ ] **Improve measured discovery extraction reliability.** Still open after v8:
+  `discovery-unnamed` fabricates evidence in 3/3 runs (rejected by the validator every
+  time, so nothing reaches the world) and `discovery-lore-topic` misses topic learning
+  at a rate between 6/9 and 8/9. Use retained raw responses when revising prompts or
+  schema. Do not equate required coverage with semantic disclosure safety or silently
+  weaken forbidden checks, and attribute a change to a mechanism in the raw proposals
+  rather than to a score that moved.
+- [ ] **Raise eval runs above three for prompt comparisons.** Two runs of the identical
+  regression suite against the identical prompt scored 29/30 and 28/30 with different
+  scenarios failing, so the noise floor is about plus or minus two clean runs even at
+  temperature 0. Single-scenario deltas of one or two runs are not evidence. `--runs 5`
+  or more, and consider whether the harness should report variance across repeats
+  instead of a single pass. Recorded in CHALLENGES.
+- [ ] **Consolidate the extraction prompt.** It grew by roughly a hundred lines across
+  v5 to v8 and mean completion tokens rose with it. The discovery section repeats rules
+  the earlier sections already state, and its final consistency checklist has accreted
+  items belonging to other sections. Worth a structural pass with both suites re-run,
+  not more accretion.
+- [ ] **Manually accept Player/Author discovery UI and lifecycle.** Use the desktop
+  README checklist after implementation. Include fresh bundled worlds, legacy saves,
+  editing/cancellation, partial extraction, retry protection and private-message leakage.
 
 - [x] **Review and implement in-session canon editing.** Four-form design approved and
   implemented 2026-09-09, with Core-owned corrections, lore-aware pickers and one-save

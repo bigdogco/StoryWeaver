@@ -43,6 +43,7 @@ internal static class EvalFormat
     /// <summary>One line for a proposed delta, for the <c>--show-deltas</c> dump.</summary>
     public static string Delta(StateDelta delta) => delta switch
     {
+        EntityObserved d => System.Text.Json.JsonSerializer.Serialize<StateDelta>(d, StoryJson.Options),
         CharacterMoved d => $"character_moved     {d.CharacterId} -> {d.ToLocationId}",
         PlayerMoved d => $"player_moved        -> {d.ToLocationId}",
         StatusChanged d => $"status_changed      {d.CharacterId} = {d.Status}",

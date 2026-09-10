@@ -1,0 +1,145 @@
+StoryWeaver - console client
+
+Settings loaded and validated.
+
+  Endpoint : https://openrouter.ai/api/v1/chat/completions
+  Timeout  : 120s
+
+  Roles:
+    extraction   deepseek/deepseek-v3.2  [temp 0, JsonSchema, require_parameters]
+    narration    qwen/qwen3.7-plus  [temp 0.9, Text]
+    summarize    deepseek/deepseek-v3.2  [temp 0.3, Text]
+    worldgen     deepseek/deepseek-v3.2  [temp 1, JsonSchema, require_parameters]
+
+Scenarios: 8, models: 1, providers: StreamLake, runs each: 3
+Calls: 24
+Logging to logs\session-2026-09-10_06-31-52.log
+
+=== deepseek/deepseek-v3.2 via StreamLake ===
+    [two-stage-entry run 1]
+      ok       player_moved        -> marrow-square
+      ok       location_introduced well-cistern (Well Cistern)
+      ok       player_moved        -> well-cistern
+      ok       item_introduced     crates (crates) @ well-cistern
+      ok       item_introduced     pale-thing (pale thing) @ well-cistern
+    [two-stage-entry run 2]
+      ok       player_moved        -> marrow-square
+      ok       location_introduced well-cistern (Well Cistern)
+      ok       player_moved        -> well-cistern
+      ok       item_introduced     sodden-crates (sodden crates) @ well-cistern
+      ok       item_introduced     pale-thing (pale thing) @ well-cistern
+    [two-stage-entry run 3]
+      ok       player_moved        -> marrow-square
+      ok       location_introduced well-cistern (Well Cistern)
+      ok       player_moved        -> well-cistern
+      ok       item_introduced     sodden-crates (Sodden Crates) @ well-cistern
+      ok       item_introduced     pale-object (Pale Object) @ well-cistern
+  two-stage-entry  required 6/6     forbidden 0
+    [discovery-item-mentioned run 1]
+      ok       fact_established    ledger-payments: Julian used a black ledger to record payments.  [said by vivian]
+      ok       fact_learned        player <- ledger-payments
+      ok       {"kind":"character_observed","targetId":"vivian","identity":null,"descriptionObservation":{"value":"A woman in a green coat.","provenance":"Observed","factId":null},"condition":null,"whereabouts":{"value":{"kind":"Location","targetId":"office","disclosedLabel":"Office"},"provenance":"Observed","factId":null},"evidence":"Vivian says"}
+      ok       {"kind":"item_observed","targetId":"ledger","identity":{"value":"black ledger","provenance":"Reported","factId":"ledger-payments"},"descriptionObservation":{"value":"Julian used it to record payments.","provenance":"Reported","factId":"ledger-payments"},"condition":null,"whereabouts":null,"evidence":"There is a black ledger."}
+    [discovery-item-mentioned run 2]
+      ok       fact_established    ledger-payments: Julian used a black ledger to record payments.  [said by vivian]
+      ok       fact_learned        player <- ledger-payments
+      ok       fact_learned        vivian <- ledger-payments
+      ok       {"kind":"item_observed","targetId":"ledger","identity":{"value":"black ledger","provenance":"Reported","factId":"ledger-payments"},"descriptionObservation":{"value":"used to record payments","provenance":"Reported","factId":"ledger-payments"},"condition":null,"whereabouts":null,"evidence":"There is a black ledger."}
+    [discovery-item-mentioned run 3]
+      ok       fact_established    ledger-payments: Julian used a black ledger to record payments.  [said by vivian]
+      ok       fact_learned        player <- ledger-payments
+      ok       fact_learned        vivian <- ledger-payments
+      ok       {"kind":"item_observed","targetId":"ledger","identity":{"value":"black ledger","provenance":"Reported","factId":"ledger-payments"},"descriptionObservation":{"value":"used to record payments","provenance":"Reported","factId":"ledger-payments"},"condition":null,"whereabouts":null,"evidence":"There is a black ledger."}
+  discovery-item-mentioned required 12/12   forbidden 1
+    [discovery-found run 1]
+      ok       {"kind":"character_observed","targetId":"julian","identity":{"value":"Julian Vale","provenance":"Observed","factId":null},"descriptionObservation":{"value":"A contractor, wearing a grey coat soaked through.","provenance":"Observed","factId":null},"condition":{"value":"exhausted","provenance":"Observed","factId":null},"whereabouts":{"value":{"kind":"Location","targetId":"hotel","disclosedLabel":"Hotel Argent"},"provenance":"Observed","factId":null},"evidence":"Julian Vale stands behind it, his grey coat soaked through. He looks exhausted."}
+      ok       {"kind":"location_observed","connections":null,"targetId":"hotel","identity":{"value":"Hotel Argent","provenance":"Observed","factId":null},"descriptionObservation":null,"condition":null,"whereabouts":null,"evidence":"Hotel Argent"}
+    [discovery-found run 2]
+      ok       {"kind":"character_observed","targetId":"julian","identity":{"value":"Julian Vale","provenance":"Observed","factId":null},"descriptionObservation":{"value":"A contractor, in a grey coat soaked through.","provenance":"Observed","factId":null},"condition":{"value":"exhausted","provenance":"Observed","factId":null},"whereabouts":{"value":{"kind":"Location","targetId":"hotel","disclosedLabel":"Hotel Argent"},"provenance":"Observed","factId":null},"evidence":"Julian Vale stands behind it, his grey coat soaked through. He looks exhausted."}
+      ok       {"kind":"location_observed","connections":null,"targetId":"hotel","identity":{"value":"Hotel Argent","provenance":"Observed","factId":null},"descriptionObservation":null,"condition":null,"whereabouts":null,"evidence":"Hotel Argent"}
+    [discovery-found run 3]
+      ok       {"kind":"character_observed","targetId":"julian","identity":{"value":"Julian Vale","provenance":"Observed","factId":null},"descriptionObservation":{"value":"A contractor, his grey coat soaked through.","provenance":"Observed","factId":null},"condition":{"value":"exhausted","provenance":"Observed","factId":null},"whereabouts":{"value":{"kind":"Location","targetId":"hotel","disclosedLabel":"Hotel Argent"},"provenance":"Observed","factId":null},"evidence":"Julian Vale stands behind it, his grey coat soaked through. He looks exhausted."}
+      ok       {"kind":"location_observed","connections":null,"targetId":"hotel","identity":{"value":"Hotel Argent","provenance":"Observed","factId":null},"descriptionObservation":null,"condition":null,"whereabouts":null,"evidence":"Hotel Argent"}
+  discovery-found  required 12/12   forbidden 0
+    [discovery-lose-sight run 1]
+      ok       {"kind":"character_observed","targetId":"julian","identity":null,"descriptionObservation":null,"condition":null,"whereabouts":{"value":{"kind":"Unknown","targetId":null,"disclosedLabel":null},"provenance":"Observed","factId":null},"evidence":"Julian steps behind a tall screen inside the same hotel lobby. He remains in the lobby, but you can no longer see him or his exact position."}
+    [discovery-lose-sight run 2]
+      ok       {"kind":"character_observed","targetId":"julian","identity":null,"descriptionObservation":null,"condition":null,"whereabouts":{"value":{"kind":"Unknown","targetId":null,"disclosedLabel":null},"provenance":"Observed","factId":null},"evidence":"Julian steps behind a tall screen inside the same hotel lobby. He remains in the lobby, but you can no longer see him or his exact position."}
+    [discovery-lose-sight run 3]
+      ok       {"kind":"character_observed","targetId":"julian","identity":null,"descriptionObservation":null,"condition":null,"whereabouts":{"value":{"kind":"Unknown","targetId":null,"disclosedLabel":null},"provenance":"Observed","factId":null},"evidence":"Julian steps behind a tall screen inside the same hotel lobby. He remains in the lobby, but you can no longer see him or his exact position."}
+  discovery-lose-sight required 9/9     forbidden 0
+    [discovery-return run 1]
+      ok       character_moved     julian -> office
+      ok       {"kind":"character_observed","targetId":"julian","identity":{"value":"Julian Vale","provenance":"Observed","factId":null},"descriptionObservation":null,"condition":null,"whereabouts":{"value":{"kind":"Location","targetId":"office","disclosedLabel":null},"provenance":"Observed","factId":null},"evidence":"Julian Vale enters your office"}
+    [discovery-return run 2]
+      ok       character_moved     julian -> office
+      ok       {"kind":"character_observed","targetId":"julian","identity":{"value":"Julian Vale","provenance":"Observed","factId":null},"descriptionObservation":{"value":"carrying his brass key","provenance":"Observed","factId":null},"condition":null,"whereabouts":{"value":{"kind":"Location","targetId":"office","disclosedLabel":null},"provenance":"Observed","factId":null},"evidence":"Julian Vale enters your office carrying his brass key. You see him standing beside your desk."}
+    [discovery-return run 3]
+      ok       character_moved     julian -> office
+      ok       {"kind":"character_observed","targetId":"julian","identity":{"value":"Julian Vale","provenance":"Observed","factId":null},"descriptionObservation":null,"condition":null,"whereabouts":{"value":{"kind":"Location","targetId":"office","disclosedLabel":null},"provenance":"Observed","factId":null},"evidence":"Julian Vale enters your office"}
+  discovery-return required 12/12   forbidden 0
+    [discovery-routes run 1]
+      ok       player_moved        -> street
+      ok       character_moved     vivian -> street
+      ok       {"kind":"location_observed","connections":[{"destinationId":"street","label":{"value":"Street","provenance":"Observed","factId":null}}],"targetId":"office","identity":{"value":"Office","provenance":"Observed","factId":null},"descriptionObservation":{"value":"A scarred desk and filing cabinet.","provenance":"Observed","factId":null},"condition":null,"whereabouts":null,"evidence":"You open the office\u0027s front door and see the rainy Street beyond."}
+      ok       {"kind":"location_observed","connections":null,"targetId":"street","identity":{"value":"Street","provenance":"Observed","factId":null},"descriptionObservation":{"value":"rainy","provenance":"Observed","factId":null},"condition":null,"whereabouts":null,"evidence":"You open the office\u0027s front door and see the rainy Street beyond."}
+      ok       {"kind":"character_observed","targetId":"vivian","identity":{"value":"Vivian Vale","provenance":"Observed","factId":null},"descriptionObservation":{"value":"A woman in a green coat.","provenance":"Observed","factId":null},"condition":null,"whereabouts":{"value":{"kind":"Location","targetId":"street","disclosedLabel":"Street"},"provenance":"Observed","factId":null},"evidence":"You open the office\u0027s front door and see the rainy Street beyond."}
+    [discovery-routes run 2]
+      ok       player_moved        -> street
+      ok       {"kind":"location_observed","connections":[{"destinationId":"street","label":{"value":"Street","provenance":"Observed","factId":null}}],"targetId":"office","identity":null,"descriptionObservation":null,"condition":null,"whereabouts":null,"evidence":"You open the office\u0027s front door and see the rainy Street beyond."}
+      ok       {"kind":"location_observed","connections":null,"targetId":"street","identity":{"value":"Street","provenance":"Observed","factId":null},"descriptionObservation":{"value":"rainy","provenance":"Observed","factId":null},"condition":null,"whereabouts":null,"evidence":"You open the office\u0027s front door and see the rainy Street beyond."}
+    [discovery-routes run 3]
+      ok       player_moved        -> street
+      ok       {"kind":"location_observed","connections":[{"destinationId":"street","label":{"value":"Street","provenance":"Observed","factId":null}}],"targetId":"office","identity":{"value":"Office","provenance":"Observed","factId":null},"descriptionObservation":{"value":"A scarred desk and filing cabinet.","provenance":"Observed","factId":null},"condition":null,"whereabouts":null,"evidence":"You open the office\u0027s front door and see the rainy Street beyond."}
+      ok       {"kind":"location_observed","connections":null,"targetId":"street","identity":{"value":"Street","provenance":"Observed","factId":null},"descriptionObservation":{"value":"rainy","provenance":"Observed","factId":null},"condition":null,"whereabouts":null,"evidence":"You open the office\u0027s front door and see the rainy Street beyond."}
+  discovery-routes required 12/12   forbidden 0
+    [discovery-same-turn-retry run 1]
+      ok       {"kind":"character_observed","targetId":"julian","identity":{"value":"Julian Vale","provenance":"Observed","factId":null},"descriptionObservation":null,"condition":null,"whereabouts":{"value":{"kind":"Location","targetId":"hotel","disclosedLabel":"Hotel Argent"},"provenance":"Observed","factId":null},"evidence":"You see Julian Vale in Hotel Argent."}
+      ok       {"kind":"location_observed","connections":null,"targetId":"hotel","identity":{"value":"Hotel Argent","provenance":"Observed","factId":null},"descriptionObservation":null,"condition":null,"whereabouts":null,"evidence":"You see Julian Vale in Hotel Argent."}
+    [discovery-same-turn-retry run 2]
+      ok       {"kind":"character_observed","targetId":"julian","identity":{"value":"Julian Vale","provenance":"Observed","factId":null},"descriptionObservation":null,"condition":null,"whereabouts":{"value":{"kind":"Location","targetId":"hotel","disclosedLabel":"Hotel Argent"},"provenance":"Observed","factId":null},"evidence":"You see Julian Vale in Hotel Argent."}
+      ok       {"kind":"location_observed","connections":null,"targetId":"hotel","identity":{"value":"Hotel Argent","provenance":"Observed","factId":null},"descriptionObservation":null,"condition":null,"whereabouts":null,"evidence":"You see Julian Vale in Hotel Argent."}
+    [discovery-same-turn-retry run 3]
+      ok       {"kind":"character_observed","targetId":"julian","identity":{"value":"Julian Vale","provenance":"Observed","factId":null},"descriptionObservation":null,"condition":null,"whereabouts":{"value":{"kind":"Location","targetId":"hotel","disclosedLabel":"Hotel Argent"},"provenance":"Observed","factId":null},"evidence":"You see Julian Vale in Hotel Argent."}
+      ok       {"kind":"location_observed","connections":null,"targetId":"hotel","identity":{"value":"Hotel Argent","provenance":"Observed","factId":null},"descriptionObservation":null,"condition":null,"whereabouts":null,"evidence":"You see Julian Vale in Hotel Argent."}
+  discovery-same-turn-retry required 6/6     forbidden 0
+    [discovery-lore-topic run 1]
+      ok       fact_established    lantern-society-exists: There is an organization called the Lantern Society.  [said by vivian]
+      ok       fact_learned        player <- lantern-society-exists
+      ok       fact_learned        vivian <- lantern-society-exists
+      ok       fact_learned        player <- lantern-society
+    [discovery-lore-topic run 2]
+      ok       fact_learned        player <- lantern-society
+      ok       {"kind":"character_observed","targetId":"vivian","identity":null,"descriptionObservation":null,"condition":null,"whereabouts":{"value":{"kind":"Location","targetId":"office","disclosedLabel":null},"provenance":"Observed","factId":null},"evidence":"Vivian says"}
+    [discovery-lore-topic run 3]
+      ok       fact_learned        player <- lantern-society
+      ok       {"kind":"character_observed","targetId":"vivian","identity":{"value":"Vivian Vale","provenance":"Observed","factId":null},"descriptionObservation":null,"condition":null,"whereabouts":{"value":{"kind":"Location","targetId":"office","disclosedLabel":"Office"},"provenance":"Observed","factId":null},"evidence":"Vivian says"}
+  discovery-lore-topic required 9/9     forbidden 0
+
+==============================================================================
+SUMMARY
+==============================================================================
+prompts   7bb6d665
+
+model                               required  forbidden  rejects   tokens
+------------------------------------------------------------------------------
+…seek/deepseek-v3.2 via StreamLake     100%       0.04     0.00      279
+
+required  = share of must-have deltas produced (higher is better)
+forbidden = must-not-happen deltas per run    (lower is better)
+rejects   = deltas the validator threw out    (lower is better)
+tokens    = mean completion tokens per call   (cost proxy)
+
+--- deepseek/deepseek-v3.2 via StreamLake ---
+  two-stage-entry  required 6/6     forbidden 0
+  discovery-item-mentioned required 12/12   forbidden 1
+      DID:    Speaker details copied without disclosure (1/3)
+  discovery-found  required 12/12   forbidden 0
+  discovery-lose-sight required 9/9     forbidden 0
+  discovery-return required 12/12   forbidden 0
+  discovery-routes required 12/12   forbidden 0
+  discovery-same-turn-retry required 6/6     forbidden 0
+  discovery-lore-topic required 9/9     forbidden 0
+  by provider:
+    StreamLake              24 run(s), clean 23/24, forbidden/run 0.04
+

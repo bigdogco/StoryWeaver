@@ -40,7 +40,7 @@ internal static class Program
         bool probe = args.Contains("--probe-schema", StringComparer.OrdinalIgnoreCase);
         // Skip anything that is the value of a --flag, or "--models deepseek/x" would be read
         // as a settings file path and the real settings silently ignored.
-        string[] valueFlags = ["--models", "--runs", "--scenarios", "--providers", "--pack", "--save"];
+        string[] valueFlags = ["--models", "--runs", "--scenarios", "--providers", "--pack", "--save", "--report"];
         string? settingsPath = args
             .Where((a, i) => !a.StartsWith("--", StringComparison.Ordinal)
                              && (i == 0 || !valueFlags.Contains(args[i - 1], StringComparer.OrdinalIgnoreCase)))
@@ -112,6 +112,8 @@ internal static class Program
                 .ConfigureAwait(false);
 
             EvalRenderer.RenderSummary(report);
+            if (Value(args, "--report") is { } reportPath)
+                await File.WriteAllTextAsync(reportPath, System.Text.Json.JsonSerializer.Serialize(report, StoryWeaver.Core.StoryJson.Pretty));
             return 0;
         }
 

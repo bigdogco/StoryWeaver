@@ -2,7 +2,7 @@
 
 **Status:** approved 2026-08-13
 **Created:** 2026-08-13
-**Latest decision update:** 2026-09-07 — Avalonia selected; first Play shell implemented
+**Latest decision update:** 2026-09-10 — player discovery implemented; manual acceptance and model reliability follow-up remain
 
 The standing reference for what this project is and where it is going. Written after three
 weeks of post-bootstrap work in which every task was chosen by whatever the last play
@@ -54,7 +54,7 @@ beneath it and is what a client talks to.
 | **Cli** | play UI: the dispatcher, the turn loop, `/edit`, authoring prompts, and the eval *renderer* | Throwaway by design, and **client one of two** — it renders and prompts; `StorySession` owns canon. Now genuinely thin: the instrumentation moved to Harness 2026-09-04 when the Cli was held to the UI rules, so the old "two-thirds eval scaffolding" is gone. 1,813 lines, ~214 of them the eval renderer — client-side by right, since the Harness scores and the CLI draws. |
 | **App** | composition: opening a session out of pack, prompts, provider and save | New 2026-09-04. Exists because opening needs Storage *and* Llm, and Core references neither — no other project could see both. Renders nothing, asks nothing. |
 | **Harness** | instrumentation: the extraction eval, the self-test suites, the live API probes, and the shared world fixture | New 2026-09-04. Everything that measures the engine rather than plays it, pulled out of the Cli because a client — thin by rule — cannot own the benchmark. References Core + Llm + Storage + App (it tests all of them). The eval is UI-bound and returns a structured `EvalReport` a client renders; the self-tests and probes are dev-only and print directly. `ResponseSelfTest` stays in Llm, with the internal wire types it checks. |
-| **Desktop** | Avalonia Play shell | Added 2026-09-07: menus, resizable narration/input and tabbed details, view preferences and illustrative preview. References App; live sessions and authoring are not connected yet. See `design/PLAY_UI.md`. |
+| **Desktop** | Avalonia Play shell | Live sessions, canon authoring and Player/Author discovery views. References App; Core owns detached projections and authoring operations. Discovery extraction evaluation and manual desktop acceptance are in progress. See `design/PLAY_UI.md` and `design/PLAYER_DISCOVERY.md`. |
 | **Plugins** | not built, not designed | See Phase 3. |
 
 **What the base game is** (decided 2026-08-13): the narrator, and the canon it maintains —
@@ -131,6 +131,13 @@ Two consequences to design for, not to solve here:
   reconciliation: an explicit button is the whole mechanism.
 
 **Content**
+
+Player discovery is separate from private canon (approved 2026-09-09). Persist safe
+per-aspect observations/reports and authored starting knowledge; private moves and edits
+do not refresh them. Desktop defaults to Player on every open; Author deliberately
+reveals canon and diagnostics. Typed observations share the existing extraction call.
+Legacy compatibility is best-effort, and any discovery change blocks Reroll. Snapshot
+undo is outside this change. See `design/PLAYER_DISCOVERY.md` for the full decision.
 
 | decision | rationale |
 |---|---|

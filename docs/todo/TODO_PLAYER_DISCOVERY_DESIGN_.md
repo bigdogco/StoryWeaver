@@ -11,9 +11,11 @@ Lantern's canon panel reveals Julian Vale's hidden whereabouts.
 - [x] Review documentation and deliver the proposal for approval.
 - [x] Record the subsequent departure clarification and explicitly requested eval
   coverage in `PLAYER_DISCOVERY.md` and `PLAYER_DISCOVERY_EVALS.md`.
+- [x] Record 2026-09-09 review decisions: best-effort older-save compatibility and
+  approval of discovery changes blocking Reroll. The complete design was then approved.
 
-Design complete for review in `docs/design/PLAYER_DISCOVERY.md`. Approval and
-implementation remain in `TODO_FUTURE_WORK.md`. No build was needed for this
+Design approved in `docs/design/PLAYER_DISCOVERY.md`. Implementation is tracked in
+`TODO_PLAYER_DISCOVERY_.md`. No build was needed for this
 documentation-only task, and no runtime tests or model calls were run.
 
 Design only. Existing uncommitted Add/Remove implementation remains available for

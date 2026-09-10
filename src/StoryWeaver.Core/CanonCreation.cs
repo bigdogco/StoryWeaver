@@ -45,7 +45,8 @@ public static class CanonCreation
     // do not contain Storage's case-insensitive dictionary/set converters.
     internal static WorldState Copy(WorldState world)
     {
-        var copy = new WorldState { TurnNumber = world.TurnNumber };
+        var copy = new WorldState { TurnNumber = world.TurnNumber,
+            Discovery = world.Discovery is null ? null : DiscoveryState.Clone(world.Discovery) };
         foreach (var (key, c) in world.Characters)
             copy.Characters.Add(key, new Character
             {

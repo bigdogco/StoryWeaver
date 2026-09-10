@@ -32,9 +32,10 @@ public sealed class CanonEditorWindow : Window
     private string? _shownSheetId;
     private readonly SessionContext _context;
     public string CreatedId => _id?.Text ?? "";
+    private Func<InitialDiscovery?> _readDiscovery = () => null;
 
     public CanonEditorWindow(CanonCreationSnapshot creation, SessionContext context, string saveId,
-        Func<string, CanonFields, Task<SessionResult<EditReport>>> save)
+        Func<string, CanonFields, InitialDiscovery?, Task<SessionResult<EditReport>>> save)
         : this(creation.Form, creation.CopyCatalog(), context, saveId, null!, creation, save) { }
 
     public CanonEditorWindow(CanonEditSnapshot baseline, WorldState world, SessionContext context,
@@ -43,10 +44,10 @@ public sealed class CanonEditorWindow : Window
 
     private CanonEditorWindow(CanonEditSnapshot baseline, WorldState world, SessionContext context,
         string saveId, Func<CanonFields, Task<SessionResult<EditReport>>> save,
-        CanonCreationSnapshot? creation, Func<string, CanonFields, Task<SessionResult<EditReport>>>? createSave)
+        CanonCreationSnapshot? creation, Func<string, CanonFields, InitialDiscovery?, Task<SessionResult<EditReport>>>? createSave)
     {
         _baseline = baseline; _creation = creation; _context = context;
-        _save = creation is null ? save : fields => createSave!(CreatedId, fields);
+        _save = creation is null ? save : fields => createSave!(CreatedId, fields, _readDiscovery());
         _read = () => baseline.Fields;
         string label = baseline.Fields switch
         {
@@ -124,6 +125,54 @@ public sealed class CanonEditorWindow : Window
             CanonKind.Location => "Present: " + string.Join(", ", world.CharactersIn(baseline.Target.Id).Select(c => $"{c.Name} ({c.Id})")),
             _ => string.Empty
         };
+        if (creation is not null && baseline.Target.Kind != CanonKind.Fact)
+        {
+            _fields.Children.Add(new TextBlock { Text = "Player knowledge · creation does not imply an encounter. Reused IDs retain their remembered information unless explicitly corrected.", TextWrapping = TextWrapping.Wrap });
+            var known = new CheckBox { Content = "The protagonist knows this identity", IsChecked = false }; _fields.Children.Add(known);
+            var safeName = TextField("Disclosed name / alias (required when known)", "");
+            var safeDescription = TextField("Disclosed description (optional)", "", true);
+            var safeCondition = TextField("Observed condition (optional)", "");
+            ComboBox? whereaboutsMode = null;
+            CanonReferencePicker? knownLocation = null, knownHolder = null;
+            TextBox? whereaboutsLabel = null;
+            if (baseline.Target.Kind != CanonKind.Location)
+            {
+                whereaboutsMode = new ComboBox { ItemsSource = baseline.Target.Kind == CanonKind.Item
+                    ? new[] { "No whereabouts recorded", "Unknown whereabouts", "At location", "Held by character" }
+                    : new[] { "No whereabouts recorded", "Unknown whereabouts", "At location" }, SelectedIndex = 0 };
+                Add("Player's knowledge of whereabouts", whereaboutsMode);
+                knownLocation = Single("Disclosed location", locations, null, "Choose a location");
+                if (baseline.Target.Kind == CanonKind.Item) knownHolder = Single("Disclosed holder", people, null, "Choose a character");
+                whereaboutsLabel = TextField("Disclosed location / holder label (optional)", "");
+                void ShowKnowledgePlacement()
+                {
+                    ((Control)knownLocation.Parent!).IsVisible = whereaboutsMode.SelectedIndex == 2;
+                    if (knownHolder is not null) ((Control)knownHolder.Parent!).IsVisible = whereaboutsMode.SelectedIndex == 3;
+                    ((Control)whereaboutsLabel.Parent!).IsVisible = whereaboutsMode.SelectedIndex >= 2;
+                }
+                whereaboutsMode.SelectionChanged += (_, _) => ShowKnowledgePlacement();
+                ShowKnowledgePlacement();
+            }
+            var requires = new CheckBox { Content = "Requires discovery", IsChecked = false }; _fields.Children.Add(requires);
+            var instruction = TextField("Private discovery instruction", "", true);
+            _readDiscovery = () =>
+            {
+                if (known.IsChecked == true && string.IsNullOrWhiteSpace(safeName.Text)) throw new InvalidOperationException("Enter a disclosed name or alias for player knowledge.");
+                Whereabouts? whereabouts = null;
+                if (known.IsChecked == true && whereaboutsMode is { SelectedIndex: > 0 })
+                {
+                    int mode = whereaboutsMode.SelectedIndex;
+                    string? target = mode == 2 ? knownLocation?.SelectedId : mode == 3 ? knownHolder?.SelectedId : null;
+                    if (mode >= 2 && target is null) throw new InvalidOperationException("Choose the disclosed location or holder.");
+                    whereabouts = new(mode == 1 ? WhereaboutsKind.Unknown : mode == 2 ? WhereaboutsKind.Location : WhereaboutsKind.Holder,
+                        target, string.IsNullOrWhiteSpace(whereaboutsLabel?.Text) ? null : whereaboutsLabel.Text);
+                }
+                return new(known.IsChecked == true ? safeName.Text : null,
+                    known.IsChecked == true ? safeDescription.Text : null, known.IsChecked == true ? safeCondition.Text : null,
+                    Whereabouts: whereabouts,
+                    RequiresDiscovery: requires.IsChecked == true, PrivateInstruction: instruction.Text ?? "");
+            };
+        }
         if (creation is not null) metadata = baseline.Target.Kind switch
         {
             CanonKind.Fact => "Authored world truth · no attributed speaker. Established at the turn when added.",
@@ -299,6 +348,10 @@ public sealed class CanonEditorWindow : Window
     private async Task SaveAsync()
     {
         if (!_saveButton.IsEnabled) return;
+        // Input errors occur before the session operation and must not disable the draft
+        // as if a persistence failure had left canon partially saved.
+        try { if (_creation is not null) _readDiscovery(); }
+        catch (InvalidOperationException error) { _error.Text = error.Message; return; }
         _saving = true; _fields.IsEnabled = false; _cancel.IsEnabled = false; Update(); _error.Text = "Saving changes…";
         try
         {

@@ -337,10 +337,44 @@ presentation state; Presentation records are immutable display values, not canon
 the real session. Preview supplies explicit sample references. No backend project
 references Avalonia.
 
-Next: manual Add/Remove review, pack editing, and reliable backend narration-reference
+Next: manual discovery review, pack editing, and reliable backend narration-reference
 generation/persistence. The
 shell's explicit sample links are not a solution to that last backend question.
 Future mod UI remains part of the mod-system design.
+
+## Player discovery manual acceptance
+
+Discovery is available for manual review. Model extraction reports under `docs/devlog`
+do not replace desktop review.
+
+1. Start a fresh Last Lantern playthrough. Player view should show the protagonist,
+   office, Vivian, Eddie and the visible cigarette case. Julian and the hidden ledger
+   should not appear. Check details, narration links, lists and empty panels.
+2. Inspect private canon in Author view, then return to Player. Selection and navigation
+   must rebuild without retaining private details. Reopening always starts in Player.
+3. Hear a report about Julian, then find him. Reports retain their source and turn,
+   separately from sightings. An unnamed person uses a disclosed alias; later identity
+   reveals retain that alias for narration links.
+4. Fail to find a concealed item, inspect a closed container, and discover a doorway.
+   No hidden contents or reverse route should appear. The narrator still receives private
+   canon: inspect prose separately for semantic disclosure errors.
+5. Move or remove a discovered entity in Author view. Player memories and timestamps
+   must remain unchanged. Losing sight within a room must not move the NPC; explicitly
+   leaving without a destination makes them offstage while retaining possessions.
+6. Edit Player knowledge: direct/reported aspects, aliases, rules and routes. Copying
+   canon is explicit per field. Cancel leaves the save unchanged; Save applies one
+   detached draft, and stale drafts are refused.
+7. Add an entity without initial knowledge, then one with a disclosed alias and whereabouts.
+   Only the latter appears in Player view. Reused IDs retain memories unless corrected.
+   Check location/holder selectors and invalid inputs.
+8. Retry extraction after failure and success. It uses the original narration/turn,
+   cannot overwrite newer or protected aspects, and identical observations are no-ops.
+   Reroll refuses turns that changed discovery.
+9. Open a legacy save without discovery: expect minimal own identity and a compatibility
+   notice. Initialize through Author view and save. Unsupported versions must fail clearly.
+10. Exercise extraction/save failures. Player notices stay generic and retain narration
+    and drafts as described. Inspect in Author view deliberately reveals the full report.
+    Check keyboard navigation, scrolling, cancellation and window resizing.
 
 Framework references: [Avalonia Desktop package](https://www.nuget.org/packages/Avalonia.Desktop/12.1.2),
 [GridSplitter](https://docs.avaloniaui.net/controls/layout/panels/gridsplitter),

@@ -14,10 +14,11 @@ namespace StoryWeaver.Core;
 /// </summary>
 public static class DeltaApplier
 {
-    public static void Apply(WorldState world, IReadOnlyList<StateDelta> deltas)
+    public static void Apply(WorldState world, IReadOnlyList<StateDelta> deltas, int? observationTurn = null)
     {
         foreach (StateDelta delta in deltas)
         {
+            if (delta is EntityObserved observed) { DiscoveryEngine.Apply(world, observed, observationTurn ?? world.TurnNumber); continue; }
             Apply(world, delta);
         }
     }

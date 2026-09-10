@@ -63,8 +63,8 @@ public sealed class LlmStateExtractor : IStateExtractor
             // Schema-conformant JSON that will not map onto the Core types means the schema
             // and the types have drifted apart. Worth naming precisely, because it looks
             // identical to a model failure from the outside and is not one.
-            throw new StoryWeaverException(
-                $"Extraction returned JSON that does not match StateDelta: {ex.Message}");
+            throw new ExtractionResponseException(
+                $"Extraction returned JSON that does not match StateDelta: {ex.Message}", result.Content, result.Provider);
         }
 
         return new ExtractionResult(
@@ -139,4 +139,10 @@ public sealed class LlmStateExtractor : IStateExtractor
     {
         public List<StateDelta>? Deltas { get; init; }
     }
+}
+
+public sealed class ExtractionResponseException(string message, string rawResponse, string? provider) : Exception(message)
+{
+    public string RawResponse { get; } = rawResponse;
+    public string? Provider { get; } = provider;
 }

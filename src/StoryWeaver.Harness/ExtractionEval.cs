@@ -36,6 +36,7 @@ public static class ExtractionEval
         IEvalObserver? observer = null)
     {
         FileLlmLog log = new(settings.Logging);
+        var prompts = PromptLibrary.Load();
 
         // A null entry means "let routing decide", which is what play does.
         string?[] targets = providers is { Length: > 0 } ? [.. providers] : [null];
@@ -54,7 +55,7 @@ public static class ExtractionEval
         {
             foreach (string? provider in targets)
             {
-                reports.Add(await ScoreModelAsync(settings, log, model, runs, scenarios, provider, observer)
+                reports.Add(await ScoreModelAsync(settings, log, model, runs, scenarios, provider, observer, prompts)
                     .ConfigureAwait(false));
             }
         }
@@ -62,7 +63,8 @@ public static class ExtractionEval
         return new EvalReport
         {
             Models = reports,
-            PromptFingerprint = PromptLibrary.Load().Fingerprint,
+            PromptFingerprint = prompts.Fingerprint,
+            SchemaFingerprint = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(DeltaSchema.Json))),
         };
     }
 
@@ -73,14 +75,14 @@ public static class ExtractionEval
         int runs,
         IReadOnlyList<EvalScenario> scenarios,
         string? provider,
-        IEvalObserver? observer)
+        IEvalObserver? observer, PromptLibrary prompts)
     {
         string label = provider is null ? model : $"{model} via {provider}";
         observer?.ModelStarting(label);
 
         StoryWeaverSettings scoped = WithExtractionModel(settings, model, provider);
         using OpenRouterClient client = new(scoped, log);
-        IStateExtractor extractor = new LlmStateExtractor(client, PromptLibrary.Load());
+        IStateExtractor extractor = new LlmStateExtractor(client, prompts);
 
         ModelReport report = new(label);
 
@@ -118,10 +120,12 @@ public static class ExtractionEval
         }
         catch (Exception ex)
         {
-            return new RunScore { Failed = true, Note = ex.Message };
+            return new RunScore { Failed = true, Note = ex.Message,
+                Provider = (ex as ExtractionResponseException)?.Provider, RawResponse = (ex as ExtractionResponseException)?.RawResponse };
         }
 
-        ValidationOutcome validation = DeltaValidator.Validate(world, result.Deltas, lore);
+        int turn = scenario.ObservationTurn ?? world.TurnNumber + 1;
+        ValidationOutcome validation = DeltaValidator.Validate(world, result.Deltas, lore, narration: scenario.Narration, observationTurn: turn);
 
         // Required and forbidden are measured at deliberately different points.
         //
@@ -138,7 +142,8 @@ public static class ExtractionEval
 
         // Apply what was accepted, so outcome rules can be judged against the world the turn
         // would actually have produced. Safe to mutate: every run builds a fresh world.
-        DeltaApplier.Apply(world, validation.Accepted);
+        world.TurnNumber = Math.Max(world.TurnNumber, turn);
+        DeltaApplier.Apply(world, validation.Accepted, turn);
 
         IReadOnlyList<StateRule> expected = scenario.Expected ?? [];
         List<string> unmetOutcomes = [.. expected.Where(r => !r.Holds(world)).Select(r => r.Description)];
@@ -160,6 +165,9 @@ public static class ExtractionEval
             ],
             ViolatedRules = [.. scenario.Forbidden.Where(r => result.Deltas.Any(r.Matches)).Select(r => r.Description)],
             Proposed = result.Deltas,
+            RawResponse = result.Raw,
+            RejectionReasons = validation.Rejected.Select(r => r.Reason).ToList(),
+            NoOps = validation.NoOps,
             RejectedDeltas = [.. validation.Rejected.Select(r => r.Delta)],
             Provider = result.Provider,
         };

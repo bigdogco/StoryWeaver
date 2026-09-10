@@ -9,7 +9,7 @@
     <Grid RowDefinitions="Auto,Auto,*" IsVisible="{Binding IsListVisible}">
       <WrapPanel Margin="0,0,0,12">
         <TextBlock Classes="heading" Text="{Binding Title}" Margin="0,0,12,4" />
-        <Button Content="{Binding AddLabel}" Click="AddEntity" IsEnabled="{Binding CanEdit}" />
+        <Button Content="{Binding AddLabel}" IsVisible="{Binding CanEdit}" Click="AddEntity" IsEnabled="{Binding CanEdit}" />
       </WrapPanel>
       <TextBlock Grid.Row="1" Text="No information to display yet." Classes="secondary"
                  IsVisible="{Binding IsEmpty}" />
@@ -34,10 +34,10 @@
     <Grid RowDefinitions="Auto,*" IsVisible="{Binding IsDetailVisible}">
       <WrapPanel Margin="0,0,0,16">
         <Button Content="← Back to list" Click="BackToList" Margin="0,0,8,6" />
-        <Button Content="Edit" Click="EditEntity" IsEnabled="{Binding CanEdit}" Margin="0,0,8,6" />
-        <Button Content="Remove" Click="RemoveEntity" IsEnabled="{Binding CanRemove}" ToolTip.Tip="{Binding RemoveHint}" Margin="0,0,0,6" />
+        <Button Content="Edit" Click="EditEntity" IsEnabled="{Binding CanEditSelected}" IsVisible="{Binding CanEdit}" Margin="0,0,8,6" />
+        <Button Content="Remove" IsVisible="{Binding CanEdit}" Click="RemoveEntity" IsEnabled="{Binding CanRemove}" ToolTip.Tip="{Binding RemoveHint}" Margin="0,0,0,6" />
         <TextBlock Text="The playthrough needs its player character. Use Edit to correct them."
-                   IsVisible="{Binding IsPlayer}" TextWrapping="Wrap" />
+                     IsVisible="{Binding ShowPlayerRemovalHint}" TextWrapping="Wrap" />
       </WrapPanel>
       <ScrollViewer x:Name="DetailScroll" Grid.Row="1" HorizontalScrollBarVisibility="Disabled">
         <StackPanel Spacing="14">

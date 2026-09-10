@@ -9,6 +9,54 @@ namespace StoryWeaver.Desktop.ViewModels;
 
 public sealed class PlayShellViewModel : ObservableObject
 {
+    private bool _isAuthorView;
+    public bool IsAuthorView => _isAuthorView;
+    public string ViewLabel => IsAuthorView ? "Full canon · contains spoilers" : "Player knowledge";
+    public string? LastAuthorReport { get; private set; }
+    private string _safeOperationNotice = "";
+    private string _operationDetailNotice = "";
+    private string OperationNotice
+    {
+        get => _operationDetailNotice;
+        set { _operationDetailNotice = value; Notice = IsAuthorView ? value : _safeOperationNotice; }
+    }
+    public void ReportError(string summary, Exception error)
+    {
+        LastAuthorReport = summary + "\n\n" + error.Message;
+        Notice = IsAuthorView || !HasLiveSession ? LastAuthorReport : summary + " Inspect in Author view for details.";
+    }
+    public void SetAuthorView(StorySession session, bool author)
+    {
+        if (IsBusy) return;
+        _isAuthorView = author;
+        foreach (var tab in Tabs) tab.Selected = null;
+        Notice = string.Empty;
+        RefreshWorld(session); LinkNarrationNames(); RefreshEditAvailability();
+        Raise(nameof(IsAuthorView)); Raise(nameof(ViewLabel));
+    }
+    private void ApplyProjection(StorySession session)
+    {
+        var projection = session.ProjectWorld(IsAuthorView);
+        foreach (var tab in Tabs) tab.Replace(projection.Entries
+            .Where(e => e.Kind.ToString() == tab.Kind.ToString()).Select(e => new EntityDetails(
+                new(tab.Kind, e.Id), e.Name, e.Summary, e.Description,
+                e.Fields.Select(f => new DetailField(f.Label, f.Value)).ToList(), e.CanonKey, e.Aliases, e.CanAuthor)));
+        if (projection.Notice is not null) Notice = projection.Notice;
+    }
+    public async Task<string?> InspectCanonAsync(StorySession session, bool reload)
+    {
+        var report = await InspectCanonDetailsAsync(session, reload);
+        LastAuthorReport = report;
+        if (!IsAuthorView && report is not null) Notice = _safeOperationNotice;
+        return report;
+    }
+    public async Task<string?> ReviseLastTurnAsync(StorySession session, bool reroll)
+    {
+        var report = await ReviseLastTurnDetailsAsync(session, reroll);
+        LastAuthorReport = report;
+        if (!IsAuthorView && report is not null) Notice = _safeOperationNotice;
+        return report;
+    }
     private string _draft = string.Empty;
     private string _notice = string.Empty;
     private bool _preview;
@@ -23,7 +71,7 @@ public sealed class PlayShellViewModel : ObservableObject
     }
     public bool CanSend => HasLiveSession && !IsBusy && !_needsReopen && !string.IsNullOrWhiteSpace(Draft);
     public bool CanInspectCanon => HasLiveSession && !IsBusy;
-    public bool CanEditCanon => CanInspectCanon && !_needsReopen;
+    public bool CanEditCanon => CanInspectCanon && !_needsReopen && IsAuthorView;
     private void RefreshEditAvailability()
     {
         foreach (var tab in Tabs) tab.CanEdit = CanEditCanon;
@@ -102,6 +150,7 @@ public sealed class PlayShellViewModel : ObservableObject
 
     public void LoadPreview()
     {
+        LastAuthorReport = null;
         foreach (var tab in Tabs) tab.Replace(PreviewScene.Entities.Where(e => e.Reference.Kind == tab.Kind));
         Narration.Clear();
         foreach (var paragraph in PreviewScene.Paragraphs) Narration.Add(paragraph);
@@ -120,11 +169,10 @@ public sealed class PlayShellViewModel : ObservableObject
 
     public void AttachSession(StorySession session, SessionContext context)
     {
+        LastAuthorReport = null;
         _needsReopen = false;
-        Characters.Replace(WorldPresentation.Characters(session.World));
-        Locations.Replace(WorldPresentation.Locations(session.World));
-        Canon.Replace(WorldPresentation.Facts(session.World));
-        Items.Replace(WorldPresentation.Items(session.World));
+        _isAuthorView = false; Raise(nameof(IsAuthorView)); Raise(nameof(ViewLabel));
+        ApplyProjection(session);
         Narration.Clear();
         _preview = false;
         _hasLiveSession = true;
@@ -145,6 +193,7 @@ public sealed class PlayShellViewModel : ObservableObject
 
     public void DetachSession()
     {
+        LastAuthorReport = null;
         if (!_hasLiveSession) return;
         foreach (EntityTabViewModel tab in Tabs) tab.Replace([]);
         Narration.Clear();
@@ -164,29 +213,32 @@ public sealed class PlayShellViewModel : ObservableObject
 
     public async Task SendAsync(StorySession session)
     {
+        _safeOperationNotice = "Processing your turn…";
         if (!CanSend) return;
         string input = Draft.Trim();
         string originalDraft = Draft;
         int before = session.World.TurnNumber;
         _busyStatus = "Writing narration and updating the world…";
         IsBusy = true;
-        Notice = string.Empty;
+        OperationNotice = string.Empty;
         var pending = new NarrativeParagraph("YOU · SENDING", [new(input)]);
         Narration.Add(pending);
         Draft = string.Empty;
         bool completed = false;
+        bool discoveryIncomplete = false;
         try
         {
             var result = await session.TakeTurnAsync(input);
-            if (result.WasRefused) { Notice = result.RefusedBecause!; return; }
+            if (result.WasRefused) { OperationNotice = result.RefusedBecause!; return; }
             var outcome = result.Value!;
             Narration[Narration.IndexOf(pending)] = new($"YOU · TURN {outcome.Turn.TurnNumber}", [new(outcome.Turn.PlayerInput)]);
+            discoveryIncomplete = outcome.ExtractionFailed || outcome.Turn.Rejected.Any(r => r.Delta is EntityObserved);
             completed = true;
             Narration.Add(new($"NARRATION · TURN {outcome.Turn.TurnNumber}", [new(outcome.Turn.Narration)]));
             RefreshWorld(session);
             LinkNarrationNames();
             if (Draft == originalDraft) Draft = string.Empty;
-            Notice = outcome.ExtractionFailed
+            OperationNotice = outcome.ExtractionFailed
                 ? "Narration was saved, but the world update failed: " + outcome.ExtractionError
                 : $"Turn {outcome.Turn.TurnNumber} saved · {outcome.Turn.Applied.Count} world changes"
                     + (outcome.Turn.Rejected.Count > 0 ? $" · {outcome.Turn.Rejected.Count} rejected changes: "
@@ -198,7 +250,7 @@ public sealed class PlayShellViewModel : ObservableObject
             // the action against that partially committed in-memory state.
             _needsReopen = session.World.TurnNumber != before;
             if (_needsReopen) RefreshWorld(session);
-            Notice = _needsReopen
+            OperationNotice = _needsReopen
                 ? "The turn changed the world but did not finish saving. Your draft is retained. Reopen the playthrough and inspect its state before continuing. " + error.Message
                 : "The turn could not complete. Your draft is retained. " + error.Message;
         }
@@ -209,6 +261,10 @@ public sealed class PlayShellViewModel : ObservableObject
                 Narration.Remove(pending);
                 Draft = originalDraft;
             }
+            LastAuthorReport = OperationNotice;
+            if (!IsAuthorView) Notice = completed
+                ? (discoveryIncomplete ? "Narration saved. Discovery updates incomplete. Retry extraction or inspect in Author view." : "Turn saved.")
+                : "The turn did not complete. Your draft is retained. " + (_needsReopen ? "Reopen this playthrough before continuing." : "You may try again.");
             IsBusy = false;
         }
     }
@@ -216,8 +272,11 @@ public sealed class PlayShellViewModel : ObservableObject
     public Task<SessionResult<EditReport>> SaveCanonEditAsync(StorySession session, CanonEditSnapshot baseline, CanonFields fields) =>
         SaveCanonActionAsync(session, () => session.EditAsync(baseline, fields), report => report, "Changes saved");
 
-    public Task<SessionResult<EditReport>> CreateCanonAsync(StorySession session, CanonCreationSnapshot baseline, string id, CanonFields fields) =>
-        SaveCanonActionAsync(session, () => session.CreateCanonAsync(baseline, id, fields), report => report, "Added");
+    public Task<SessionResult<EditReport>> SaveDiscoveryAsync(StorySession session, DiscoveryEditSnapshot baseline, DiscoveryState draft) =>
+        SaveCanonActionAsync(session, () => session.SaveDiscoveryAsync(baseline, draft), report => report, "Player knowledge saved");
+
+    public Task<SessionResult<EditReport>> CreateCanonAsync(StorySession session, CanonCreationSnapshot baseline, string id, CanonFields fields, InitialDiscovery? discovery = null) =>
+        SaveCanonActionAsync(session, () => session.CreateCanonAsync(baseline, id, fields, initialDiscovery: discovery), report => report, "Added");
 
     public Task<SessionResult<CanonRemovalOutcome>> RemoveCanonAsync(StorySession session, CanonRemovalPlan plan) =>
         SaveCanonActionAsync(session, () => session.RemoveCanonAsync(plan), outcome => outcome.Report, "Removed");
@@ -248,29 +307,33 @@ public sealed class PlayShellViewModel : ObservableObject
         finally { IsBusy = false; }
     }
 
-    public async Task<string?> ReviseLastTurnAsync(StorySession session, bool reroll)
+    private async Task<string?> ReviseLastTurnDetailsAsync(StorySession session, bool reroll)
     {
         if (!CanReviseLastTurn) return null;
         string action = reroll ? "Reroll" : "Retry extraction";
+        _safeOperationNotice = action + " could not run. Inspect in Author view for details.";
         _busyStatus = reroll ? "Rewriting the last narration and updating the world…"
             : "Retrying extraction on the last narration…";
         IsBusy = true;
-        Notice = string.Empty;
+        OperationNotice = string.Empty;
         try
         {
             var result = reroll ? await session.RerollLastAsync() : await session.ReExtractLastAsync();
             if (result.WasRefused)
             {
-                Notice = $"{action} could not run: {result.RefusedBecause}";
-                return Notice;
+                OperationNotice = $"{action} could not run: {result.RefusedBecause}";
+                return OperationNotice;
             }
             var outcome = result.Value!;
             var turn = outcome.Turn;
+            _safeOperationNotice = outcome.ExtractionFailed || turn.Rejected.Any(r => r.Delta is EntityObserved)
+                ? action + ": discovery updates incomplete. Inspect in Author view for details."
+                : action + " completed.";
             ReplaceTurnParagraph($"YOU · TURN {turn.TurnNumber}", turn.PlayerInput);
             ReplaceTurnParagraph($"NARRATION · TURN {turn.TurnNumber}", turn.Narration);
             RefreshWorld(session);
             LinkNarrationNames();
-            Notice = outcome.ExtractionFailed
+            OperationNotice = outcome.ExtractionFailed
                 ? $"{action}: narration saved, but extraction failed."
                 : $"{action} saved for turn {turn.TurnNumber} · {turn.Rejected.Count} rejected changes.";
             return $"Playthrough: {session.SaveId}\nTurn: {turn.TurnNumber}\n\n"
@@ -287,8 +350,9 @@ public sealed class PlayShellViewModel : ObservableObject
             // These operations can save canon and then fail writing history without
             // advancing the turn counter. An exception supplies no completion outcome.
             _needsReopen = true;
-            Notice = $"{action} did not complete. Reopen the playthrough and inspect its state before continuing.";
-            return Notice + "\n\nThe previous narration and your draft are retained on screen."
+            OperationNotice = $"{action} did not complete. Reopen the playthrough and inspect its state before continuing.";
+            _safeOperationNotice = OperationNotice;
+            return OperationNotice + "\n\nThe previous narration and your draft are retained on screen."
                 + " Saving may have been incomplete.\n\n" + error.Message;
         }
         finally { IsBusy = false; }
@@ -305,12 +369,13 @@ public sealed class PlayShellViewModel : ObservableObject
         Narration.Add(new(label, [new(text)]));
     }
 
-    public async Task<string?> InspectCanonAsync(StorySession session, bool reload)
+    private async Task<string?> InspectCanonDetailsAsync(StorySession session, bool reload)
     {
         if (!CanInspectCanon) return null;
         _busyStatus = reload ? "Reloading canon from disk…" : "Checking current canon…";
         IsBusy = true;
         string title = reload ? "Update State" : "Check Canon";
+        _safeOperationNotice = title + " could not run. Inspect in Author view for details.";
         bool adopted = false;
         try
         {
@@ -322,14 +387,15 @@ public sealed class PlayShellViewModel : ObservableObject
                 var result = await session.UpdateStateAsync();
                 if (result.WasRefused)
                 {
-                    Notice = $"{title} could not run: {result.RefusedBecause}";
-                    return Notice;
+                    OperationNotice = $"{title} could not run: {result.RefusedBecause}";
+                    return OperationNotice;
                 }
                 var report = result.Value!;
                 if (report.NothingOnDisk)
                 {
-                    Notice = "No canon save was found on disk. The current world was kept.";
-                    return Notice;
+                    OperationNotice = "No canon save was found on disk. The current world was kept.";
+                    _safeOperationNotice = OperationNotice;
+                    return OperationNotice;
                 }
                 adopted = true;
                 RefreshWorld(session);
@@ -344,35 +410,35 @@ public sealed class PlayShellViewModel : ObservableObject
                 var result = await session.CheckCanonAsync();
                 if (result.WasRefused)
                 {
-                    Notice = $"{title} could not run: {result.RefusedBecause}";
-                    return Notice;
+                    OperationNotice = $"{title} could not run: {result.RefusedBecause}";
+                    return OperationNotice;
                 }
                 warnings = result.Value!.Warnings;
                 summary = "Checked the current in-memory canon. Nothing was reloaded or written.";
             }
             string findings = warnings.Count == 0 ? "No integrity warnings found."
                 : $"{warnings.Count} integrity warnings\n" + string.Join("\n", warnings.Select(warning => "• " + warning));
-            Notice = $"{title} complete · {warnings.Count} integrity warnings.";
+            OperationNotice = $"{title} complete · {warnings.Count} integrity warnings.";
+            _safeOperationNotice = title + " completed. Inspect in Author view for details."
+                + (_needsReopen ? " Reopen this playthrough before continuing." : "");
             return $"Playthrough: {session.SaveId}\n\n{summary}{changes}\n\n{findings}"
                 + (_needsReopen ? "\n\nThe earlier save failure still requires reopening this playthrough before sending a turn." : string.Empty);
         }
         catch (Exception error)
         {
-            Notice = adopted
+            OperationNotice = adopted
                 ? "Canon was reloaded, but the desktop could not refresh. Reopen the playthrough."
                 : $"{title} failed. The current world was kept.";
             if (adopted) _needsReopen = true;
-            return Notice + "\n\n" + error.Message;
+            _safeOperationNotice = OperationNotice;
+            return OperationNotice + "\n\n" + error.Message;
         }
         finally { IsBusy = false; }
     }
 
     private void RefreshWorld(StorySession session)
     {
-        Characters.Replace(WorldPresentation.Characters(session.World));
-        Locations.Replace(WorldPresentation.Locations(session.World));
-        Canon.Replace(WorldPresentation.Facts(session.World));
-        Items.Replace(WorldPresentation.Items(session.World));
+        ApplyProjection(session);
         _sessionStatus = $"Live save · {session.SaveId} · turn {session.World.TurnNumber}";
         Raise(nameof(SessionStatus));
     }
@@ -404,9 +470,7 @@ public sealed class PlayShellViewModel : ObservableObject
 
     private void AddOpening(StorySession session, SessionContext context)
     {
-        string? opening = context.Pack.HasOpening
-            ? EntityReferences.Resolve(context.Pack.Opening, session.World)
-            : session.World.PlayerLocationId is { } id ? session.World.FindLocation(id)?.Description : null;
+        string? opening = context.OpeningForPlayer(session.World);
         Narration.Add(new("OPENING", [new(string.IsNullOrWhiteSpace(opening)
             ? "This world has no opening scene. Your playthrough is ready."
             : System.Text.RegularExpressions.Regex.Replace(opening.Replace("\r\n", "\n"), @"(?<!\n)\n(?!\n)", " "))]));

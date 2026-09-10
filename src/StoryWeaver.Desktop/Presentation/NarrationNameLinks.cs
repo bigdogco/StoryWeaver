@@ -10,7 +10,7 @@ internal static class NarrationNameLinks
         var candidates = entities.Where(entity => entity.Reference.Kind != EntityKind.Fact && !string.IsNullOrWhiteSpace(entity.Name)).ToList();
         var excluded = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         { "the", "and", "of", "Mr", "Mrs", "Ms", "Miss", "Dr", "Sir", "Lady", "Lord", "Detective", "Sergeant", "Inspector", "Captain", "Officer", "King", "Queen" };
-        var fullNames = candidates.Select(entity => (Name: entity.Name, entity.Reference));
+        var fullNames = candidates.SelectMany(entity => new[] { entity.Name }.Concat(entity.Aliases ?? []).Select(name => (Name: name, entity.Reference)));
         var shortNames = candidates.Where(entity => entity.Reference.Kind == EntityKind.Character)
             .SelectMany(entity => Regex.Matches(entity.Name, @"[\p{L}\p{M}]+(?:['’-][\p{L}\p{M}]+)*")
                 .Select(match => match.Value)

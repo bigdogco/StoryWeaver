@@ -35,6 +35,7 @@ internal static class CanonRemoval
         var selected = CanonCorrection.Capture(world, target);
         if (selected is null) return null;
         List<string> messages = [], revision = [selected.Revision];
+        messages.Add("Player observations and aliases are retained as memories. Removal does not reveal itself in Player view. Reusing this ID retains its remembered identity; review Player knowledge explicitly.");
         List<RemovalEffect> effects = [];
         List<object> dependencies = [];
         string key = target.Key;

@@ -1,0 +1,1570 @@
+{
+  "models": [
+    {
+      "label": "deepseek/deepseek-v3.2 via StreamLake",
+      "scenarios": [
+        {
+          "name": "two-stage-entry",
+          "runs": [
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: [\n    {\n      \u0022kind\u0022: \u0022player_moved\u0022,\n      \u0022toLocationId\u0022: \u0022marrow-square\u0022,\n      \u0022evidence\u0022: \u0022You brace against the cold stone and drop the last few feet, your boots breaking through a skin of black water at the bottom of the shaft.\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022location_introduced\u0022,\n      \u0022locationId\u0022: \u0022well-cistern\u0022,\n      \u0022name\u0022: \u0022Well Cistern\u0022,\n      \u0022description\u0022: \u0022A vaulted cistern at the end of a low brick tunnel from the well shaft. Wide, dark, with crates stacked against the near side and water lapping at the brick.\u0022,\n      \u0022evidence\u0022: \u0022A low brick tunnel runs off from the shaft. After twenty feet it opens out into a vaulted cistern, wide enough that your light cannot find the far wall.\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022player_moved\u0022,\n      \u0022toLocationId\u0022: \u0022well-cistern\u0022,\n      \u0022evidence\u0022: \u0022After twenty feet it opens out into a vaulted cistern\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022item_introduced\u0022,\n      \u0022itemId\u0022: \u0022crates\u0022,\n      \u0022name\u0022: \u0022crates\u0022,\n      \u0022description\u0022: \u0022Sodden and split wooden crates stacked against the wall.\u0022,\n      \u0022locationId\u0022: \u0022well-cistern\u0022,\n      \u0022holderId\u0022: null,\n      \u0022evidence\u0022: \u0022Crates have been stacked against the near side, sodden and split\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022item_introduced\u0022,\n      \u0022itemId\u0022: \u0022pale-thing\u0022,\n      \u0022name\u0022: \u0022pale thing\u0022,\n      \u0022description\u0022: \u0022Something pale wedged behind the crates where the water laps at the brick.\u0022,\n      \u0022locationId\u0022: \u0022well-cistern\u0022,\n      \u0022holderId\u0022: null,\n      \u0022evidence\u0022: \u0022something pale is wedged behind them where the water laps at the brick.\u0022\n    }\n  ]\n}",
+              "rejectionReasons": [],
+              "noOps": [],
+              "failed": false,
+              "note": null,
+              "requiredHit": 2,
+              "requiredTotal": 2,
+              "forbiddenHit": 0,
+              "rejected": 0,
+              "promptTokens": 8691,
+              "completionTokens": 405,
+              "reasoningTokens": 0,
+              "missingRules": [],
+              "violatedRules": [],
+              "proposed": [
+                {
+                  "kind": "player_moved",
+                  "toLocationId": "marrow-square",
+                  "evidence": "You brace against the cold stone and drop the last few feet, your boots breaking through a skin of black water at the bottom of the shaft."
+                },
+                {
+                  "kind": "location_introduced",
+                  "locationId": "well-cistern",
+                  "name": "Well Cistern",
+                  "description": "A vaulted cistern at the end of a low brick tunnel from the well shaft. Wide, dark, with crates stacked against the near side and water lapping at the brick.",
+                  "evidence": "A low brick tunnel runs off from the shaft. After twenty feet it opens out into a vaulted cistern, wide enough that your light cannot find the far wall."
+                },
+                {
+                  "kind": "player_moved",
+                  "toLocationId": "well-cistern",
+                  "evidence": "After twenty feet it opens out into a vaulted cistern"
+                },
+                {
+                  "kind": "item_introduced",
+                  "itemId": "crates",
+                  "name": "crates",
+                  "description": "Sodden and split wooden crates stacked against the wall.",
+                  "locationId": "well-cistern",
+                  "holderId": null,
+                  "evidence": "Crates have been stacked against the near side, sodden and split"
+                },
+                {
+                  "kind": "item_introduced",
+                  "itemId": "pale-thing",
+                  "name": "pale thing",
+                  "description": "Something pale wedged behind the crates where the water laps at the brick.",
+                  "locationId": "well-cistern",
+                  "holderId": null,
+                  "evidence": "something pale is wedged behind them where the water laps at the brick."
+                }
+              ],
+              "rejectedDeltas": [],
+              "provider": "StreamLake",
+              "clean": true
+            },
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: [\n    {\n      \u0022kind\u0022: \u0022player_moved\u0022,\n      \u0022toLocationId\u0022: \u0022marrow-square\u0022,\n      \u0022evidence\u0022: \u0022You brace against the cold stone and drop the last few feet, your boots breaking through a skin of black water at the bottom of the shaft.\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022location_introduced\u0022,\n      \u0022locationId\u0022: \u0022well-cistern\u0022,\n      \u0022name\u0022: \u0022Well Cistern\u0022,\n      \u0022description\u0022: \u0022A vaulted cistern at the end of a low brick tunnel from the well shaft. Wide, dark, with crates stacked against the near side and water lapping at the brick.\u0022,\n      \u0022evidence\u0022: \u0022A low brick tunnel runs off from the shaft. After twenty feet it opens out into a vaulted cistern, wide enough that your light cannot find the far wall.\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022player_moved\u0022,\n      \u0022toLocationId\u0022: \u0022well-cistern\u0022,\n      \u0022evidence\u0022: \u0022After twenty feet it opens out into a vaulted cistern\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022item_introduced\u0022,\n      \u0022itemId\u0022: \u0022sodden-crates\u0022,\n      \u0022name\u0022: \u0022sodden crates\u0022,\n      \u0022description\u0022: \u0022Crates stacked against the near side of the cistern, sodden and split.\u0022,\n      \u0022locationId\u0022: \u0022well-cistern\u0022,\n      \u0022holderId\u0022: null,\n      \u0022evidence\u0022: \u0022Crates have been stacked against the near side, sodden and split\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022item_introduced\u0022,\n      \u0022itemId\u0022: \u0022pale-thing\u0022,\n      \u0022name\u0022: \u0022pale thing\u0022,\n      \u0022description\u0022: \u0022Something pale wedged behind the crates where the water laps at the brick.\u0022,\n      \u0022locationId\u0022: \u0022well-cistern\u0022,\n      \u0022holderId\u0022: null,\n      \u0022evidence\u0022: \u0022something pale is wedged behind them where the water laps at the brick.\u0022\n    }\n  ]\n}",
+              "rejectionReasons": [],
+              "noOps": [],
+              "failed": false,
+              "note": null,
+              "requiredHit": 2,
+              "requiredTotal": 2,
+              "forbiddenHit": 0,
+              "rejected": 0,
+              "promptTokens": 8691,
+              "completionTokens": 415,
+              "reasoningTokens": 0,
+              "missingRules": [],
+              "violatedRules": [],
+              "proposed": [
+                {
+                  "kind": "player_moved",
+                  "toLocationId": "marrow-square",
+                  "evidence": "You brace against the cold stone and drop the last few feet, your boots breaking through a skin of black water at the bottom of the shaft."
+                },
+                {
+                  "kind": "location_introduced",
+                  "locationId": "well-cistern",
+                  "name": "Well Cistern",
+                  "description": "A vaulted cistern at the end of a low brick tunnel from the well shaft. Wide, dark, with crates stacked against the near side and water lapping at the brick.",
+                  "evidence": "A low brick tunnel runs off from the shaft. After twenty feet it opens out into a vaulted cistern, wide enough that your light cannot find the far wall."
+                },
+                {
+                  "kind": "player_moved",
+                  "toLocationId": "well-cistern",
+                  "evidence": "After twenty feet it opens out into a vaulted cistern"
+                },
+                {
+                  "kind": "item_introduced",
+                  "itemId": "sodden-crates",
+                  "name": "sodden crates",
+                  "description": "Crates stacked against the near side of the cistern, sodden and split.",
+                  "locationId": "well-cistern",
+                  "holderId": null,
+                  "evidence": "Crates have been stacked against the near side, sodden and split"
+                },
+                {
+                  "kind": "item_introduced",
+                  "itemId": "pale-thing",
+                  "name": "pale thing",
+                  "description": "Something pale wedged behind the crates where the water laps at the brick.",
+                  "locationId": "well-cistern",
+                  "holderId": null,
+                  "evidence": "something pale is wedged behind them where the water laps at the brick."
+                }
+              ],
+              "rejectedDeltas": [],
+              "provider": "StreamLake",
+              "clean": true
+            },
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: [\n    {\n      \u0022kind\u0022: \u0022player_moved\u0022,\n      \u0022toLocationId\u0022: \u0022marrow-square\u0022,\n      \u0022evidence\u0022: \u0022You brace against the cold stone and drop the last few feet, your boots breaking through a skin of black water at the bottom of the shaft.\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022location_introduced\u0022,\n      \u0022locationId\u0022: \u0022well-cistern\u0022,\n      \u0022name\u0022: \u0022Well Cistern\u0022,\n      \u0022description\u0022: \u0022A vaulted cistern at the bottom of the well, wide and dark, with a low brick tunnel leading to it. Crates are stacked against one side.\u0022,\n      \u0022evidence\u0022: \u0022A low brick tunnel runs off from the shaft. After twenty feet it opens out into a vaulted cistern, wide enough that your light cannot find the far wall.\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022player_moved\u0022,\n      \u0022toLocationId\u0022: \u0022well-cistern\u0022,\n      \u0022evidence\u0022: \u0022After twenty feet it opens out into a vaulted cistern\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022item_introduced\u0022,\n      \u0022itemId\u0022: \u0022sodden-crates\u0022,\n      \u0022name\u0022: \u0022Sodden Crates\u0022,\n      \u0022description\u0022: \u0022Crates stacked against the wall of the cistern, sodden and split.\u0022,\n      \u0022locationId\u0022: \u0022well-cistern\u0022,\n      \u0022holderId\u0022: null,\n      \u0022evidence\u0022: \u0022Crates have been stacked against the near side, sodden and split\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022item_introduced\u0022,\n      \u0022itemId\u0022: \u0022pale-object\u0022,\n      \u0022name\u0022: \u0022Pale Object\u0022,\n      \u0022description\u0022: \u0022Something pale wedged behind the crates where the water laps at the brick.\u0022,\n      \u0022locationId\u0022: \u0022well-cistern\u0022,\n      \u0022holderId\u0022: null,\n      \u0022evidence\u0022: \u0022something pale is wedged behind them where the water laps at the brick.\u0022\n    }\n  ]\n}",
+              "rejectionReasons": [],
+              "noOps": [],
+              "failed": false,
+              "note": null,
+              "requiredHit": 2,
+              "requiredTotal": 2,
+              "forbiddenHit": 0,
+              "rejected": 0,
+              "promptTokens": 8691,
+              "completionTokens": 409,
+              "reasoningTokens": 0,
+              "missingRules": [],
+              "violatedRules": [],
+              "proposed": [
+                {
+                  "kind": "player_moved",
+                  "toLocationId": "marrow-square",
+                  "evidence": "You brace against the cold stone and drop the last few feet, your boots breaking through a skin of black water at the bottom of the shaft."
+                },
+                {
+                  "kind": "location_introduced",
+                  "locationId": "well-cistern",
+                  "name": "Well Cistern",
+                  "description": "A vaulted cistern at the bottom of the well, wide and dark, with a low brick tunnel leading to it. Crates are stacked against one side.",
+                  "evidence": "A low brick tunnel runs off from the shaft. After twenty feet it opens out into a vaulted cistern, wide enough that your light cannot find the far wall."
+                },
+                {
+                  "kind": "player_moved",
+                  "toLocationId": "well-cistern",
+                  "evidence": "After twenty feet it opens out into a vaulted cistern"
+                },
+                {
+                  "kind": "item_introduced",
+                  "itemId": "sodden-crates",
+                  "name": "Sodden Crates",
+                  "description": "Crates stacked against the wall of the cistern, sodden and split.",
+                  "locationId": "well-cistern",
+                  "holderId": null,
+                  "evidence": "Crates have been stacked against the near side, sodden and split"
+                },
+                {
+                  "kind": "item_introduced",
+                  "itemId": "pale-object",
+                  "name": "Pale Object",
+                  "description": "Something pale wedged behind the crates where the water laps at the brick.",
+                  "locationId": "well-cistern",
+                  "holderId": null,
+                  "evidence": "something pale is wedged behind them where the water laps at the brick."
+                }
+              ],
+              "rejectedDeltas": [],
+              "provider": "StreamLake",
+              "clean": true
+            }
+          ],
+          "requiredHit": 6,
+          "requiredTotal": 6,
+          "forbiddenHit": 0,
+          "failedCount": 0,
+          "problems": []
+        },
+        {
+          "name": "discovery-item-mentioned",
+          "runs": [
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: [\n    {\n      \u0022kind\u0022: \u0022fact_established\u0022,\n      \u0022factId\u0022: \u0022ledger-payments\u0022,\n      \u0022text\u0022: \u0022Julian used a black ledger to record payments.\u0022,\n      \u0022sourceId\u0022: \u0022vivian\u0022,\n      \u0022evidence\u0022: \u0022Julian used it to record payments.\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022fact_learned\u0022,\n      \u0022characterId\u0022: \u0022player\u0022,\n      \u0022factId\u0022: \u0022ledger-payments\u0022,\n      \u0022evidence\u0022: \u0022Julian used it to record payments.\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022character_observed\u0022,\n      \u0022targetId\u0022: \u0022vivian\u0022,\n      \u0022identity\u0022: null,\n      \u0022descriptionObservation\u0022: {\n        \u0022value\u0022: \u0022A woman in a green coat.\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022condition\u0022: null,\n      \u0022whereabouts\u0022: {\n        \u0022value\u0022: {\n          \u0022kind\u0022: \u0022Location\u0022,\n          \u0022targetId\u0022: \u0022office\u0022,\n          \u0022disclosedLabel\u0022: \u0022Office\u0022\n        },\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022evidence\u0022: \u0022Vivian says\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022item_observed\u0022,\n      \u0022targetId\u0022: \u0022ledger\u0022,\n      \u0022identity\u0022: {\n        \u0022value\u0022: \u0022black ledger\u0022,\n        \u0022provenance\u0022: \u0022Reported\u0022,\n        \u0022factId\u0022: \u0022ledger-payments\u0022\n      },\n      \u0022descriptionObservation\u0022: {\n        \u0022value\u0022: \u0022Julian used it to record payments.\u0022,\n        \u0022provenance\u0022: \u0022Reported\u0022,\n        \u0022factId\u0022: \u0022ledger-payments\u0022\n      },\n      \u0022condition\u0022: null,\n      \u0022whereabouts\u0022: null,\n      \u0022evidence\u0022: \u0022There is a black ledger.\u0022\n    }\n  ]\n}",
+              "rejectionReasons": [],
+              "noOps": [],
+              "failed": false,
+              "note": null,
+              "requiredHit": 4,
+              "requiredTotal": 4,
+              "forbiddenHit": 1,
+              "rejected": 0,
+              "promptTokens": 8633,
+              "completionTokens": 379,
+              "reasoningTokens": 0,
+              "missingRules": [],
+              "violatedRules": [
+                "Speaker details copied without disclosure"
+              ],
+              "proposed": [
+                {
+                  "kind": "fact_established",
+                  "factId": "ledger-payments",
+                  "text": "Julian used a black ledger to record payments.",
+                  "sourceId": "vivian",
+                  "evidence": "Julian used it to record payments."
+                },
+                {
+                  "kind": "fact_learned",
+                  "characterId": "player",
+                  "factId": "ledger-payments",
+                  "evidence": "Julian used it to record payments."
+                },
+                {
+                  "kind": "character_observed",
+                  "targetId": "vivian",
+                  "identity": null,
+                  "descriptionObservation": {
+                    "value": "A woman in a green coat.",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "condition": null,
+                  "whereabouts": {
+                    "value": {
+                      "kind": "Location",
+                      "targetId": "office",
+                      "disclosedLabel": "Office"
+                    },
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "evidence": "Vivian says"
+                },
+                {
+                  "kind": "item_observed",
+                  "targetId": "ledger",
+                  "identity": {
+                    "value": "black ledger",
+                    "provenance": "Reported",
+                    "factId": "ledger-payments"
+                  },
+                  "descriptionObservation": {
+                    "value": "Julian used it to record payments.",
+                    "provenance": "Reported",
+                    "factId": "ledger-payments"
+                  },
+                  "condition": null,
+                  "whereabouts": null,
+                  "evidence": "There is a black ledger."
+                }
+              ],
+              "rejectedDeltas": [],
+              "provider": "StreamLake",
+              "clean": false
+            },
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: [\n    {\n      \u0022kind\u0022: \u0022fact_established\u0022,\n      \u0022factId\u0022: \u0022ledger-payments\u0022,\n      \u0022text\u0022: \u0022Julian used a black ledger to record payments.\u0022,\n      \u0022sourceId\u0022: \u0022vivian\u0022,\n      \u0022evidence\u0022: \u0022Julian used it to record payments.\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022fact_learned\u0022,\n      \u0022characterId\u0022: \u0022player\u0022,\n      \u0022factId\u0022: \u0022ledger-payments\u0022,\n      \u0022evidence\u0022: \u0022Julian used it to record payments.\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022fact_learned\u0022,\n      \u0022characterId\u0022: \u0022vivian\u0022,\n      \u0022factId\u0022: \u0022ledger-payments\u0022,\n      \u0022evidence\u0022: \u0022Julian used it to record payments.\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022item_observed\u0022,\n      \u0022targetId\u0022: \u0022ledger\u0022,\n      \u0022identity\u0022: {\n        \u0022value\u0022: \u0022black ledger\u0022,\n        \u0022provenance\u0022: \u0022Reported\u0022,\n        \u0022factId\u0022: \u0022ledger-payments\u0022\n      },\n      \u0022descriptionObservation\u0022: {\n        \u0022value\u0022: \u0022used to record payments\u0022,\n        \u0022provenance\u0022: \u0022Reported\u0022,\n        \u0022factId\u0022: \u0022ledger-payments\u0022\n      },\n      \u0022condition\u0022: null,\n      \u0022whereabouts\u0022: null,\n      \u0022evidence\u0022: \u0022There is a black ledger.\u0022\n    }\n  ]\n}",
+              "rejectionReasons": [],
+              "noOps": [],
+              "failed": false,
+              "note": null,
+              "requiredHit": 4,
+              "requiredTotal": 4,
+              "forbiddenHit": 0,
+              "rejected": 0,
+              "promptTokens": 8633,
+              "completionTokens": 287,
+              "reasoningTokens": 0,
+              "missingRules": [],
+              "violatedRules": [],
+              "proposed": [
+                {
+                  "kind": "fact_established",
+                  "factId": "ledger-payments",
+                  "text": "Julian used a black ledger to record payments.",
+                  "sourceId": "vivian",
+                  "evidence": "Julian used it to record payments."
+                },
+                {
+                  "kind": "fact_learned",
+                  "characterId": "player",
+                  "factId": "ledger-payments",
+                  "evidence": "Julian used it to record payments."
+                },
+                {
+                  "kind": "fact_learned",
+                  "characterId": "vivian",
+                  "factId": "ledger-payments",
+                  "evidence": "Julian used it to record payments."
+                },
+                {
+                  "kind": "item_observed",
+                  "targetId": "ledger",
+                  "identity": {
+                    "value": "black ledger",
+                    "provenance": "Reported",
+                    "factId": "ledger-payments"
+                  },
+                  "descriptionObservation": {
+                    "value": "used to record payments",
+                    "provenance": "Reported",
+                    "factId": "ledger-payments"
+                  },
+                  "condition": null,
+                  "whereabouts": null,
+                  "evidence": "There is a black ledger."
+                }
+              ],
+              "rejectedDeltas": [],
+              "provider": "StreamLake",
+              "clean": true
+            },
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: [\n    {\n      \u0022kind\u0022: \u0022fact_established\u0022,\n      \u0022factId\u0022: \u0022ledger-payments\u0022,\n      \u0022text\u0022: \u0022Julian used a black ledger to record payments.\u0022,\n      \u0022sourceId\u0022: \u0022vivian\u0022,\n      \u0022evidence\u0022: \u0022Julian used it to record payments.\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022fact_learned\u0022,\n      \u0022characterId\u0022: \u0022player\u0022,\n      \u0022factId\u0022: \u0022ledger-payments\u0022,\n      \u0022evidence\u0022: \u0022Julian used it to record payments.\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022fact_learned\u0022,\n      \u0022characterId\u0022: \u0022vivian\u0022,\n      \u0022factId\u0022: \u0022ledger-payments\u0022,\n      \u0022evidence\u0022: \u0022Julian used it to record payments.\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022item_observed\u0022,\n      \u0022targetId\u0022: \u0022ledger\u0022,\n      \u0022identity\u0022: {\n        \u0022value\u0022: \u0022black ledger\u0022,\n        \u0022provenance\u0022: \u0022Reported\u0022,\n        \u0022factId\u0022: \u0022ledger-payments\u0022\n      },\n      \u0022descriptionObservation\u0022: {\n        \u0022value\u0022: \u0022used to record payments\u0022,\n        \u0022provenance\u0022: \u0022Reported\u0022,\n        \u0022factId\u0022: \u0022ledger-payments\u0022\n      },\n      \u0022condition\u0022: null,\n      \u0022whereabouts\u0022: null,\n      \u0022evidence\u0022: \u0022There is a black ledger.\u0022\n    }\n  ]\n}",
+              "rejectionReasons": [],
+              "noOps": [],
+              "failed": false,
+              "note": null,
+              "requiredHit": 4,
+              "requiredTotal": 4,
+              "forbiddenHit": 0,
+              "rejected": 0,
+              "promptTokens": 8633,
+              "completionTokens": 287,
+              "reasoningTokens": 0,
+              "missingRules": [],
+              "violatedRules": [],
+              "proposed": [
+                {
+                  "kind": "fact_established",
+                  "factId": "ledger-payments",
+                  "text": "Julian used a black ledger to record payments.",
+                  "sourceId": "vivian",
+                  "evidence": "Julian used it to record payments."
+                },
+                {
+                  "kind": "fact_learned",
+                  "characterId": "player",
+                  "factId": "ledger-payments",
+                  "evidence": "Julian used it to record payments."
+                },
+                {
+                  "kind": "fact_learned",
+                  "characterId": "vivian",
+                  "factId": "ledger-payments",
+                  "evidence": "Julian used it to record payments."
+                },
+                {
+                  "kind": "item_observed",
+                  "targetId": "ledger",
+                  "identity": {
+                    "value": "black ledger",
+                    "provenance": "Reported",
+                    "factId": "ledger-payments"
+                  },
+                  "descriptionObservation": {
+                    "value": "used to record payments",
+                    "provenance": "Reported",
+                    "factId": "ledger-payments"
+                  },
+                  "condition": null,
+                  "whereabouts": null,
+                  "evidence": "There is a black ledger."
+                }
+              ],
+              "rejectedDeltas": [],
+              "provider": "StreamLake",
+              "clean": true
+            }
+          ],
+          "requiredHit": 12,
+          "requiredTotal": 12,
+          "forbiddenHit": 1,
+          "failedCount": 0,
+          "problems": [
+            {
+              "kind": 1,
+              "description": "Speaker details copied without disclosure",
+              "hitRuns": 1,
+              "totalRuns": 3
+            }
+          ]
+        },
+        {
+          "name": "discovery-found",
+          "runs": [
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: [\n    {\n      \u0022kind\u0022: \u0022character_observed\u0022,\n      \u0022targetId\u0022: \u0022julian\u0022,\n      \u0022identity\u0022: {\n        \u0022value\u0022: \u0022Julian Vale\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022descriptionObservation\u0022: {\n        \u0022value\u0022: \u0022A contractor, wearing a grey coat soaked through.\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022condition\u0022: {\n        \u0022value\u0022: \u0022exhausted\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022whereabouts\u0022: {\n        \u0022value\u0022: {\n          \u0022kind\u0022: \u0022Location\u0022,\n          \u0022targetId\u0022: \u0022hotel\u0022,\n          \u0022disclosedLabel\u0022: \u0022Hotel Argent\u0022\n        },\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022evidence\u0022: \u0022Julian Vale stands behind it, his grey coat soaked through. He looks exhausted.\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022location_observed\u0022,\n      \u0022targetId\u0022: \u0022hotel\u0022,\n      \u0022identity\u0022: {\n        \u0022value\u0022: \u0022Hotel Argent\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022descriptionObservation\u0022: null,\n      \u0022condition\u0022: null,\n      \u0022whereabouts\u0022: null,\n      \u0022connections\u0022: null,\n      \u0022evidence\u0022: \u0022Hotel Argent\u0022\n    }\n  ]\n}",
+              "rejectionReasons": [],
+              "noOps": [],
+              "failed": false,
+              "note": null,
+              "requiredHit": 4,
+              "requiredTotal": 4,
+              "forbiddenHit": 0,
+              "rejected": 0,
+              "promptTokens": 8528,
+              "completionTokens": 309,
+              "reasoningTokens": 0,
+              "missingRules": [],
+              "violatedRules": [],
+              "proposed": [
+                {
+                  "kind": "character_observed",
+                  "targetId": "julian",
+                  "identity": {
+                    "value": "Julian Vale",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "descriptionObservation": {
+                    "value": "A contractor, wearing a grey coat soaked through.",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "condition": {
+                    "value": "exhausted",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "whereabouts": {
+                    "value": {
+                      "kind": "Location",
+                      "targetId": "hotel",
+                      "disclosedLabel": "Hotel Argent"
+                    },
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "evidence": "Julian Vale stands behind it, his grey coat soaked through. He looks exhausted."
+                },
+                {
+                  "kind": "location_observed",
+                  "connections": null,
+                  "targetId": "hotel",
+                  "identity": {
+                    "value": "Hotel Argent",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "descriptionObservation": null,
+                  "condition": null,
+                  "whereabouts": null,
+                  "evidence": "Hotel Argent"
+                }
+              ],
+              "rejectedDeltas": [],
+              "provider": "StreamLake",
+              "clean": true
+            },
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: [\n    {\n      \u0022kind\u0022: \u0022character_observed\u0022,\n      \u0022targetId\u0022: \u0022julian\u0022,\n      \u0022identity\u0022: {\n        \u0022value\u0022: \u0022Julian Vale\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022descriptionObservation\u0022: {\n        \u0022value\u0022: \u0022A contractor, in a grey coat soaked through.\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022condition\u0022: {\n        \u0022value\u0022: \u0022exhausted\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022whereabouts\u0022: {\n        \u0022value\u0022: {\n          \u0022kind\u0022: \u0022Location\u0022,\n          \u0022targetId\u0022: \u0022hotel\u0022,\n          \u0022disclosedLabel\u0022: \u0022Hotel Argent\u0022\n        },\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022evidence\u0022: \u0022Julian Vale stands behind it, his grey coat soaked through. He looks exhausted.\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022location_observed\u0022,\n      \u0022targetId\u0022: \u0022hotel\u0022,\n      \u0022identity\u0022: {\n        \u0022value\u0022: \u0022Hotel Argent\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022descriptionObservation\u0022: null,\n      \u0022condition\u0022: null,\n      \u0022whereabouts\u0022: null,\n      \u0022connections\u0022: null,\n      \u0022evidence\u0022: \u0022Hotel Argent\u0022\n    }\n  ]\n}",
+              "rejectionReasons": [],
+              "noOps": [],
+              "failed": false,
+              "note": null,
+              "requiredHit": 4,
+              "requiredTotal": 4,
+              "forbiddenHit": 0,
+              "rejected": 0,
+              "promptTokens": 8528,
+              "completionTokens": 309,
+              "reasoningTokens": 0,
+              "missingRules": [],
+              "violatedRules": [],
+              "proposed": [
+                {
+                  "kind": "character_observed",
+                  "targetId": "julian",
+                  "identity": {
+                    "value": "Julian Vale",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "descriptionObservation": {
+                    "value": "A contractor, in a grey coat soaked through.",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "condition": {
+                    "value": "exhausted",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "whereabouts": {
+                    "value": {
+                      "kind": "Location",
+                      "targetId": "hotel",
+                      "disclosedLabel": "Hotel Argent"
+                    },
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "evidence": "Julian Vale stands behind it, his grey coat soaked through. He looks exhausted."
+                },
+                {
+                  "kind": "location_observed",
+                  "connections": null,
+                  "targetId": "hotel",
+                  "identity": {
+                    "value": "Hotel Argent",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "descriptionObservation": null,
+                  "condition": null,
+                  "whereabouts": null,
+                  "evidence": "Hotel Argent"
+                }
+              ],
+              "rejectedDeltas": [],
+              "provider": "StreamLake",
+              "clean": true
+            },
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: [\n    {\n      \u0022kind\u0022: \u0022character_observed\u0022,\n      \u0022targetId\u0022: \u0022julian\u0022,\n      \u0022identity\u0022: {\n        \u0022value\u0022: \u0022Julian Vale\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022descriptionObservation\u0022: {\n        \u0022value\u0022: \u0022A contractor, his grey coat soaked through.\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022condition\u0022: {\n        \u0022value\u0022: \u0022exhausted\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022whereabouts\u0022: {\n        \u0022value\u0022: {\n          \u0022kind\u0022: \u0022Location\u0022,\n          \u0022targetId\u0022: \u0022hotel\u0022,\n          \u0022disclosedLabel\u0022: \u0022Hotel Argent\u0022\n        },\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022evidence\u0022: \u0022Julian Vale stands behind it, his grey coat soaked through. He looks exhausted.\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022location_observed\u0022,\n      \u0022targetId\u0022: \u0022hotel\u0022,\n      \u0022identity\u0022: {\n        \u0022value\u0022: \u0022Hotel Argent\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022descriptionObservation\u0022: null,\n      \u0022condition\u0022: null,\n      \u0022whereabouts\u0022: null,\n      \u0022connections\u0022: null,\n      \u0022evidence\u0022: \u0022Hotel Argent\u0022\n    }\n  ]\n}",
+              "rejectionReasons": [],
+              "noOps": [],
+              "failed": false,
+              "note": null,
+              "requiredHit": 4,
+              "requiredTotal": 4,
+              "forbiddenHit": 0,
+              "rejected": 0,
+              "promptTokens": 8528,
+              "completionTokens": 308,
+              "reasoningTokens": 0,
+              "missingRules": [],
+              "violatedRules": [],
+              "proposed": [
+                {
+                  "kind": "character_observed",
+                  "targetId": "julian",
+                  "identity": {
+                    "value": "Julian Vale",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "descriptionObservation": {
+                    "value": "A contractor, his grey coat soaked through.",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "condition": {
+                    "value": "exhausted",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "whereabouts": {
+                    "value": {
+                      "kind": "Location",
+                      "targetId": "hotel",
+                      "disclosedLabel": "Hotel Argent"
+                    },
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "evidence": "Julian Vale stands behind it, his grey coat soaked through. He looks exhausted."
+                },
+                {
+                  "kind": "location_observed",
+                  "connections": null,
+                  "targetId": "hotel",
+                  "identity": {
+                    "value": "Hotel Argent",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "descriptionObservation": null,
+                  "condition": null,
+                  "whereabouts": null,
+                  "evidence": "Hotel Argent"
+                }
+              ],
+              "rejectedDeltas": [],
+              "provider": "StreamLake",
+              "clean": true
+            }
+          ],
+          "requiredHit": 12,
+          "requiredTotal": 12,
+          "forbiddenHit": 0,
+          "failedCount": 0,
+          "problems": []
+        },
+        {
+          "name": "discovery-lose-sight",
+          "runs": [
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: [\n    {\n      \u0022kind\u0022: \u0022character_observed\u0022,\n      \u0022targetId\u0022: \u0022julian\u0022,\n      \u0022identity\u0022: null,\n      \u0022descriptionObservation\u0022: null,\n      \u0022condition\u0022: null,\n      \u0022whereabouts\u0022: {\n        \u0022value\u0022: {\n          \u0022kind\u0022: \u0022Unknown\u0022,\n          \u0022targetId\u0022: null,\n          \u0022disclosedLabel\u0022: null\n        },\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022evidence\u0022: \u0022Julian steps behind a tall screen inside the same hotel lobby. He remains in the lobby, but you can no longer see him or his exact position.\u0022\n    }\n  ]\n}",
+              "rejectionReasons": [],
+              "noOps": [],
+              "failed": false,
+              "note": null,
+              "requiredHit": 3,
+              "requiredTotal": 3,
+              "forbiddenHit": 0,
+              "rejected": 0,
+              "promptTokens": 8641,
+              "completionTokens": 144,
+              "reasoningTokens": 0,
+              "missingRules": [],
+              "violatedRules": [],
+              "proposed": [
+                {
+                  "kind": "character_observed",
+                  "targetId": "julian",
+                  "identity": null,
+                  "descriptionObservation": null,
+                  "condition": null,
+                  "whereabouts": {
+                    "value": {
+                      "kind": "Unknown",
+                      "targetId": null,
+                      "disclosedLabel": null
+                    },
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "evidence": "Julian steps behind a tall screen inside the same hotel lobby. He remains in the lobby, but you can no longer see him or his exact position."
+                }
+              ],
+              "rejectedDeltas": [],
+              "provider": "StreamLake",
+              "clean": true
+            },
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: [\n    {\n      \u0022kind\u0022: \u0022character_observed\u0022,\n      \u0022targetId\u0022: \u0022julian\u0022,\n      \u0022identity\u0022: null,\n      \u0022descriptionObservation\u0022: null,\n      \u0022condition\u0022: null,\n      \u0022whereabouts\u0022: {\n        \u0022value\u0022: {\n          \u0022kind\u0022: \u0022Unknown\u0022,\n          \u0022targetId\u0022: null,\n          \u0022disclosedLabel\u0022: null\n        },\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022evidence\u0022: \u0022Julian steps behind a tall screen inside the same hotel lobby. He remains in the lobby, but you can no longer see him or his exact position.\u0022\n    }\n  ]\n}",
+              "rejectionReasons": [],
+              "noOps": [],
+              "failed": false,
+              "note": null,
+              "requiredHit": 3,
+              "requiredTotal": 3,
+              "forbiddenHit": 0,
+              "rejected": 0,
+              "promptTokens": 8641,
+              "completionTokens": 144,
+              "reasoningTokens": 0,
+              "missingRules": [],
+              "violatedRules": [],
+              "proposed": [
+                {
+                  "kind": "character_observed",
+                  "targetId": "julian",
+                  "identity": null,
+                  "descriptionObservation": null,
+                  "condition": null,
+                  "whereabouts": {
+                    "value": {
+                      "kind": "Unknown",
+                      "targetId": null,
+                      "disclosedLabel": null
+                    },
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "evidence": "Julian steps behind a tall screen inside the same hotel lobby. He remains in the lobby, but you can no longer see him or his exact position."
+                }
+              ],
+              "rejectedDeltas": [],
+              "provider": "StreamLake",
+              "clean": true
+            },
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: [\n    {\n      \u0022kind\u0022: \u0022character_observed\u0022,\n      \u0022targetId\u0022: \u0022julian\u0022,\n      \u0022identity\u0022: null,\n      \u0022descriptionObservation\u0022: null,\n      \u0022condition\u0022: null,\n      \u0022whereabouts\u0022: {\n        \u0022value\u0022: {\n          \u0022kind\u0022: \u0022Unknown\u0022,\n          \u0022targetId\u0022: null,\n          \u0022disclosedLabel\u0022: null\n        },\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022evidence\u0022: \u0022Julian steps behind a tall screen inside the same hotel lobby. He remains in the lobby, but you can no longer see him or his exact position.\u0022\n    }\n  ]\n}",
+              "rejectionReasons": [],
+              "noOps": [],
+              "failed": false,
+              "note": null,
+              "requiredHit": 3,
+              "requiredTotal": 3,
+              "forbiddenHit": 0,
+              "rejected": 0,
+              "promptTokens": 8641,
+              "completionTokens": 144,
+              "reasoningTokens": 0,
+              "missingRules": [],
+              "violatedRules": [],
+              "proposed": [
+                {
+                  "kind": "character_observed",
+                  "targetId": "julian",
+                  "identity": null,
+                  "descriptionObservation": null,
+                  "condition": null,
+                  "whereabouts": {
+                    "value": {
+                      "kind": "Unknown",
+                      "targetId": null,
+                      "disclosedLabel": null
+                    },
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "evidence": "Julian steps behind a tall screen inside the same hotel lobby. He remains in the lobby, but you can no longer see him or his exact position."
+                }
+              ],
+              "rejectedDeltas": [],
+              "provider": "StreamLake",
+              "clean": true
+            }
+          ],
+          "requiredHit": 9,
+          "requiredTotal": 9,
+          "forbiddenHit": 0,
+          "failedCount": 0,
+          "problems": []
+        },
+        {
+          "name": "discovery-return",
+          "runs": [
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: [\n    {\n      \u0022kind\u0022: \u0022character_moved\u0022,\n      \u0022characterId\u0022: \u0022julian\u0022,\n      \u0022toLocationId\u0022: \u0022office\u0022,\n      \u0022evidence\u0022: \u0022Julian Vale enters your office\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022character_observed\u0022,\n      \u0022targetId\u0022: \u0022julian\u0022,\n      \u0022identity\u0022: {\n        \u0022value\u0022: \u0022Julian Vale\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022descriptionObservation\u0022: null,\n      \u0022condition\u0022: null,\n      \u0022whereabouts\u0022: {\n        \u0022value\u0022: {\n          \u0022kind\u0022: \u0022Location\u0022,\n          \u0022targetId\u0022: \u0022office\u0022,\n          \u0022disclosedLabel\u0022: null\n        },\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022evidence\u0022: \u0022Julian Vale enters your office\u0022\n    }\n  ]\n}",
+              "rejectionReasons": [],
+              "noOps": [],
+              "failed": false,
+              "note": null,
+              "requiredHit": 4,
+              "requiredTotal": 4,
+              "forbiddenHit": 0,
+              "rejected": 0,
+              "promptTokens": 8638,
+              "completionTokens": 192,
+              "reasoningTokens": 0,
+              "missingRules": [],
+              "violatedRules": [],
+              "proposed": [
+                {
+                  "kind": "character_moved",
+                  "characterId": "julian",
+                  "toLocationId": "office",
+                  "evidence": "Julian Vale enters your office"
+                },
+                {
+                  "kind": "character_observed",
+                  "targetId": "julian",
+                  "identity": {
+                    "value": "Julian Vale",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "descriptionObservation": null,
+                  "condition": null,
+                  "whereabouts": {
+                    "value": {
+                      "kind": "Location",
+                      "targetId": "office",
+                      "disclosedLabel": null
+                    },
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "evidence": "Julian Vale enters your office"
+                }
+              ],
+              "rejectedDeltas": [],
+              "provider": "StreamLake",
+              "clean": true
+            },
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: [\n    {\n      \u0022kind\u0022: \u0022character_moved\u0022,\n      \u0022characterId\u0022: \u0022julian\u0022,\n      \u0022toLocationId\u0022: \u0022office\u0022,\n      \u0022evidence\u0022: \u0022Julian Vale enters your office\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022character_observed\u0022,\n      \u0022targetId\u0022: \u0022julian\u0022,\n      \u0022identity\u0022: {\n        \u0022value\u0022: \u0022Julian Vale\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022descriptionObservation\u0022: {\n        \u0022value\u0022: \u0022carrying his brass key\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022condition\u0022: null,\n      \u0022whereabouts\u0022: {\n        \u0022value\u0022: {\n          \u0022kind\u0022: \u0022Location\u0022,\n          \u0022targetId\u0022: \u0022office\u0022,\n          \u0022disclosedLabel\u0022: null\n        },\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022evidence\u0022: \u0022Julian Vale enters your office carrying his brass key. You see him standing beside your desk.\u0022\n    }\n  ]\n}",
+              "rejectionReasons": [],
+              "noOps": [],
+              "failed": false,
+              "note": null,
+              "requiredHit": 4,
+              "requiredTotal": 4,
+              "forbiddenHit": 0,
+              "rejected": 0,
+              "promptTokens": 8638,
+              "completionTokens": 233,
+              "reasoningTokens": 0,
+              "missingRules": [],
+              "violatedRules": [],
+              "proposed": [
+                {
+                  "kind": "character_moved",
+                  "characterId": "julian",
+                  "toLocationId": "office",
+                  "evidence": "Julian Vale enters your office"
+                },
+                {
+                  "kind": "character_observed",
+                  "targetId": "julian",
+                  "identity": {
+                    "value": "Julian Vale",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "descriptionObservation": {
+                    "value": "carrying his brass key",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "condition": null,
+                  "whereabouts": {
+                    "value": {
+                      "kind": "Location",
+                      "targetId": "office",
+                      "disclosedLabel": null
+                    },
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "evidence": "Julian Vale enters your office carrying his brass key. You see him standing beside your desk."
+                }
+              ],
+              "rejectedDeltas": [],
+              "provider": "StreamLake",
+              "clean": true
+            },
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: [\n    {\n      \u0022kind\u0022: \u0022character_moved\u0022,\n      \u0022characterId\u0022: \u0022julian\u0022,\n      \u0022toLocationId\u0022: \u0022office\u0022,\n      \u0022evidence\u0022: \u0022Julian Vale enters your office\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022character_observed\u0022,\n      \u0022targetId\u0022: \u0022julian\u0022,\n      \u0022identity\u0022: {\n        \u0022value\u0022: \u0022Julian Vale\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022descriptionObservation\u0022: null,\n      \u0022condition\u0022: null,\n      \u0022whereabouts\u0022: {\n        \u0022value\u0022: {\n          \u0022kind\u0022: \u0022Location\u0022,\n          \u0022targetId\u0022: \u0022office\u0022,\n          \u0022disclosedLabel\u0022: null\n        },\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022evidence\u0022: \u0022Julian Vale enters your office\u0022\n    }\n  ]\n}",
+              "rejectionReasons": [],
+              "noOps": [],
+              "failed": false,
+              "note": null,
+              "requiredHit": 4,
+              "requiredTotal": 4,
+              "forbiddenHit": 0,
+              "rejected": 0,
+              "promptTokens": 8638,
+              "completionTokens": 192,
+              "reasoningTokens": 0,
+              "missingRules": [],
+              "violatedRules": [],
+              "proposed": [
+                {
+                  "kind": "character_moved",
+                  "characterId": "julian",
+                  "toLocationId": "office",
+                  "evidence": "Julian Vale enters your office"
+                },
+                {
+                  "kind": "character_observed",
+                  "targetId": "julian",
+                  "identity": {
+                    "value": "Julian Vale",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "descriptionObservation": null,
+                  "condition": null,
+                  "whereabouts": {
+                    "value": {
+                      "kind": "Location",
+                      "targetId": "office",
+                      "disclosedLabel": null
+                    },
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "evidence": "Julian Vale enters your office"
+                }
+              ],
+              "rejectedDeltas": [],
+              "provider": "StreamLake",
+              "clean": true
+            }
+          ],
+          "requiredHit": 12,
+          "requiredTotal": 12,
+          "forbiddenHit": 0,
+          "failedCount": 0,
+          "problems": []
+        },
+        {
+          "name": "discovery-routes",
+          "runs": [
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: [\n    {\n      \u0022kind\u0022: \u0022player_moved\u0022,\n      \u0022toLocationId\u0022: \u0022street\u0022,\n      \u0022evidence\u0022: \u0022You open the office\u0027s front door and see the rainy Street beyond.\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022character_moved\u0022,\n      \u0022characterId\u0022: \u0022vivian\u0022,\n      \u0022toLocationId\u0022: \u0022street\u0022,\n      \u0022evidence\u0022: \u0022You open the office\u0027s front door and see the rainy Street beyond.\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022location_observed\u0022,\n      \u0022targetId\u0022: \u0022office\u0022,\n      \u0022identity\u0022: {\n        \u0022value\u0022: \u0022Office\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022descriptionObservation\u0022: {\n        \u0022value\u0022: \u0022A scarred desk and filing cabinet.\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022condition\u0022: null,\n      \u0022whereabouts\u0022: null,\n      \u0022connections\u0022: [\n        {\n          \u0022destinationId\u0022: \u0022street\u0022,\n          \u0022label\u0022: {\n            \u0022value\u0022: \u0022Street\u0022,\n            \u0022provenance\u0022: \u0022Observed\u0022,\n            \u0022factId\u0022: null\n          }\n        }\n      ],\n      \u0022evidence\u0022: \u0022You open the office\u0027s front door and see the rainy Street beyond.\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022location_observed\u0022,\n      \u0022targetId\u0022: \u0022street\u0022,\n      \u0022identity\u0022: {\n        \u0022value\u0022: \u0022Street\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022descriptionObservation\u0022: {\n        \u0022value\u0022: \u0022rainy\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022condition\u0022: null,\n      \u0022whereabouts\u0022: null,\n      \u0022connections\u0022: null,\n      \u0022evidence\u0022: \u0022You open the office\u0027s front door and see the rainy Street beyond.\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022character_observed\u0022,\n      \u0022targetId\u0022: \u0022vivian\u0022,\n      \u0022identity\u0022: {\n        \u0022value\u0022: \u0022Vivian Vale\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022descriptionObservation\u0022: {\n        \u0022value\u0022: \u0022A woman in a green coat.\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022condition\u0022: null,\n      \u0022whereabouts\u0022: {\n        \u0022value\u0022: {\n          \u0022kind\u0022: \u0022Location\u0022,\n          \u0022targetId\u0022: \u0022street\u0022,\n          \u0022disclosedLabel\u0022: \u0022Street\u0022\n        },\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022evidence\u0022: \u0022You open the office\u0027s front door and see the rainy Street beyond.\u0022\n    }\n  ]\n}",
+              "rejectionReasons": [],
+              "noOps": [],
+              "failed": false,
+              "note": null,
+              "requiredHit": 4,
+              "requiredTotal": 4,
+              "forbiddenHit": 0,
+              "rejected": 0,
+              "promptTokens": 8640,
+              "completionTokens": 571,
+              "reasoningTokens": 0,
+              "missingRules": [],
+              "violatedRules": [],
+              "proposed": [
+                {
+                  "kind": "player_moved",
+                  "toLocationId": "street",
+                  "evidence": "You open the office\u0027s front door and see the rainy Street beyond."
+                },
+                {
+                  "kind": "character_moved",
+                  "characterId": "vivian",
+                  "toLocationId": "street",
+                  "evidence": "You open the office\u0027s front door and see the rainy Street beyond."
+                },
+                {
+                  "kind": "location_observed",
+                  "connections": [
+                    {
+                      "destinationId": "street",
+                      "label": {
+                        "value": "Street",
+                        "provenance": "Observed",
+                        "factId": null
+                      }
+                    }
+                  ],
+                  "targetId": "office",
+                  "identity": {
+                    "value": "Office",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "descriptionObservation": {
+                    "value": "A scarred desk and filing cabinet.",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "condition": null,
+                  "whereabouts": null,
+                  "evidence": "You open the office\u0027s front door and see the rainy Street beyond."
+                },
+                {
+                  "kind": "location_observed",
+                  "connections": null,
+                  "targetId": "street",
+                  "identity": {
+                    "value": "Street",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "descriptionObservation": {
+                    "value": "rainy",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "condition": null,
+                  "whereabouts": null,
+                  "evidence": "You open the office\u0027s front door and see the rainy Street beyond."
+                },
+                {
+                  "kind": "character_observed",
+                  "targetId": "vivian",
+                  "identity": {
+                    "value": "Vivian Vale",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "descriptionObservation": {
+                    "value": "A woman in a green coat.",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "condition": null,
+                  "whereabouts": {
+                    "value": {
+                      "kind": "Location",
+                      "targetId": "street",
+                      "disclosedLabel": "Street"
+                    },
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "evidence": "You open the office\u0027s front door and see the rainy Street beyond."
+                }
+              ],
+              "rejectedDeltas": [],
+              "provider": "StreamLake",
+              "clean": true
+            },
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: [\n    {\n      \u0022kind\u0022: \u0022player_moved\u0022,\n      \u0022toLocationId\u0022: \u0022street\u0022,\n      \u0022evidence\u0022: \u0022You open the office\u0027s front door and see the rainy Street beyond.\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022location_observed\u0022,\n      \u0022targetId\u0022: \u0022office\u0022,\n      \u0022identity\u0022: null,\n      \u0022descriptionObservation\u0022: null,\n      \u0022condition\u0022: null,\n      \u0022whereabouts\u0022: null,\n      \u0022connections\u0022: [\n        {\n          \u0022destinationId\u0022: \u0022street\u0022,\n          \u0022label\u0022: {\n            \u0022value\u0022: \u0022Street\u0022,\n            \u0022provenance\u0022: \u0022Observed\u0022,\n            \u0022factId\u0022: null\n          }\n        }\n      ],\n      \u0022evidence\u0022: \u0022You open the office\u0027s front door and see the rainy Street beyond.\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022location_observed\u0022,\n      \u0022targetId\u0022: \u0022street\u0022,\n      \u0022identity\u0022: {\n        \u0022value\u0022: \u0022Street\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022descriptionObservation\u0022: {\n        \u0022value\u0022: \u0022rainy\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022condition\u0022: null,\n      \u0022whereabouts\u0022: null,\n      \u0022connections\u0022: null,\n      \u0022evidence\u0022: \u0022You open the office\u0027s front door and see the rainy Street beyond.\u0022\n    }\n  ]\n}",
+              "rejectionReasons": [],
+              "noOps": [],
+              "failed": false,
+              "note": null,
+              "requiredHit": 4,
+              "requiredTotal": 4,
+              "forbiddenHit": 0,
+              "rejected": 0,
+              "promptTokens": 8640,
+              "completionTokens": 292,
+              "reasoningTokens": 0,
+              "missingRules": [],
+              "violatedRules": [],
+              "proposed": [
+                {
+                  "kind": "player_moved",
+                  "toLocationId": "street",
+                  "evidence": "You open the office\u0027s front door and see the rainy Street beyond."
+                },
+                {
+                  "kind": "location_observed",
+                  "connections": [
+                    {
+                      "destinationId": "street",
+                      "label": {
+                        "value": "Street",
+                        "provenance": "Observed",
+                        "factId": null
+                      }
+                    }
+                  ],
+                  "targetId": "office",
+                  "identity": null,
+                  "descriptionObservation": null,
+                  "condition": null,
+                  "whereabouts": null,
+                  "evidence": "You open the office\u0027s front door and see the rainy Street beyond."
+                },
+                {
+                  "kind": "location_observed",
+                  "connections": null,
+                  "targetId": "street",
+                  "identity": {
+                    "value": "Street",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "descriptionObservation": {
+                    "value": "rainy",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "condition": null,
+                  "whereabouts": null,
+                  "evidence": "You open the office\u0027s front door and see the rainy Street beyond."
+                }
+              ],
+              "rejectedDeltas": [],
+              "provider": "StreamLake",
+              "clean": true
+            },
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: [\n    {\n      \u0022kind\u0022: \u0022player_moved\u0022,\n      \u0022toLocationId\u0022: \u0022street\u0022,\n      \u0022evidence\u0022: \u0022You open the office\u0027s front door and see the rainy Street beyond.\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022location_observed\u0022,\n      \u0022targetId\u0022: \u0022office\u0022,\n      \u0022identity\u0022: {\n        \u0022value\u0022: \u0022Office\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022descriptionObservation\u0022: {\n        \u0022value\u0022: \u0022A scarred desk and filing cabinet.\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022condition\u0022: null,\n      \u0022whereabouts\u0022: null,\n      \u0022connections\u0022: [\n        {\n          \u0022destinationId\u0022: \u0022street\u0022,\n          \u0022label\u0022: {\n            \u0022value\u0022: \u0022Street\u0022,\n            \u0022provenance\u0022: \u0022Observed\u0022,\n            \u0022factId\u0022: null\n          }\n        }\n      ],\n      \u0022evidence\u0022: \u0022You open the office\u0027s front door and see the rainy Street beyond.\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022location_observed\u0022,\n      \u0022targetId\u0022: \u0022street\u0022,\n      \u0022identity\u0022: {\n        \u0022value\u0022: \u0022Street\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022descriptionObservation\u0022: {\n        \u0022value\u0022: \u0022rainy\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022condition\u0022: null,\n      \u0022whereabouts\u0022: null,\n      \u0022connections\u0022: null,\n      \u0022evidence\u0022: \u0022You open the office\u0027s front door and see the rainy Street beyond.\u0022\n    }\n  ]\n}",
+              "rejectionReasons": [],
+              "noOps": [],
+              "failed": false,
+              "note": null,
+              "requiredHit": 4,
+              "requiredTotal": 4,
+              "forbiddenHit": 0,
+              "rejected": 0,
+              "promptTokens": 8640,
+              "completionTokens": 348,
+              "reasoningTokens": 0,
+              "missingRules": [],
+              "violatedRules": [],
+              "proposed": [
+                {
+                  "kind": "player_moved",
+                  "toLocationId": "street",
+                  "evidence": "You open the office\u0027s front door and see the rainy Street beyond."
+                },
+                {
+                  "kind": "location_observed",
+                  "connections": [
+                    {
+                      "destinationId": "street",
+                      "label": {
+                        "value": "Street",
+                        "provenance": "Observed",
+                        "factId": null
+                      }
+                    }
+                  ],
+                  "targetId": "office",
+                  "identity": {
+                    "value": "Office",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "descriptionObservation": {
+                    "value": "A scarred desk and filing cabinet.",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "condition": null,
+                  "whereabouts": null,
+                  "evidence": "You open the office\u0027s front door and see the rainy Street beyond."
+                },
+                {
+                  "kind": "location_observed",
+                  "connections": null,
+                  "targetId": "street",
+                  "identity": {
+                    "value": "Street",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "descriptionObservation": {
+                    "value": "rainy",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "condition": null,
+                  "whereabouts": null,
+                  "evidence": "You open the office\u0027s front door and see the rainy Street beyond."
+                }
+              ],
+              "rejectedDeltas": [],
+              "provider": "StreamLake",
+              "clean": true
+            }
+          ],
+          "requiredHit": 12,
+          "requiredTotal": 12,
+          "forbiddenHit": 0,
+          "failedCount": 0,
+          "problems": []
+        },
+        {
+          "name": "discovery-same-turn-retry",
+          "runs": [
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: [\n    {\n      \u0022kind\u0022: \u0022character_observed\u0022,\n      \u0022targetId\u0022: \u0022julian\u0022,\n      \u0022identity\u0022: {\n        \u0022value\u0022: \u0022Julian Vale\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022descriptionObservation\u0022: null,\n      \u0022condition\u0022: null,\n      \u0022whereabouts\u0022: {\n        \u0022value\u0022: {\n          \u0022kind\u0022: \u0022Location\u0022,\n          \u0022targetId\u0022: \u0022hotel\u0022,\n          \u0022disclosedLabel\u0022: \u0022Hotel Argent\u0022\n        },\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022evidence\u0022: \u0022You see Julian Vale in Hotel Argent.\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022location_observed\u0022,\n      \u0022targetId\u0022: \u0022hotel\u0022,\n      \u0022identity\u0022: {\n        \u0022value\u0022: \u0022Hotel Argent\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022descriptionObservation\u0022: null,\n      \u0022condition\u0022: null,\n      \u0022whereabouts\u0022: null,\n      \u0022connections\u0022: null,\n      \u0022evidence\u0022: \u0022You see Julian Vale in Hotel Argent.\u0022\n    }\n  ]\n}",
+              "rejectionReasons": [],
+              "noOps": [
+                {
+                  "kind": "character_observed",
+                  "targetId": "julian",
+                  "identity": {
+                    "value": "Julian Vale",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "descriptionObservation": null,
+                  "condition": null,
+                  "whereabouts": {
+                    "value": {
+                      "kind": "Location",
+                      "targetId": "hotel",
+                      "disclosedLabel": "Hotel Argent"
+                    },
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "evidence": "You see Julian Vale in Hotel Argent."
+                },
+                {
+                  "kind": "location_observed",
+                  "connections": null,
+                  "targetId": "hotel",
+                  "identity": {
+                    "value": "Hotel Argent",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "descriptionObservation": null,
+                  "condition": null,
+                  "whereabouts": null,
+                  "evidence": "You see Julian Vale in Hotel Argent."
+                }
+              ],
+              "failed": false,
+              "note": null,
+              "requiredHit": 2,
+              "requiredTotal": 2,
+              "forbiddenHit": 0,
+              "rejected": 0,
+              "promptTokens": 8618,
+              "completionTokens": 245,
+              "reasoningTokens": 0,
+              "missingRules": [],
+              "violatedRules": [],
+              "proposed": [
+                {
+                  "kind": "character_observed",
+                  "targetId": "julian",
+                  "identity": {
+                    "value": "Julian Vale",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "descriptionObservation": null,
+                  "condition": null,
+                  "whereabouts": {
+                    "value": {
+                      "kind": "Location",
+                      "targetId": "hotel",
+                      "disclosedLabel": "Hotel Argent"
+                    },
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "evidence": "You see Julian Vale in Hotel Argent."
+                },
+                {
+                  "kind": "location_observed",
+                  "connections": null,
+                  "targetId": "hotel",
+                  "identity": {
+                    "value": "Hotel Argent",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "descriptionObservation": null,
+                  "condition": null,
+                  "whereabouts": null,
+                  "evidence": "You see Julian Vale in Hotel Argent."
+                }
+              ],
+              "rejectedDeltas": [],
+              "provider": "StreamLake",
+              "clean": true
+            },
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: [\n    {\n      \u0022kind\u0022: \u0022character_observed\u0022,\n      \u0022targetId\u0022: \u0022julian\u0022,\n      \u0022identity\u0022: {\n        \u0022value\u0022: \u0022Julian Vale\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022descriptionObservation\u0022: null,\n      \u0022condition\u0022: null,\n      \u0022whereabouts\u0022: {\n        \u0022value\u0022: {\n          \u0022kind\u0022: \u0022Location\u0022,\n          \u0022targetId\u0022: \u0022hotel\u0022,\n          \u0022disclosedLabel\u0022: \u0022Hotel Argent\u0022\n        },\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022evidence\u0022: \u0022You see Julian Vale in Hotel Argent.\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022location_observed\u0022,\n      \u0022targetId\u0022: \u0022hotel\u0022,\n      \u0022identity\u0022: {\n        \u0022value\u0022: \u0022Hotel Argent\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022descriptionObservation\u0022: null,\n      \u0022condition\u0022: null,\n      \u0022whereabouts\u0022: null,\n      \u0022connections\u0022: null,\n      \u0022evidence\u0022: \u0022You see Julian Vale in Hotel Argent.\u0022\n    }\n  ]\n}",
+              "rejectionReasons": [],
+              "noOps": [
+                {
+                  "kind": "character_observed",
+                  "targetId": "julian",
+                  "identity": {
+                    "value": "Julian Vale",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "descriptionObservation": null,
+                  "condition": null,
+                  "whereabouts": {
+                    "value": {
+                      "kind": "Location",
+                      "targetId": "hotel",
+                      "disclosedLabel": "Hotel Argent"
+                    },
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "evidence": "You see Julian Vale in Hotel Argent."
+                },
+                {
+                  "kind": "location_observed",
+                  "connections": null,
+                  "targetId": "hotel",
+                  "identity": {
+                    "value": "Hotel Argent",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "descriptionObservation": null,
+                  "condition": null,
+                  "whereabouts": null,
+                  "evidence": "You see Julian Vale in Hotel Argent."
+                }
+              ],
+              "failed": false,
+              "note": null,
+              "requiredHit": 2,
+              "requiredTotal": 2,
+              "forbiddenHit": 0,
+              "rejected": 0,
+              "promptTokens": 8618,
+              "completionTokens": 245,
+              "reasoningTokens": 0,
+              "missingRules": [],
+              "violatedRules": [],
+              "proposed": [
+                {
+                  "kind": "character_observed",
+                  "targetId": "julian",
+                  "identity": {
+                    "value": "Julian Vale",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "descriptionObservation": null,
+                  "condition": null,
+                  "whereabouts": {
+                    "value": {
+                      "kind": "Location",
+                      "targetId": "hotel",
+                      "disclosedLabel": "Hotel Argent"
+                    },
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "evidence": "You see Julian Vale in Hotel Argent."
+                },
+                {
+                  "kind": "location_observed",
+                  "connections": null,
+                  "targetId": "hotel",
+                  "identity": {
+                    "value": "Hotel Argent",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "descriptionObservation": null,
+                  "condition": null,
+                  "whereabouts": null,
+                  "evidence": "You see Julian Vale in Hotel Argent."
+                }
+              ],
+              "rejectedDeltas": [],
+              "provider": "StreamLake",
+              "clean": true
+            },
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: [\n    {\n      \u0022kind\u0022: \u0022character_observed\u0022,\n      \u0022targetId\u0022: \u0022julian\u0022,\n      \u0022identity\u0022: {\n        \u0022value\u0022: \u0022Julian Vale\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022descriptionObservation\u0022: null,\n      \u0022condition\u0022: null,\n      \u0022whereabouts\u0022: {\n        \u0022value\u0022: {\n          \u0022kind\u0022: \u0022Location\u0022,\n          \u0022targetId\u0022: \u0022hotel\u0022,\n          \u0022disclosedLabel\u0022: \u0022Hotel Argent\u0022\n        },\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022evidence\u0022: \u0022You see Julian Vale in Hotel Argent.\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022location_observed\u0022,\n      \u0022targetId\u0022: \u0022hotel\u0022,\n      \u0022identity\u0022: {\n        \u0022value\u0022: \u0022Hotel Argent\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022descriptionObservation\u0022: null,\n      \u0022condition\u0022: null,\n      \u0022whereabouts\u0022: null,\n      \u0022connections\u0022: null,\n      \u0022evidence\u0022: \u0022You see Julian Vale in Hotel Argent.\u0022\n    }\n  ]\n}",
+              "rejectionReasons": [],
+              "noOps": [
+                {
+                  "kind": "character_observed",
+                  "targetId": "julian",
+                  "identity": {
+                    "value": "Julian Vale",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "descriptionObservation": null,
+                  "condition": null,
+                  "whereabouts": {
+                    "value": {
+                      "kind": "Location",
+                      "targetId": "hotel",
+                      "disclosedLabel": "Hotel Argent"
+                    },
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "evidence": "You see Julian Vale in Hotel Argent."
+                },
+                {
+                  "kind": "location_observed",
+                  "connections": null,
+                  "targetId": "hotel",
+                  "identity": {
+                    "value": "Hotel Argent",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "descriptionObservation": null,
+                  "condition": null,
+                  "whereabouts": null,
+                  "evidence": "You see Julian Vale in Hotel Argent."
+                }
+              ],
+              "failed": false,
+              "note": null,
+              "requiredHit": 2,
+              "requiredTotal": 2,
+              "forbiddenHit": 0,
+              "rejected": 0,
+              "promptTokens": 8618,
+              "completionTokens": 245,
+              "reasoningTokens": 0,
+              "missingRules": [],
+              "violatedRules": [],
+              "proposed": [
+                {
+                  "kind": "character_observed",
+                  "targetId": "julian",
+                  "identity": {
+                    "value": "Julian Vale",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "descriptionObservation": null,
+                  "condition": null,
+                  "whereabouts": {
+                    "value": {
+                      "kind": "Location",
+                      "targetId": "hotel",
+                      "disclosedLabel": "Hotel Argent"
+                    },
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "evidence": "You see Julian Vale in Hotel Argent."
+                },
+                {
+                  "kind": "location_observed",
+                  "connections": null,
+                  "targetId": "hotel",
+                  "identity": {
+                    "value": "Hotel Argent",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "descriptionObservation": null,
+                  "condition": null,
+                  "whereabouts": null,
+                  "evidence": "You see Julian Vale in Hotel Argent."
+                }
+              ],
+              "rejectedDeltas": [],
+              "provider": "StreamLake",
+              "clean": true
+            }
+          ],
+          "requiredHit": 6,
+          "requiredTotal": 6,
+          "forbiddenHit": 0,
+          "failedCount": 0,
+          "problems": []
+        },
+        {
+          "name": "discovery-lore-topic",
+          "runs": [
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: [\n    {\n      \u0022kind\u0022: \u0022fact_established\u0022,\n      \u0022factId\u0022: \u0022lantern-society-exists\u0022,\n      \u0022text\u0022: \u0022There is an organization called the Lantern Society.\u0022,\n      \u0022sourceId\u0022: \u0022vivian\u0022,\n      \u0022evidence\u0022: \u0022There is an organization called the Lantern Society.\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022fact_learned\u0022,\n      \u0022characterId\u0022: \u0022player\u0022,\n      \u0022factId\u0022: \u0022lantern-society-exists\u0022,\n      \u0022evidence\u0022: \u0022You hear the name for the first time.\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022fact_learned\u0022,\n      \u0022characterId\u0022: \u0022vivian\u0022,\n      \u0022factId\u0022: \u0022lantern-society-exists\u0022,\n      \u0022evidence\u0022: \u0022There is an organization called the Lantern Society.\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022fact_learned\u0022,\n      \u0022characterId\u0022: \u0022player\u0022,\n      \u0022factId\u0022: \u0022lantern-society\u0022,\n      \u0022evidence\u0022: \u0022You hear the name for the first time.\u0022\n    }\n  ]\n}",
+              "rejectionReasons": [],
+              "noOps": [],
+              "failed": false,
+              "note": null,
+              "requiredHit": 3,
+              "requiredTotal": 3,
+              "forbiddenHit": 0,
+              "rejected": 0,
+              "promptTokens": 8788,
+              "completionTokens": 224,
+              "reasoningTokens": 0,
+              "missingRules": [],
+              "violatedRules": [],
+              "proposed": [
+                {
+                  "kind": "fact_established",
+                  "factId": "lantern-society-exists",
+                  "text": "There is an organization called the Lantern Society.",
+                  "sourceId": "vivian",
+                  "evidence": "There is an organization called the Lantern Society."
+                },
+                {
+                  "kind": "fact_learned",
+                  "characterId": "player",
+                  "factId": "lantern-society-exists",
+                  "evidence": "You hear the name for the first time."
+                },
+                {
+                  "kind": "fact_learned",
+                  "characterId": "vivian",
+                  "factId": "lantern-society-exists",
+                  "evidence": "There is an organization called the Lantern Society."
+                },
+                {
+                  "kind": "fact_learned",
+                  "characterId": "player",
+                  "factId": "lantern-society",
+                  "evidence": "You hear the name for the first time."
+                }
+              ],
+              "rejectedDeltas": [],
+              "provider": "StreamLake",
+              "clean": true
+            },
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: [\n    {\n      \u0022kind\u0022: \u0022fact_learned\u0022,\n      \u0022characterId\u0022: \u0022player\u0022,\n      \u0022factId\u0022: \u0022lantern-society\u0022,\n      \u0022evidence\u0022: \u0022There is an organization called the Lantern Society.\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022character_observed\u0022,\n      \u0022targetId\u0022: \u0022vivian\u0022,\n      \u0022identity\u0022: null,\n      \u0022descriptionObservation\u0022: null,\n      \u0022condition\u0022: null,\n      \u0022whereabouts\u0022: {\n        \u0022value\u0022: {\n          \u0022kind\u0022: \u0022Location\u0022,\n          \u0022targetId\u0022: \u0022office\u0022,\n          \u0022disclosedLabel\u0022: null\n        },\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022evidence\u0022: \u0022Vivian says\u0022\n    }\n  ]\n}",
+              "rejectionReasons": [],
+              "noOps": [],
+              "failed": false,
+              "note": null,
+              "requiredHit": 3,
+              "requiredTotal": 3,
+              "forbiddenHit": 0,
+              "rejected": 0,
+              "promptTokens": 8788,
+              "completionTokens": 165,
+              "reasoningTokens": 0,
+              "missingRules": [],
+              "violatedRules": [],
+              "proposed": [
+                {
+                  "kind": "fact_learned",
+                  "characterId": "player",
+                  "factId": "lantern-society",
+                  "evidence": "There is an organization called the Lantern Society."
+                },
+                {
+                  "kind": "character_observed",
+                  "targetId": "vivian",
+                  "identity": null,
+                  "descriptionObservation": null,
+                  "condition": null,
+                  "whereabouts": {
+                    "value": {
+                      "kind": "Location",
+                      "targetId": "office",
+                      "disclosedLabel": null
+                    },
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "evidence": "Vivian says"
+                }
+              ],
+              "rejectedDeltas": [],
+              "provider": "StreamLake",
+              "clean": true
+            },
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: [\n    {\n      \u0022kind\u0022: \u0022fact_learned\u0022,\n      \u0022characterId\u0022: \u0022player\u0022,\n      \u0022factId\u0022: \u0022lantern-society\u0022,\n      \u0022evidence\u0022: \u0022There is an organization called the Lantern Society.\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022character_observed\u0022,\n      \u0022targetId\u0022: \u0022vivian\u0022,\n      \u0022identity\u0022: {\n        \u0022value\u0022: \u0022Vivian Vale\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022descriptionObservation\u0022: null,\n      \u0022condition\u0022: null,\n      \u0022whereabouts\u0022: {\n        \u0022value\u0022: {\n          \u0022kind\u0022: \u0022Location\u0022,\n          \u0022targetId\u0022: \u0022office\u0022,\n          \u0022disclosedLabel\u0022: \u0022Office\u0022\n        },\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022evidence\u0022: \u0022Vivian says\u0022\n    }\n  ]\n}",
+              "rejectionReasons": [],
+              "noOps": [],
+              "failed": false,
+              "note": null,
+              "requiredHit": 3,
+              "requiredTotal": 3,
+              "forbiddenHit": 0,
+              "rejected": 0,
+              "promptTokens": 8788,
+              "completionTokens": 193,
+              "reasoningTokens": 0,
+              "missingRules": [],
+              "violatedRules": [],
+              "proposed": [
+                {
+                  "kind": "fact_learned",
+                  "characterId": "player",
+                  "factId": "lantern-society",
+                  "evidence": "There is an organization called the Lantern Society."
+                },
+                {
+                  "kind": "character_observed",
+                  "targetId": "vivian",
+                  "identity": {
+                    "value": "Vivian Vale",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "descriptionObservation": null,
+                  "condition": null,
+                  "whereabouts": {
+                    "value": {
+                      "kind": "Location",
+                      "targetId": "office",
+                      "disclosedLabel": "Office"
+                    },
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "evidence": "Vivian says"
+                }
+              ],
+              "rejectedDeltas": [],
+              "provider": "StreamLake",
+              "clean": true
+            }
+          ],
+          "requiredHit": 9,
+          "requiredTotal": 9,
+          "forbiddenHit": 0,
+          "failedCount": 0,
+          "problems": []
+        }
+      ],
+      "requiredRate": 1,
+      "forbiddenPerRun": 0.041666666666666664,
+      "rejectsPerRun": 0,
+      "averageCompletionTokens": 278.5416666666667,
+      "providerBreakdown": [
+        {
+          "provider": "StreamLake",
+          "runs": 24,
+          "clean": 23,
+          "forbiddenPerRun": 0.041666666666666664
+        }
+      ]
+    }
+  ],
+  "promptFingerprint": "7bb6d665",
+  "schemaFingerprint": "FA27F80D4EED87C928E7E203444AAAECE17ED9C091ECBA59369EAA67F3CA4DCB"
+}

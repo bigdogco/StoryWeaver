@@ -76,6 +76,15 @@ public sealed record SessionContext(
     int TurnNumber,
     int HistoryTurns)
 {
+    public string OpeningForPlayer(WorldState world)
+    {
+        if (Pack.HasOpening) return EntityReferences.ResolveForPlayer(Pack.Opening, world);
+        var seed = Pack.Seed;
+        return seed?.PlayerLocationId is { } location
+            ? seed.Discovery?.Find(DiscoveryKind.Location, location)?.Description.Known?.Value
+                ?? "This world has no authored opening. Your playthrough is ready."
+            : "This world has no authored opening. Your playthrough is ready.";
+    }
     /// <summary>
     /// Set when the save was started against a different version of this pack.
     ///

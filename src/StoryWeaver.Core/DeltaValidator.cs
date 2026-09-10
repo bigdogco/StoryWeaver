@@ -60,7 +60,9 @@ public static class DeltaValidator
         WorldState world,
         IReadOnlyList<StateDelta> deltas,
         LoreBook? lore = null,
-        bool authored = false)
+        bool authored = false,
+        string? narration = null,
+        int? observationTurn = null)
     {
         LoreBook book = lore ?? LoreBook.Empty;
 
@@ -85,7 +87,7 @@ public static class DeltaValidator
 
         // Dependency order, not emission order. OrderBy is stable, so deltas within a tier
         // keep the sequence the model gave them — only the tiers move.
-        foreach (StateDelta delta in deltas.OrderBy(Tier))
+        foreach (StateDelta delta in deltas.Where(d => d is not EntityObserved).OrderBy(Tier))
         {
             if (!seen.Add(Identity(delta)))
             {
@@ -94,6 +96,9 @@ public static class DeltaValidator
             }
 
             string? problem = Check(delta, characters, locations, facts, loreIds, items, authored);
+            if (problem is null && !authored && delta is CharacterMoved { ToLocationId: null }
+                && !DiscoveryEngine.EvidencePresent(narration, delta.Evidence))
+                problem = "An offstage departure needs an exact quotation from the current narration.";
 
             if (problem is not null)
             {
@@ -139,6 +144,8 @@ public static class DeltaValidator
             accepted.Add(delta);
         }
 
+        DiscoveryEngine.ValidateBatch(world, deltas.OfType<EntityObserved>().ToList(), accepted, noOps, rejected,
+            narration, observationTurn ?? world.TurnNumber + 1);
         return new ValidationOutcome(accepted, noOps, rejected);
     }
 
@@ -377,7 +384,8 @@ public static class DeltaValidator
 
             CharacterMoved d =>
                 !characters.Contains(d.CharacterId) ? $"character '{d.CharacterId}' does not exist."
-                : !locations.Contains(d.ToLocationId) ? $"location '{d.ToLocationId}' does not exist."
+                : d.ToLocationId is null && Same(d.CharacterId, Character.PlayerId) ? "The player needs a destination."
+                : d.ToLocationId is not null && !locations.Contains(d.ToLocationId) ? $"location '{d.ToLocationId}' does not exist."
                 : null,
 
             PlayerMoved d =>

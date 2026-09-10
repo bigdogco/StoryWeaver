@@ -1,4 +1,168 @@
 {
+  "discovery": {
+  "rules": {
+    "Character:julian-vale": {
+      "privateInstruction": "Julian is concealed. Knowing his name or entering the hotel does not reveal his whereabouts; discovery requires a narrated encounter or disclosure.",
+      "requiresDiscovery": true
+    },
+    "Item:black-ledger": {
+      "privateInstruction": "Do not announce this concealed ledger merely because Vivian is in the scene. A mention reveals only what is said; seeing the closed ledger does not expose its contents.",
+      "requiresDiscovery": true
+    }
+  },
+  "entries": {
+    "Item:vivians-cigarette-case": {
+      "kind": "Item",
+      "description": {
+        "known": {
+          "provenance": "Starting",
+          "evidence": "Authored opening and starting identity",
+          "value": "A silver cigarette case, turned over in gloved hands without being opened.",
+          "turn": 0
+        }
+      },
+      "identityKnown": true,
+      "id": "vivians-cigarette-case",
+      "whereabouts": {
+        "known": {
+          "provenance": "Starting",
+          "evidence": "Authored opening",
+          "value": {
+            "kind": "Holder",
+            "targetId": "vivian-vale"
+          },
+          "turn": 0
+        }
+      },
+      "name": {
+        "known": {
+          "provenance": "Starting",
+          "evidence": "Authored opening and starting identity",
+          "value": "Silver cigarette case",
+          "turn": 0
+        }
+      }
+    },
+    "Location:detective-office": {
+      "id": "detective-office",
+      "kind": "Location",
+      "description": {
+        "known": {
+          "provenance": "Starting",
+          "evidence": "Authored opening and starting identity",
+          "value": "An office above the Orpheum cinema, with blinds, a desk and a filing cabinet. Rain ticks outside after midnight.",
+          "turn": 0
+        }
+      },
+      "identityKnown": true,
+      "name": {
+        "known": {
+          "provenance": "Starting",
+          "evidence": "Authored opening and starting identity",
+          "value": "The Detective's Office",
+          "turn": 0
+        }
+      }
+    },
+    "Character:player": {
+      "kind": "Character",
+      "description": {
+        "known": {
+          "provenance": "Starting",
+          "evidence": "Authored opening and starting identity",
+          "value": "A licensed private detective with an office above the Orpheum cinema.",
+          "turn": 0
+        }
+      },
+      "identityKnown": true,
+      "id": "player",
+      "whereabouts": {
+        "known": {
+          "provenance": "Starting",
+          "evidence": "Authored opening",
+          "value": {
+            "kind": "Location",
+            "targetId": "detective-office"
+          },
+          "turn": 0
+        }
+      },
+      "name": {
+        "known": {
+          "provenance": "Starting",
+          "evidence": "Authored opening and starting identity",
+          "value": "The detective",
+          "turn": 0
+        }
+      }
+    },
+    "Character:eddie-mercer": {
+      "kind": "Character",
+      "description": {
+        "known": {
+          "provenance": "Starting",
+          "evidence": "Authored opening and starting identity",
+          "value": "Eddie stands by the filing cabinet with his hat still on.",
+          "turn": 0
+        }
+      },
+      "identityKnown": true,
+      "id": "eddie-mercer",
+      "whereabouts": {
+        "known": {
+          "provenance": "Starting",
+          "evidence": "Authored opening",
+          "value": {
+            "kind": "Location",
+            "targetId": "detective-office"
+          },
+          "turn": 0
+        }
+      },
+      "name": {
+        "known": {
+          "provenance": "Starting",
+          "evidence": "Authored opening and starting identity",
+          "value": "Eddie",
+          "turn": 0
+        }
+      }
+    },
+    "Character:vivian-vale": {
+      "kind": "Character",
+      "description": {
+        "known": {
+          "provenance": "Starting",
+          "evidence": "Authored opening and starting identity",
+          "value": "A woman in a rain-darkened green coat and gloves, sitting across the desk.",
+          "turn": 0
+        }
+      },
+      "identityKnown": true,
+      "id": "vivian-vale",
+      "whereabouts": {
+        "known": {
+          "provenance": "Starting",
+          "evidence": "Authored opening",
+          "value": {
+            "kind": "Location",
+            "targetId": "detective-office"
+          },
+          "turn": 0
+        }
+      },
+      "name": {
+        "known": {
+          "provenance": "Starting",
+          "evidence": "Authored opening and starting identity",
+          "value": "Vivian Vale",
+          "turn": 0
+        }
+      }
+    }
+  },
+  "version": 1
+},
   "turnNumber": 0,
   "characters": {
     "player": {

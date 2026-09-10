@@ -100,6 +100,12 @@ public sealed class StorySession : IDisposable
     /// </summary>
     public WorldState World => _world;
 
+    public WorldView ProjectWorld(bool authorView = false) => authorView
+        ? new WorldView([.. AuthorProjection.Characters(_world), .. AuthorProjection.Locations(_world),
+            .. AuthorProjection.Facts(_world), .. AuthorProjection.Items(_world),
+            .. _lore.All.Select(l => new WorldViewEntry(CanonKind.Fact, l.Id, l.Title, "Private lore reference", l.Body, [], CanAuthor: false))])
+        : DiscoveryProjection.Player(_world, _lore);
+
     /// <summary>
     /// True while an operation holds the guard. For a UI to bind a spinner to, or to disable
     /// buttons with — but it is advisory, not the guard itself. Checking this and then acting
@@ -263,7 +269,7 @@ public sealed class StorySession : IDisposable
             {
                 edit(_world);
 
-                await _repository.SaveAsync(SaveId, _world, cancellationToken).ConfigureAwait(false);
+                await SaveAuthoredWorldAsync(cancellationToken).ConfigureAwait(false);
 
                 return new EditReport(CanonRefresh.Check(_world, _lore));
             });
@@ -274,6 +280,29 @@ public sealed class StorySession : IDisposable
                 ? SessionResult<CanonEditSnapshot>.Ok(snapshot)
                 : SessionResult<CanonEditSnapshot>.Refused("The selected entity no longer exists with the same identity.")));
 
+    private Task SaveAuthoredWorldAsync(CancellationToken cancellationToken)
+    {
+        _world.Discovery ??= DiscoveryState.Minimal(_world);
+        return _repository.SaveAsync(SaveId, _world, cancellationToken);
+    }
+
+    public Task<SessionResult<DiscoveryEditSnapshot>> BeginDiscoveryEditAsync() =>
+        GuardedAsync("canon is being changed right now", () => Task.FromResult(new DiscoveryEditSnapshot(_world, _canonFormSession)));
+
+    public Task<SessionResult<EditReport>> SaveDiscoveryAsync(DiscoveryEditSnapshot baseline, DiscoveryState draft,
+        CancellationToken cancellationToken = default) => GuardedAsync<EditReport>("canon is being changed right now", async () =>
+        {
+            if (baseline.Session != _canonFormSession || baseline.Revision != DiscoveryEditSnapshot.Fingerprint(_world))
+                return SessionResult<EditReport>.Refused("Canon or player knowledge changed while this form was open. Reopen it before saving.");
+            var candidate = CanonCreation.Copy(_world);
+            candidate.Discovery = DiscoveryAuthoring.Prepare(_world, draft);
+            var errors = DiscoveryIntegrity.Check(candidate);
+            if (errors.Count > 0) return SessionResult<EditReport>.Refused(string.Join("\n", errors));
+            _world.Discovery = candidate.Discovery;
+            await SaveAuthoredWorldAsync(cancellationToken).ConfigureAwait(false);
+            return SessionResult<EditReport>.Ok(new EditReport(CanonRefresh.Check(_world, _lore)));
+        });
+
     /// <summary>Capture a detached form/catalog baseline belonging to this session.</summary>
     public Task<SessionResult<CanonCreationSnapshot>> BeginCanonCreationAsync(CanonKind kind) =>
         GuardedAsync("canon is being changed right now", () => Task.FromResult(
@@ -281,7 +310,7 @@ public sealed class StorySession : IDisposable
 
     /// <summary>Validate and apply the complete authored form, then save once without advancing the story.</summary>
     public Task<SessionResult<EditReport>> CreateCanonAsync(CanonCreationSnapshot baseline, string id, CanonFields fields,
-        CancellationToken cancellationToken = default) =>
+        CancellationToken cancellationToken = default, InitialDiscovery? initialDiscovery = null) =>
         GuardedAsync<EditReport>("canon is being changed right now", async () =>
         {
             if (baseline.Session != _canonFormSession) return SessionResult<EditReport>.Refused("This form belongs to another playthrough.");
@@ -296,12 +325,16 @@ public sealed class StorySession : IDisposable
             var candidate = CanonCreation.Copy(_world);
             DeltaApplier.Apply(candidate, validation.Accepted);
             CanonCreation.ApplyFields(candidate, id, fields);
+            DiscoveryAuthoring.InitializeEntity(candidate, baseline.Kind, id, initialDiscovery);
+            var discoveryErrors = DiscoveryIntegrity.Check(candidate);
+            if (discoveryErrors.Count > 0) return SessionResult<EditReport>.Refused(string.Join("\n", discoveryErrors));
             var created = CanonCorrection.Capture(candidate, new(baseline.Kind, id, id));
             if (created is null || !CanonCorrection.Same(created.Fields, fields))
                 return SessionResult<EditReport>.Refused("The complete form could not be applied. Nothing was added.");
             DeltaApplier.Apply(_world, validation.Accepted);
             CanonCreation.ApplyFields(_world, id, fields);
-            await _repository.SaveAsync(SaveId, _world, cancellationToken).ConfigureAwait(false);
+            _world.Discovery = candidate.Discovery;
+            await SaveAuthoredWorldAsync(cancellationToken).ConfigureAwait(false);
             return SessionResult<EditReport>.Ok(new EditReport(CanonRefresh.Check(_world, _lore)));
         });
 
@@ -326,7 +359,7 @@ public sealed class StorySession : IDisposable
             if (current.Revision != baseline.Revision || !current.Dependencies.SequenceEqual(baseline.Dependencies, ReferenceEqualityComparer.Instance))
                 return SessionResult<CanonRemovalOutcome>.Ok(new(null, current));
             CanonRemoval.Apply(_world, current);
-            await _repository.SaveAsync(SaveId, _world, cancellationToken).ConfigureAwait(false);
+            await SaveAuthoredWorldAsync(cancellationToken).ConfigureAwait(false);
             return SessionResult<CanonRemovalOutcome>.Ok(new(new EditReport(CanonRefresh.Check(_world, _lore)), null));
         });
 
@@ -340,7 +373,7 @@ public sealed class StorySession : IDisposable
             if (CanonCorrection.Same(baseline.Fields, fields))
                 return SessionResult<EditReport>.Ok(new EditReport(CanonRefresh.Check(_world, _lore)));
             CanonCorrection.Apply(_world, baseline, fields);
-            await _repository.SaveAsync(SaveId, _world, cancellationToken).ConfigureAwait(false);
+            await SaveAuthoredWorldAsync(cancellationToken).ConfigureAwait(false);
             return SessionResult<EditReport>.Ok(new EditReport(CanonRefresh.Check(_world, _lore)));
         });
 

@@ -1,0 +1,174 @@
+StoryWeaver - console client
+
+Settings loaded and validated.
+
+  Endpoint : https://openrouter.ai/api/v1/chat/completions
+  Timeout  : 120s
+
+  Roles:
+    extraction   deepseek/deepseek-v3.2  [temp 0, JsonSchema, require_parameters]
+    narration    qwen/qwen3.7-plus  [temp 0.9, Text]
+    summarize    deepseek/deepseek-v3.2  [temp 0.3, Text]
+    worldgen     deepseek/deepseek-v3.2  [temp 1, JsonSchema, require_parameters]
+
+Scenarios: 10, models: 1, providers: StreamLake, runs each: 3
+Calls: 30
+Logging to logs\session-2026-09-10_12-13-33.log
+
+=== deepseek/deepseek-v3.2 via StreamLake ===
+    [deflection run 1]
+      REJECTED {"kind":"character_observed","targetId":"innkeeper-hald","identity":null,"descriptionObservation":null,"condition":{"value":"guarded","provenance":"Observed","factId":null},"whereabouts":{"value":{"kind":"Location","targetId":"marrow-tavern","disclosedLabel":null},"provenance":"Observed","factId":null},"evidence":"He looks at you for a moment"}
+      ok       fact_learned        player <- well-boarded
+    [deflection run 2]
+      (no deltas proposed)
+    [deflection run 3]
+      ok       fact_established    well-black-water: The well contains black water and bad luck.  [said by innkeeper-hald]
+      ok       fact_learned        player <- well-black-water
+      REJECTED {"kind":"character_observed","targetId":"innkeeper-hald","identity":null,"descriptionObservation":null,"condition":{"value":"guarded","provenance":"Observed","factId":null},"whereabouts":{"value":{"kind":"Location","targetId":"marrow-tavern","disclosedLabel":null},"provenance":"Observed","factId":null},"evidence":"He looks at you for a moment, then resumes his slow circles without answering."}
+  deflection       required n/a     forbidden 1
+    [revelation run 1]
+      ok       fact_established    tanner-girl-body: A tanner's girl was found dead in the well.  [said by innkeeper-hald]
+      ok       fact_learned        player <- tanner-girl-body
+      ok       fact_learned        innkeeper-hald <- tanner-girl-body
+      ok       {"kind":"character_observed","targetId":"innkeeper-hald","identity":{"value":"Hald","provenance":"Observed","factId":null},"descriptionObservation":{"value":"The innkeeper of the Drowned Crow. Heavyset, watchful.","provenance":"Observed","factId":null},"condition":{"value":"guarded","provenance":"Observed","factId":null},"whereabouts":{"value":{"kind":"Location","targetId":"marrow-tavern","disclosedLabel":null},"provenance":"Observed","factId":null},"evidence":"Hald\u0027s hand closes over the coin. He glances at the door, then leans close enough that you smell the ale on him."}
+    [revelation run 2]
+      ok       fact_established    tanner-girl-body: A body was found in the well, the tanner's girl, three weeks under the water.  [said by innkeeper-hald]
+      ok       fact_learned        player <- tanner-girl-body
+      ok       fact_learned        innkeeper-hald <- tanner-girl-body
+      ok       {"kind":"character_observed","targetId":"innkeeper-hald","identity":{"value":"Hald","provenance":"Observed","factId":null},"descriptionObservation":{"value":"The innkeeper of the Drowned Crow. Heavyset, watchful.","provenance":"Observed","factId":null},"condition":{"value":"guarded","provenance":"Observed","factId":null},"whereabouts":{"value":{"kind":"Location","targetId":"marrow-tavern","disclosedLabel":null},"provenance":"Observed","factId":null},"evidence":"Hald\u0027s hand closes over the coin. He glances at the door, then leans close enough that you smell the ale on him."}
+    [revelation run 3]
+      ok       fact_established    tanner-girl-body: A tanner's girl was found dead in the well.  [said by innkeeper-hald]
+      ok       fact_learned        player <- tanner-girl-body
+      ok       fact_learned        innkeeper-hald <- tanner-girl-body
+      ok       {"kind":"character_observed","targetId":"innkeeper-hald","identity":{"value":"Hald","provenance":"Observed","factId":null},"descriptionObservation":{"value":"The innkeeper of the Drowned Crow. Heavyset, watchful.","provenance":"Observed","factId":null},"condition":{"value":"guarded","provenance":"Observed","factId":null},"whereabouts":{"value":{"kind":"Location","targetId":"marrow-tavern","disclosedLabel":null},"provenance":"Observed","factId":null},"evidence":"Hald\u0027s hand closes over the coin. He glances at the door, then leans close enough that you smell the ale on him."}
+  revelation       required 9/9     forbidden 0
+    [movement run 1]
+      ok       player_moved        -> marrow-square
+      ok       {"kind":"location_observed","connections":null,"targetId":"marrow-square","identity":{"value":"Marrow Square","provenance":"Observed","factId":null},"descriptionObservation":{"value":"rutted and near empty under a low grey sky, the boarded well squatting at its centre beneath its iron bands","provenance":"Observed","factId":null},"condition":null,"whereabouts":null,"evidence":"Marrow Square opens ahead of you, rutted and near empty under a low grey sky, the boarded well squatting at its centre beneath its iron bands"}
+      REJECTED {"kind":"item_observed","targetId":"well-boarded","identity":{"value":"boarded well","provenance":"Observed","factId":null},"descriptionObservation":{"value":"squatting at the centre of the square beneath its iron bands","provenance":"Observed","factId":null},"condition":null,"whereabouts":{"value":{"kind":"Location","targetId":"marrow-square","disclosedLabel":"Marrow Square"},"provenance":"Observed","factId":null},"evidence":"the boarded well squatting at its centre beneath its iron bands"}
+    [movement run 2]
+      ok       player_moved        -> marrow-square
+      ok       {"kind":"location_observed","connections":null,"targetId":"marrow-square","identity":{"value":"Marrow Square","provenance":"Observed","factId":null},"descriptionObservation":{"value":"rutted and near empty under a low grey sky, the boarded well squatting at its centre beneath its iron bands","provenance":"Observed","factId":null},"condition":null,"whereabouts":null,"evidence":"Marrow Square opens ahead of you, rutted and near empty under a low grey sky, the boarded well squatting at its centre beneath its iron bands"}
+    [movement run 3]
+      ok       player_moved        -> marrow-square
+      ok       {"kind":"location_observed","connections":null,"targetId":"marrow-square","identity":{"value":"Marrow Square","provenance":"Observed","factId":null},"descriptionObservation":{"value":"rutted and near empty under a low grey sky, the boarded well squatting at its centre beneath its iron bands","provenance":"Observed","factId":null},"condition":null,"whereabouts":null,"evidence":"Marrow Square opens ahead of you, rutted and near empty under a low grey sky, the boarded well squatting at its centre beneath its iron bands"}
+  movement         required 3/3     forbidden 0
+    [hostility run 1]
+      ok       mood_changed        innkeeper-hald = hostile
+      ok       relationship_changed innkeeper-hald = -20 (angered by the accusation)
+    [hostility run 2]
+      ok       mood_changed        innkeeper-hald = hostile
+      ok       relationship_changed innkeeper-hald = -20 (hostile after being accused)
+    [hostility run 3]
+      ok       mood_changed        innkeeper-hald = hostile
+      ok       relationship_changed innkeeper-hald = -30 (hostile after being accused of lying)
+  hostility        required 6/6     forbidden 0
+    [new-character run 1]
+      ok       character_introduced militia-woman (militia woman) @ marrow-tavern
+      ok       {"kind":"character_observed","targetId":"militia-woman","identity":{"value":"militia woman","provenance":"Observed","factId":null},"descriptionObservation":{"value":"A woman in a militia tabard, rain running off her shoulders, professional and commanding.","provenance":"Observed","factId":null},"condition":{"value":"wet from rain","provenance":"Observed","factId":null},"whereabouts":{"value":{"kind":"Location","targetId":"marrow-tavern","disclosedLabel":null},"provenance":"Observed","factId":null},"evidence":"A woman in a militia tabard stands in the frame"}
+      ok       mood_changed        innkeeper-hald = alarmed
+    [new-character run 2]
+      ok       character_introduced militia-woman (militia woman) @ marrow-tavern
+      ok       {"kind":"character_observed","targetId":"militia-woman","identity":{"value":"militia woman","provenance":"Observed","factId":null},"descriptionObservation":{"value":"A woman in a militia tabard, rain running off her shoulders, professional and commanding.","provenance":"Observed","factId":null},"condition":{"value":"wet from rain","provenance":"Observed","factId":null},"whereabouts":{"value":{"kind":"Location","targetId":"marrow-tavern","disclosedLabel":null},"provenance":"Observed","factId":null},"evidence":"A woman in a militia tabard stands in the frame"}
+      ok       mood_changed        innkeeper-hald = tense
+    [new-character run 3]
+      ok       character_introduced militia-woman (militia woman) @ marrow-tavern
+      ok       {"kind":"character_observed","targetId":"militia-woman","identity":{"value":"militia woman","provenance":"Observed","factId":null},"descriptionObservation":{"value":"A woman in a militia tabard, rain running off her shoulders, professional and commanding.","provenance":"Observed","factId":null},"condition":{"value":"wet from rain","provenance":"Observed","factId":null},"whereabouts":{"value":{"kind":"Location","targetId":"marrow-tavern","disclosedLabel":null},"provenance":"Observed","factId":null},"evidence":"A woman in a militia tabard stands in the frame"}
+      ok       mood_changed        innkeeper-hald = tense
+  new-character    required 3/3     forbidden 0
+    [redescription run 1]
+      REJECTED {"kind":"character_observed","targetId":"innkeeper-hald","identity":null,"descriptionObservation":{"value":"Heavyset, watchful, his sleeves pushed back over forearms like ham hocks.","provenance":"Observed","factId":null},"condition":null,"whereabouts":{"value":{"kind":"Location","targetId":"marrow-tavern","disclosedLabel":null},"provenance":"Observed","factId":null},"evidence":"Heavyset, watchful, his sleeves pushed back over forearms like ham hocks."}
+    [redescription run 2]
+      (no deltas proposed)
+    [redescription run 3]
+      (no deltas proposed)
+  redescription    required n/a     forbidden 0
+    [atmosphere run 1]
+      REJECTED {"kind":"character_observed","targetId":"innkeeper-hald","identity":null,"descriptionObservation":{"value":"Heavyset, watchful, wipes the same patch of counter when he is thinking.","provenance":"Observed","factId":null},"condition":{"value":"guarded","provenance":"Observed","factId":null},"whereabouts":{"value":{"kind":"Location","targetId":"marrow-tavern","disclosedLabel":null},"provenance":"Observed","factId":null},"evidence":"Hald watches you from behind the scarred wood of the bar."}
+      REJECTED {"kind":"character_observed","targetId":"drinker-mabb","identity":null,"descriptionObservation":{"value":"An old marsh-hand nursing a mug in the corner. Talks when drunk, which is often.","provenance":"Observed","factId":null},"condition":{"value":"drunk, maudlin","provenance":"Observed","factId":null},"whereabouts":{"value":{"kind":"Location","targetId":"marrow-tavern","disclosedLabel":null},"provenance":"Observed","factId":null},"evidence":"Over in the shadowed corner, the old marsh-hand slumps over his mug."}
+      REJECTED {"kind":"location_observed","connections":[{"destinationId":"marrow-square","label":{"value":"Marrow Square","provenance":"Observed","factId":null}}],"targetId":"marrow-tavern","identity":null,"descriptionObservation":{"value":"A low-ceilinged taproom in the town of Marrow. Peat smoke, spilled ale, and the sour cold that comes off the marsh outside. A handful of locals keep to their own tables and their own business.","provenance":"Observed","factId":null},"condition":null,"whereabouts":null,"evidence":"the heavy door that leads out to Marrow Square"}
+    [atmosphere run 2]
+      (no deltas proposed)
+    [atmosphere run 3]
+      (no deltas proposed)
+  atmosphere       required n/a     forbidden 0
+    [player-arrival run 1]
+      ok       player_moved        -> marrow-square
+      ok       location_introduced old-mill (old mill)
+      ok       {"kind":"location_observed","connections":null,"targetId":"old-mill","identity":{"value":"old mill","provenance":"Observed","factId":null},"descriptionObservation":{"value":"An abandoned mill where the ground rises, its wheel long stopped and half its roof fallen in.","provenance":"Observed","factId":null},"condition":null,"whereabouts":null,"evidence":"The old mill stands where the ground rises, its wheel long stopped and half its roof fallen in."}
+    [player-arrival run 2]
+      ok       player_moved        -> marrow-square
+      ok       location_introduced old-mill (old mill)
+      ok       player_moved        -> old-mill
+      ok       {"kind":"location_observed","connections":null,"targetId":"old-mill","identity":{"value":"old mill","provenance":"Observed","factId":null},"descriptionObservation":{"value":"An abandoned mill where the ground rises, its wheel long stopped and half its roof fallen in.","provenance":"Observed","factId":null},"condition":null,"whereabouts":null,"evidence":"The old mill stands where the ground rises, its wheel long stopped and half its roof fallen in."}
+    [player-arrival run 3]
+      ok       player_moved        -> marrow-square
+      ok       location_introduced old-mill (old mill)
+      ok       {"kind":"location_observed","connections":null,"targetId":"old-mill","identity":{"value":"old mill","provenance":"Observed","factId":null},"descriptionObservation":{"value":"An abandoned mill where the ground rises, its wheel long stopped and half its roof fallen in. The door hangs open and nettles by the step are trodden flat.","provenance":"Observed","factId":null},"condition":null,"whereabouts":null,"evidence":"The old mill stands where the ground rises, its wheel long stopped and half its roof fallen in."}
+  player-arrival   required 4/6     forbidden 0
+    [two-stage-entry run 1]
+      ok       player_moved        -> marrow-square
+      ok       location_introduced well-cistern (Well Cistern)
+      REJECTED {"kind":"location_observed","connections":null,"targetId":"marrow-square","identity":null,"descriptionObservation":null,"condition":null,"whereabouts":null,"evidence":"You brace against the cold stone and drop the last few feet, your boots breaking through a skin of black water at the bottom of the shaft."}
+      ok       {"kind":"location_observed","connections":null,"targetId":"well-cistern","identity":{"value":"Well Cistern","provenance":"Observed","factId":null},"descriptionObservation":{"value":"A vaulted cistern at the bottom of the well, wide and dark, with a low brick tunnel leading to it. Crates are stacked against one side.","provenance":"Observed","factId":null},"condition":null,"whereabouts":null,"evidence":"A low brick tunnel runs off from the shaft. After twenty feet it opens out into a vaulted cistern, wide enough that your light cannot find the far wall. Crates have been stacked against the near side, sodden and split, and something pale is wedged behind them where the water laps at the brick."}
+    [two-stage-entry run 2]
+      ok       player_moved        -> marrow-square
+      ok       location_introduced well-cistern (Well Cistern)
+      ok       player_moved        -> well-cistern
+      ok       item_introduced     sodden-crates (sodden crates) @ well-cistern
+      ok       item_introduced     pale-object (pale object) @ well-cistern
+      REJECTED {"kind":"location_observed","connections":null,"targetId":"marrow-tavern","identity":null,"descriptionObservation":null,"condition":null,"whereabouts":null,"evidence":"You brace against the cold stone and drop the last few feet"}
+      ok       {"kind":"location_observed","connections":null,"targetId":"marrow-square","identity":{"value":"Marrow Square","provenance":"Observed","factId":null},"descriptionObservation":{"value":"The well in the square.","provenance":"Observed","factId":null},"condition":null,"whereabouts":null,"evidence":"the bottom of the shaft"}
+      ok       {"kind":"location_observed","connections":null,"targetId":"well-cistern","identity":{"value":"Well Cistern","provenance":"Observed","factId":null},"descriptionObservation":{"value":"A vaulted cistern at the end of a low brick tunnel from the well shaft. Wide, dark, with crates stacked against the near side and water lapping at the brick.","provenance":"Observed","factId":null},"condition":null,"whereabouts":null,"evidence":"A low brick tunnel runs off from the shaft. After twenty feet it opens out into a vaulted cistern"}
+    [two-stage-entry run 3]
+      ok       player_moved        -> marrow-square
+      ok       location_introduced well-cistern (Well Cistern)
+      ok       player_moved        -> well-cistern
+      ok       item_introduced     sodden-crates (sodden crates) @ well-cistern
+      ok       item_introduced     pale-thing (pale thing) @ well-cistern
+  two-stage-entry  required 5/6     forbidden 0
+    [name-reveal run 1]
+      ok       character_renamed   hooded-drinker -> Sera Voight
+      REJECTED {"kind":"character_observed","targetId":"hooded-drinker","identity":{"value":"Sera Voight","provenance":"Observed","factId":null},"descriptionObservation":{"value":"Dark hair flattened by the rain, a face younger than the stillness suggested, a long white scar running from her ear to the corner of her jaw.","provenance":"Observed","factId":null},"condition":null,"whereabouts":null,"evidence":"She reaches up and pushes the hood back off her head \u2014 dark hair flattened by the rain, a face younger than the stillness suggested, a long white scar running from her ear to the corner of her jaw."}
+      REJECTED {"kind":"character_observed","targetId":"innkeeper-hald","identity":null,"descriptionObservation":null,"condition":null,"whereabouts":null,"evidence":"Behind the counter, Hald has stopped wiping and is watching the pair of you."}
+    [name-reveal run 2]
+      ok       character_renamed   hooded-drinker -> Sera Voight
+      REJECTED {"kind":"character_observed","targetId":"hooded-drinker","identity":{"value":"Sera Voight","provenance":"Observed","factId":null},"descriptionObservation":{"value":"Dark hair flattened by the rain, a face younger than the stillness suggested, a long white scar running from her ear to the corner of her jaw.","provenance":"Observed","factId":null},"condition":null,"whereabouts":{"value":{"kind":"Location","targetId":"marrow-tavern","disclosedLabel":null},"provenance":"Observed","factId":null},"evidence":"She reaches up and pushes the hood back off her head \u2014 dark hair flattened by the rain, a face younger than the stillness suggested, a long white scar running from her ear to the corner of her jaw."}
+      REJECTED {"kind":"character_observed","targetId":"innkeeper-hald","identity":null,"descriptionObservation":null,"condition":null,"whereabouts":{"value":{"kind":"Location","targetId":"marrow-tavern","disclosedLabel":null},"provenance":"Observed","factId":null},"evidence":"Behind the counter, Hald has stopped wiping and is watching the pair of you."}
+    [name-reveal run 3]
+      ok       character_renamed   hooded-drinker -> Sera Voight
+      REJECTED {"kind":"character_observed","targetId":"hooded-drinker","identity":{"value":"Sera Voight","provenance":"Observed","factId":null},"descriptionObservation":{"value":"A woman with dark hair flattened by rain, a face younger than the stillness suggested, and a long white scar running from her ear to the corner of her jaw.","provenance":"Observed","factId":null},"condition":null,"whereabouts":{"value":{"kind":"Location","targetId":"marrow-tavern","disclosedLabel":null},"provenance":"Observed","factId":null},"evidence":"She reaches up and pushes the hood back off her head \u2014 dark hair flattened by the rain, a face younger than the stillness suggested, a long white scar running from her ear to the corner of her jaw."}
+      ok       mood_changed        innkeeper-hald = watchful
+  name-reveal      required 9/9     forbidden 0
+
+==============================================================================
+SUMMARY
+==============================================================================
+prompts   dd3cd7b1
+
+model                               required  forbidden  rejects   tokens
+------------------------------------------------------------------------------
+…seek/deepseek-v3.2 via StreamLake      93%       0.03     0.47      296
+
+required  = share of must-have deltas produced (higher is better)
+forbidden = must-not-happen deltas per run    (lower is better)
+rejects   = deltas the validator threw out    (lower is better)
+tokens    = mean completion tokens per call   (cost proxy)
+
+--- deepseek/deepseek-v3.2 via StreamLake ---
+  deflection       required n/a     forbidden 1
+      DID:    any fact established (1/3)
+  revelation       required 9/9     forbidden 0
+  movement         required 3/3     forbidden 0
+  hostility        required 6/6     forbidden 0
+  new-character    required 3/3     forbidden 0
+  redescription    required n/a     forbidden 0
+  atmosphere       required n/a     forbidden 0
+  player-arrival   required 4/6     forbidden 0
+      MISSED: the player ends the turn at the mill (2/3)
+  two-stage-entry  required 5/6     forbidden 0
+      MISSED: the player ends the turn in the cistern (1/3)
+  name-reveal      required 9/9     forbidden 0
+  by provider:
+    StreamLake              30 run(s), clean 26/30, forbidden/run 0.03
+

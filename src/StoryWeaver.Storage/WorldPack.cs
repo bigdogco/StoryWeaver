@@ -210,6 +210,9 @@ public sealed partial class WorldPack
             RequireSheetsOwnTheirNames(seed, sheets, Path.Combine(directory, SeedFile));
 
             ApplySheets(seed, sheets, directory);
+            DiscoveryState.RequireSupported(seed);
+            if (DiscoveryIntegrity.Check(seed, seed: true).Count > 0)
+                throw new InvalidDataException("Invalid starting discovery: " + string.Join("; ", DiscoveryIntegrity.Check(seed, seed: true)));
             RequireEverythingIsNamed(seed, Path.Combine(directory, SeedFile));
             RequirePlayer(seed, Path.Combine(directory, SeedFile));
             RequireEveryoneIsPlaced(seed, Path.Combine(directory, SeedFile));

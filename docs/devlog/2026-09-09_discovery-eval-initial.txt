@@ -1,0 +1,283 @@
+StoryWeaver - console client
+
+Settings loaded and validated.
+
+  Endpoint : https://openrouter.ai/api/v1/chat/completions
+  Timeout  : 120s
+
+  Roles:
+    extraction   deepseek/deepseek-v3.2  [temp 0, JsonSchema, require_parameters]
+    narration    qwen/qwen3.7-plus  [temp 0.9, Text]
+    summarize    deepseek/deepseek-v3.2  [temp 0.3, Text]
+    worldgen     deepseek/deepseek-v3.2  [temp 1, JsonSchema, require_parameters]
+
+Scenarios: 21, models: 1, providers: StreamLake, runs each: 3
+Calls: 63
+Logging to logs\session-2026-09-09_20-21-43.log
+
+=== deepseek/deepseek-v3.2 via StreamLake ===
+    [discovery-briefing run 1]
+      ok       fact_established    julian-vale-missing: Julian Vale has been missing since yesterday.  [said by vivian]
+      ok       fact_learned        player <- julian-vale-missing
+      ok       fact_learned        vivian <- julian-vale-missing
+      REJECTED CharacterObserved
+    [discovery-briefing run 2]
+      ok       fact_established    vivian-husband: Vivian Vale's husband is Julian Vale, a city contractor.  [said by vivian]
+      ok       fact_established    julian-missing: Julian Vale has been missing since yesterday.  [said by vivian]
+      ok       fact_learned        vivian <- vivian-husband
+      ok       fact_learned        vivian <- julian-missing
+      ok       fact_learned        player <- vivian-husband
+      ok       fact_learned        player <- julian-missing
+      ok       CharacterObserved
+    [discovery-briefing run 3]
+      ok       fact_established    julian-vale-missing: Julian Vale has been missing since yesterday.  [said by vivian]
+      ok       fact_learned        player <- julian-vale-missing
+      ok       fact_learned        vivian <- julian-vale-missing
+      REJECTED CharacterObserved
+  discovery-briefing required 12/15   forbidden 2
+    [discovery-failed-search run 1]
+      (no deltas proposed)
+    [discovery-failed-search run 2]
+      (no deltas proposed)
+    [discovery-failed-search run 3]
+      (no deltas proposed)
+  discovery-failed-search required 9/9     forbidden 0
+    [discovery-hidden-item run 1]
+      ok       ItemObserved
+    [discovery-hidden-item run 2]
+      ok       ItemObserved
+    [discovery-hidden-item run 3]
+      ok       ItemObserved
+  discovery-hidden-item required 12/12   forbidden 0
+    [discovery-item-mentioned run 1]
+      ok       fact_established    ledger-recorded-payments: Julian used a black ledger to record payments.  [said by vivian]
+      ok       fact_learned        player <- ledger-recorded-payments
+      ok       fact_learned        vivian <- ledger-recorded-payments
+      ok       CharacterObserved
+    [discovery-item-mentioned run 2]
+      ok       fact_established    ledger-recorded-payments: Julian used a black ledger to record payments.  [said by vivian]
+      ok       fact_learned        player <- ledger-recorded-payments
+      ok       fact_learned        vivian <- ledger-recorded-payments
+      ok       ItemObserved
+    [discovery-item-mentioned run 3]
+      (no deltas proposed)
+  discovery-item-mentioned required 7/12    forbidden 0
+    [discovery-closed-container run 1]
+      ok       ItemObserved
+    [discovery-closed-container run 2]
+      ok       ItemObserved
+    [discovery-closed-container run 3]
+      ok       ItemObserved
+  discovery-closed-container required 6/6     forbidden 0
+    [discovery-found run 1]
+      ok       CharacterObserved
+      ok       LocationObserved
+    [discovery-found run 2]
+      ok       CharacterObserved
+    [discovery-found run 3]
+      ok       CharacterObserved
+  discovery-found  required 10/12   forbidden 0
+    [discovery-departure run 1]
+      ok       character_moved     julian -> 
+      ok       CharacterObserved
+    [discovery-departure run 2]
+      ok       character_moved     julian -> 
+      ok       CharacterObserved
+    [discovery-departure run 3]
+      ok       character_moved     julian -> 
+      ok       CharacterObserved
+  discovery-departure required 15/15   forbidden 0
+    [discovery-visible-departure run 1]
+      ok       character_moved     julian -> station
+      ok       CharacterObserved
+      ok       LocationObserved
+    [discovery-visible-departure run 2]
+      ok       character_moved     julian -> station
+      ok       CharacterObserved
+      ok       LocationObserved
+    [discovery-visible-departure run 3]
+      ok       character_moved     julian -> station
+      ok       CharacterObserved
+  discovery-visible-departure required 9/9     forbidden 0
+    [discovery-lose-sight run 1]
+      ok       CharacterObserved
+    [discovery-lose-sight run 2]
+      ok       character_moved     julian -> hotel
+      ok       CharacterObserved
+    [discovery-lose-sight run 3]
+      ok       character_moved     julian -> hotel
+      ok       CharacterObserved
+  discovery-lose-sight required 9/9     forbidden 2
+    [discovery-no-departure run 1]
+      (no deltas proposed)
+    [discovery-no-departure run 2]
+      (no deltas proposed)
+    [discovery-no-departure run 3]
+      (no deltas proposed)
+  discovery-no-departure required 9/9     forbidden 0
+    [discovery-return run 1]
+      REJECTED character_introduced julian (Julian Vale) @ office
+      ok       CharacterObserved
+      ok       CharacterObserved
+      ok       LocationObserved
+    [discovery-return run 2]
+      REJECTED character_introduced julian (Julian Vale) @ office
+      ok       CharacterObserved
+      ok       CharacterObserved
+      ok       LocationObserved
+    [discovery-return run 3]
+      REJECTED character_introduced julian (Julian Vale) @ office
+      ok       CharacterObserved
+      ok       CharacterObserved
+      ok       LocationObserved
+  discovery-return required 9/12    forbidden 0
+    [discovery-false-report run 1]
+      ok       fact_established    julian-at-station: Julian is at the Railway Station.  [said by vivian]
+      ok       fact_learned        player <- julian-at-station
+      ok       CharacterObserved
+      ok       CharacterObserved
+    [discovery-false-report run 2]
+      ok       fact_established    julian-at-station: Julian is at the Railway Station.  [said by vivian]
+      ok       fact_learned        player <- julian-at-station
+      ok       CharacterObserved
+      ok       CharacterObserved
+    [discovery-false-report run 3]
+      ok       fact_established    julian-at-station: Julian is at the Railway Station.  [said by vivian]
+      ok       fact_learned        player <- julian-at-station
+      ok       fact_learned        vivian <- julian-at-station
+      ok       CharacterObserved
+  discovery-false-report required 11/12   forbidden 0
+    [discovery-unnamed run 1]
+      ok       CharacterObserved
+      ok       LocationObserved
+    [discovery-unnamed run 2]
+      ok       CharacterObserved
+      ok       LocationObserved
+    [discovery-unnamed run 3]
+      ok       CharacterObserved
+      ok       LocationObserved
+  discovery-unnamed required 6/9     forbidden 0
+    [discovery-identification run 1]
+      ok       character_renamed   vivian -> Vivian Vale
+      ok       CharacterObserved
+    [discovery-identification run 2]
+      ok       character_renamed   vivian -> Vivian Vale
+      ok       CharacterObserved
+    [discovery-identification run 3]
+      ok       character_renamed   vivian -> Vivian Vale
+      ok       CharacterObserved
+  discovery-identification required 9/9     forbidden 0
+    [discovery-ambiguous run 1]
+      (no deltas proposed)
+    [discovery-ambiguous run 2]
+      (no deltas proposed)
+    [discovery-ambiguous run 3]
+      (no deltas proposed)
+  discovery-ambiguous required 6/6     forbidden 0
+    [discovery-routes run 1]
+      ok       player_moved        -> street
+      ok       character_moved     vivian -> street
+      ok       LocationObserved
+      ok       CharacterObserved
+    [discovery-routes run 2]
+      ok       player_moved        -> street
+      ok       LocationObserved
+      ok       LocationObserved
+    [discovery-routes run 3]
+      ERROR: Extraction returned JSON that does not match StateDelta: The JSON value could not be converted to System.Collections.Generic.IReadOnlyList`1[StoryWeaver.Core.RouteObservation]. Path: $.connections | LineNumber: 7 | BytePositionInLine: 22.
+  discovery-routes required 7/8     forbidden 0, 1 call(s) failed
+    [discovery-partial run 1]
+      ok       status_changed      julian = bruised left wrist
+      ok       CharacterObserved
+    [discovery-partial run 2]
+      ok       status_changed      julian = bruised left wrist
+      ok       CharacterObserved
+    [discovery-partial run 3]
+      ok       status_changed      julian = bruised left wrist
+      ok       CharacterObserved
+  discovery-partial required 9/9     forbidden 0
+    [discovery-introduction run 1]
+      ok       character_introduced nessa (Nessa) @ office
+      ok       CharacterObserved
+    [discovery-introduction run 2]
+      ok       character_introduced nessa (Nessa) @ office
+      ok       CharacterObserved
+    [discovery-introduction run 3]
+      ok       character_introduced nessa (Nessa) @ office
+      ok       CharacterObserved
+  discovery-introduction required 6/6     forbidden 0
+    [discovery-facts run 1]
+      (no deltas proposed)
+    [discovery-facts run 2]
+      (no deltas proposed)
+    [discovery-facts run 3]
+      (no deltas proposed)
+  discovery-facts  required 3/6     forbidden 0
+    [discovery-repeat run 1]
+      ok       CharacterObserved
+    [discovery-repeat run 2]
+      ok       CharacterObserved
+      ok       LocationObserved
+    [discovery-repeat run 3]
+      ok       CharacterObserved
+  discovery-repeat required 9/9     forbidden 0
+    [discovery-unsupported run 1]
+      (no deltas proposed)
+    [discovery-unsupported run 2]
+      (no deltas proposed)
+    [discovery-unsupported run 3]
+      (no deltas proposed)
+  discovery-unsupported required 6/6     forbidden 0
+
+==============================================================================
+SUMMARY
+==============================================================================
+prompts   4b299c42
+
+model                               required  forbidden  rejects   tokens
+------------------------------------------------------------------------------
+…seek/deepseek-v3.2 via StreamLake      90%       0.06     0.08      215
+
+required  = share of must-have deltas produced (higher is better)
+forbidden = must-not-happen deltas per run    (lower is better)
+rejects   = deltas the validator threw out    (lower is better)
+tokens    = mean completion tokens per call   (cost proxy)
+
+--- deepseek/deepseek-v3.2 via StreamLake ---
+  discovery-briefing required 12/15   forbidden 2
+      MISSED: Julian identity learned (3/3)
+      DID:    Observation evidence absent from narration (2/3)
+  discovery-failed-search required 9/9     forbidden 0
+  discovery-hidden-item required 12/12   forbidden 0
+  discovery-item-mentioned required 7/12    forbidden 0
+      MISSED: Ledger identity known (2/3)
+      MISSED: Purpose recorded as reported (3/3)
+  discovery-closed-container required 6/6     forbidden 0
+  discovery-found  required 10/12   forbidden 0
+      MISSED: Hotel identity learned (2/3)
+  discovery-departure required 15/15   forbidden 0
+  discovery-visible-departure required 9/9     forbidden 0
+  discovery-lose-sight required 9/9     forbidden 2
+      DID:    Invented movement (2/3)
+  discovery-no-departure required 9/9     forbidden 0
+  discovery-return required 9/12    forbidden 0
+      MISSED: Same NPC returned (3/3)
+  discovery-false-report required 11/12   forbidden 0
+      MISSED: Station report retained (1/3)
+  discovery-unnamed required 6/9     forbidden 0
+      MISSED: True name not exposed (3/3)
+  discovery-identification required 9/9     forbidden 0
+  discovery-ambiguous required 6/6     forbidden 0
+  discovery-routes required 7/8     forbidden 0, 1 call(s) failed
+      MISSED: Directed street route learned (1/3)
+      ERROR:  Extraction returned JSON that does not match StateDelta: The JSON value could not be converted to System.Collections.Generic.IReadOnlyList`1[StoryWeaver.Core.RouteObservation]. Path: $.connections | LineNumber: 7 | BytePositionInLine: 22.
+  discovery-partial required 9/9     forbidden 0
+  discovery-introduction required 6/6     forbidden 0
+  discovery-facts  required 3/6     forbidden 0
+      MISSED: Attributed learned claim (3/3)
+  discovery-repeat required 9/9     forbidden 0
+  discovery-unsupported required 6/6     forbidden 0
+  by provider:
+    StreamLake              62 run(s), clean 41/62, forbidden/run 0.06
+    (unreported)             1 run(s), clean 0/1, forbidden/run 0.00
+

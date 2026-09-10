@@ -29,6 +29,8 @@
         <MenuItem Header="_Settings" Command="{Binding #Root.SettingsCommand}" />
       </MenuItem>
       <MenuItem Header="_View">
+        <MenuItem Header="Player view" Click="PlayerView" IsEnabled="{Binding CanInspectCanon}" />
+        <MenuItem Header="Author view · full canon" Click="AuthorView" IsEnabled="{Binding CanInspectCanon}" />
         <MenuItem Header="Show/Hide _World Panel" InputGesture="Ctrl+Shift+W" Command="{Binding ToggleWorldCommand}" />
         <MenuItem Header="_Reset Pane Split" Command="{Binding #Root.ResetSplitCommand}" />
         <MenuItem Header="_Text Size">
@@ -113,7 +115,17 @@
                     Background="{DynamicResource SystemControlForegroundBaseLowBrush}"
                     IsVisible="{Binding ShowWorldPanel}" DragCompleted="SplitterDragCompleted"
                     AutomationProperties.Name="Resize story and world panes" />
-      <TabControl Grid.Column="2" SelectedIndex="{Binding SelectedTab, Mode=TwoWay}"
+      <DockPanel Grid.Column="2" IsVisible="{Binding ShowWorldPanel}">
+      <StackPanel DockPanel.Dock="Top" Margin="20,12,20,0" Spacing="8">
+        <TextBlock Text="{Binding ViewLabel}" FontWeight="SemiBold" />
+        <WrapPanel>
+          <Button Content="Player view" Click="PlayerView" IsEnabled="{Binding CanInspectCanon}" Margin="0,0,8,6" />
+          <Button Content="Author view" Click="AuthorView" IsEnabled="{Binding CanInspectCanon}" Margin="0,0,8,6" />
+          <Button Content="Player knowledge…" Click="EditDiscovery" IsVisible="{Binding IsAuthorView}" IsEnabled="{Binding CanEditCanon}" Margin="0,0,8,6" />
+          <Button Content="Inspect in Author view" Click="InspectAuthorReport" IsEnabled="{Binding CanInspectCanon}" Margin="0,0,0,6" />
+        </WrapPanel>
+      </StackPanel>
+      <TabControl SelectedIndex="{Binding SelectedTab, Mode=TwoWay}"
                   IsVisible="{Binding ShowWorldPanel}">
         <TabControl.ItemsPanel>
           <ItemsPanelTemplate><WrapPanel /></ItemsPanelTemplate>
@@ -123,6 +135,7 @@
         <TabItem Header="Canon"><views:EntityBrowser DataContext="{Binding Canon}" EditRequested="EditCanonEntity" AddRequested="AddCanonEntity" RemoveRequested="RemoveCanonEntity" /></TabItem>
         <TabItem Header="Items"><views:EntityBrowser DataContext="{Binding Items}" EditRequested="EditCanonEntity" AddRequested="AddCanonEntity" RemoveRequested="RemoveCanonEntity" /></TabItem>
       </TabControl>
+      </DockPanel>
     </Grid>
   </Grid>
 </Window>

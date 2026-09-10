@@ -26,6 +26,9 @@ public sealed class StateDeltaConverter : JsonConverter<StateDelta>
     private static readonly Dictionary<string, Type> KindToType = new(StringComparer.OrdinalIgnoreCase)
     {
         ["character_moved"] = typeof(CharacterMoved),
+        ["character_observed"] = typeof(CharacterObserved),
+        ["location_observed"] = typeof(LocationObserved),
+        ["item_observed"] = typeof(ItemObserved),
         ["player_moved"] = typeof(PlayerMoved),
         ["status_changed"] = typeof(StatusChanged),
         ["mood_changed"] = typeof(MoodChanged),

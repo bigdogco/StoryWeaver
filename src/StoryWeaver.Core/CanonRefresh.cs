@@ -55,6 +55,7 @@ public static class CanonRefresh
     {
         LoreBook book = lore ?? LoreBook.Empty;
         List<string> warnings = [];
+        warnings.AddRange(DiscoveryIntegrity.Check(world));
 
         if (world.Player is null)
         {

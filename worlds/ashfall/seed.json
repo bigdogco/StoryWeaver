@@ -1,4 +1,63 @@
 {
+  "discovery": {
+  "rules": {},
+  "entries": {
+    "Character:player": {
+      "kind": "Character",
+      "description": {
+        "known": {
+          "provenance": "Starting",
+          "evidence": "Authored opening and starting identity",
+          "value": "A traveller who came over the pass on the wrong day.",
+          "turn": 0
+        }
+      },
+      "identityKnown": true,
+      "id": "player",
+      "whereabouts": {
+        "known": {
+          "provenance": "Starting",
+          "evidence": "Authored opening",
+          "value": {
+            "kind": "Location",
+            "targetId": "waystation-common-room"
+          },
+          "turn": 0
+        }
+      },
+      "name": {
+        "known": {
+          "provenance": "Starting",
+          "evidence": "Authored opening and starting identity",
+          "value": "You",
+          "turn": 0
+        }
+      }
+    },
+    "Location:waystation-common-room": {
+      "id": "waystation-common-room",
+      "kind": "Location",
+      "description": {
+        "known": {
+          "provenance": "Starting",
+          "evidence": "Authored opening and starting identity",
+          "value": "A long stone room dug into the mountain. Falling ash ticks on its slate roof. One fire, a dozen chairs, closed shutters and lamps lit at midday.",
+          "turn": 0
+        }
+      },
+      "identityKnown": true,
+      "name": {
+        "known": {
+          "provenance": "Starting",
+          "evidence": "Authored opening and starting identity",
+          "value": "Waystation common room",
+          "turn": 0
+        }
+      }
+    }
+  },
+  "version": 1
+},
   "turnNumber": 0,
   "characters": {
     "player": {

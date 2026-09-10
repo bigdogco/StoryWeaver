@@ -167,6 +167,14 @@ public static class SessionOpener
     {
         if (!resumed)
         {
+            world.Discovery ??= DiscoveryState.Minimal(world);
+            if (world.Player is { } player)
+            {
+                var key = DiscoveryState.Key(DiscoveryKind.Character, player.Id);
+                if (!world.Discovery.Entries.TryGetValue(key, out var memory))
+                    world.Discovery.Entries[key] = memory = new() { Kind = DiscoveryKind.Character, Id = player.Id };
+                memory.Name.Known = new(player.Name, DiscoveryProvenance.Starting, 0);
+            }
             await repository.SaveAsync(saveId, world, cancellationToken).ConfigureAwait(false);
         }
 

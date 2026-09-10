@@ -22,6 +22,7 @@ public sealed class EvalReport
     /// without the prompt it was measured against is not a measurement.
     /// </summary>
     public required string PromptFingerprint { get; init; }
+    public string SchemaFingerprint { get; init; } = "";
 }
 
 /// <summary>
@@ -166,6 +167,9 @@ public sealed record ProviderStat(string Provider, int Runs, int Clean, double F
 /// </summary>
 public sealed class RunScore
 {
+    public string? RawResponse { get; init; }
+    public IReadOnlyList<string> RejectionReasons { get; init; } = [];
+    public IReadOnlyList<StateDelta> NoOps { get; init; } = [];
     public bool Failed { get; init; }
 
     public string? Note { get; init; }

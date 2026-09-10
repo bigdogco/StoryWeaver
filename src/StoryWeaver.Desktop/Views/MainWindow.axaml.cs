@@ -267,21 +267,22 @@ public sealed partial class MainWindow : Window
             }
             catch (Exception error) when (error is IOException or UnauthorizedAccessException or System.Text.Json.JsonException)
             {
-                Model.Notice = "The playthrough is open, but its narration history could not be read: " + error.Message;
+                Model.ReportError("The playthrough is open, but its narration history could not be read.", error);
                 return;
             }
             Model.Notice = opening.Context!.PackHasMoved
                 ? $"Opened {session!.SaveId}. This save began with pack version {opening.Context.PackVersionAtStart}."
                 : $"Opened {session!.SaveId}. Ready for your next action.";
+            if (session!.ProjectWorld().Notice is { } compatibility) Model.Notice += " " + compatibility;
             RememberRecent(selection);
         }
         catch (SettingsException error)
         {
-            Model.Notice = "Could not open because settings need attention: " + error.Message;
+            Model.ReportError("Could not open because settings need attention.", error);
         }
         catch (Exception error) when (error is IOException or UnauthorizedAccessException or InvalidDataException or ArgumentException)
         {
-            Model.Notice = "Could not open playthrough: " + error.Message;
+            Model.ReportError("Could not open playthrough.", error);
         }
         finally { _opening = false; }
     }
@@ -430,10 +431,10 @@ public sealed partial class MainWindow : Window
             var opening = await session.BeginCanonCreationAsync(CanonKindFor(tab.Kind));
             if (opening.WasRefused) { Model.Notice = opening.RefusedBecause!; return; }
             var baseline = opening.Value!;
-            var dialog = new CanonEditorWindow(baseline, _sessionContext, session.SaveId, async (id, fields) =>
+            var dialog = new CanonEditorWindow(baseline, _sessionContext, session.SaveId, async (id, fields, discovery) =>
             {
                 var offset = NarrationScroll.Offset;
-                var result = await Model.CreateCanonAsync(session, baseline, id, fields);
+                var result = await Model.CreateCanonAsync(session, baseline, id, fields, discovery);
                 Avalonia.Threading.Dispatcher.UIThread.Post(() => NarrationScroll.Offset = offset);
                 return result;
             });
@@ -500,8 +501,52 @@ public sealed partial class MainWindow : Window
         await ShowReportAsync(reload ? "Update State" : "Check Canon", report);
     }
 
+    private void PlayerView(object? sender, RoutedEventArgs e)
+    { if (!_opening && !_editing && _session is not null) Model.SetAuthorView(_session, false); }
+    private void AuthorView(object? sender, RoutedEventArgs e)
+    { if (!_opening && !_editing && _session is not null) Model.SetAuthorView(_session, true); }
+    private async void InspectAuthorReport(object? sender, RoutedEventArgs e)
+    {
+        if (_opening || _editing || _session is null || Model.IsBusy) return;
+        var report = Model.LastAuthorReport;
+        Model.SetAuthorView(_session, true);
+        if (report is not null) await ShowReportAsync("Operation details", report);
+    }
+    private async void EditDiscovery(object? sender, RoutedEventArgs e)
+    {
+        if (_opening || _editing || _session is null || !Model.CanEditCanon) return;
+        _editing = true;
+        try
+        {
+            var session = _session;
+            var result = await session.BeginDiscoveryEditAsync();
+            if (result.WasRefused) { Model.Notice = result.RefusedBecause!; return; }
+            var baseline = result.Value!;
+            var window = new DiscoveryEditorWindow(baseline, session.SaveId,
+                draft => Model.SaveDiscoveryAsync(session, baseline, draft));
+            var report = await window.ShowDialog<EditReport?>(this);
+            if (report is { IsClean: false }) await ShowReportAsync("Knowledge saved with warnings", string.Join("\n", report.Warnings));
+        }
+        catch (Exception error) { Model.Notice = error.Message; }
+        finally { _editing = false; }
+    }
+
     private async Task ShowReportAsync(string title, string report)
     {
+        if (!Model.IsAuthorView && _session is not null)
+        {
+            var safeDialog = new Window { Title = title, Width = 520, Height = 240, WindowStartupLocation = WindowStartupLocation.CenterOwner };
+            var panel = new StackPanel { Margin = new Thickness(24), Spacing = 16 };
+            panel.Children.Add(new TextBlock { Text = Model.Notice + "\n\nOperation details are available in Author view and may contain spoilers.", TextWrapping = TextWrapping.Wrap });
+            var inspect = new Button { Content = "Inspect in Author view" };
+            var closeSafe = new Button { Content = "Close", IsCancel = true };
+            bool show = false;
+            inspect.Click += (_, _) => { show = true; safeDialog.Close(); };
+            closeSafe.Click += (_, _) => safeDialog.Close(); panel.Children.Add(inspect); panel.Children.Add(closeSafe); safeDialog.Content = panel;
+            await safeDialog.ShowDialog(this);
+            if (!show || _session is null) return;
+            Model.SetAuthorView(_session, true);
+        }
         var dialog = new Window
         {
             Title = title,

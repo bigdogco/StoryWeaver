@@ -1,0 +1,947 @@
+{
+  "models": [
+    {
+      "label": "deepseek/deepseek-v3.2 via StreamLake",
+      "scenarios": [
+        {
+          "name": "discovery-stale-memory",
+          "runs": [
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: []\n}",
+              "rejectionReasons": [],
+              "noOps": [],
+              "failed": false,
+              "note": null,
+              "requiredHit": 3,
+              "requiredTotal": 3,
+              "forbiddenHit": 0,
+              "rejected": 0,
+              "promptTokens": 8204,
+              "completionTokens": 10,
+              "reasoningTokens": 0,
+              "missingRules": [],
+              "violatedRules": [],
+              "proposed": [],
+              "rejectedDeltas": [],
+              "provider": "StreamLake",
+              "clean": true
+            },
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: []\n}",
+              "rejectionReasons": [],
+              "noOps": [],
+              "failed": false,
+              "note": null,
+              "requiredHit": 3,
+              "requiredTotal": 3,
+              "forbiddenHit": 0,
+              "rejected": 0,
+              "promptTokens": 8204,
+              "completionTokens": 10,
+              "reasoningTokens": 0,
+              "missingRules": [],
+              "violatedRules": [],
+              "proposed": [],
+              "rejectedDeltas": [],
+              "provider": "StreamLake",
+              "clean": true
+            },
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: []\n}",
+              "rejectionReasons": [],
+              "noOps": [],
+              "failed": false,
+              "note": null,
+              "requiredHit": 3,
+              "requiredTotal": 3,
+              "forbiddenHit": 0,
+              "rejected": 0,
+              "promptTokens": 8204,
+              "completionTokens": 10,
+              "reasoningTokens": 0,
+              "missingRules": [],
+              "violatedRules": [],
+              "proposed": [],
+              "rejectedDeltas": [],
+              "provider": "StreamLake",
+              "clean": true
+            }
+          ],
+          "requiredHit": 9,
+          "requiredTotal": 9,
+          "forbiddenHit": 0,
+          "failedCount": 0,
+          "problems": []
+        },
+        {
+          "name": "discovery-same-turn-retry",
+          "runs": [
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: [\n    {\n      \u0022kind\u0022: \u0022character_observed\u0022,\n      \u0022targetId\u0022: \u0022julian\u0022,\n      \u0022identity\u0022: {\n        \u0022value\u0022: \u0022Julian Vale\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022appearance\u0022: null,\n      \u0022condition\u0022: null,\n      \u0022whereabouts\u0022: {\n        \u0022value\u0022: {\n          \u0022kind\u0022: \u0022Location\u0022,\n          \u0022targetId\u0022: \u0022hotel\u0022,\n          \u0022disclosedLabel\u0022: \u0022Hotel Argent\u0022\n        },\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022evidence\u0022: \u0022You see Julian Vale in Hotel Argent.\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022location_observed\u0022,\n      \u0022targetId\u0022: \u0022hotel\u0022,\n      \u0022identity\u0022: {\n        \u0022value\u0022: \u0022Hotel Argent\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022appearance\u0022: null,\n      \u0022condition\u0022: null,\n      \u0022whereabouts\u0022: null,\n      \u0022connections\u0022: null,\n      \u0022evidence\u0022: \u0022You see Julian Vale in Hotel Argent.\u0022\n    }\n  ]\n}",
+              "rejectionReasons": [
+                "Conflicting same-turn observation; review in Author view."
+              ],
+              "noOps": [
+                {
+                  "kind": "location_observed",
+                  "connections": null,
+                  "targetId": "hotel",
+                  "identity": {
+                    "value": "Hotel Argent",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "appearance": null,
+                  "condition": null,
+                  "whereabouts": null,
+                  "evidence": "You see Julian Vale in Hotel Argent."
+                }
+              ],
+              "failed": false,
+              "note": null,
+              "requiredHit": 2,
+              "requiredTotal": 2,
+              "forbiddenHit": 0,
+              "rejected": 1,
+              "promptTokens": 8078,
+              "completionTokens": 245,
+              "reasoningTokens": 0,
+              "missingRules": [],
+              "violatedRules": [],
+              "proposed": [
+                {
+                  "kind": "character_observed",
+                  "targetId": "julian",
+                  "identity": {
+                    "value": "Julian Vale",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "appearance": null,
+                  "condition": null,
+                  "whereabouts": {
+                    "value": {
+                      "kind": "Location",
+                      "targetId": "hotel",
+                      "disclosedLabel": "Hotel Argent"
+                    },
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "evidence": "You see Julian Vale in Hotel Argent."
+                },
+                {
+                  "kind": "location_observed",
+                  "connections": null,
+                  "targetId": "hotel",
+                  "identity": {
+                    "value": "Hotel Argent",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "appearance": null,
+                  "condition": null,
+                  "whereabouts": null,
+                  "evidence": "You see Julian Vale in Hotel Argent."
+                }
+              ],
+              "rejectedDeltas": [
+                {
+                  "kind": "character_observed",
+                  "targetId": "julian",
+                  "identity": {
+                    "value": "Julian Vale",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "appearance": null,
+                  "condition": null,
+                  "whereabouts": {
+                    "value": {
+                      "kind": "Location",
+                      "targetId": "hotel",
+                      "disclosedLabel": "Hotel Argent"
+                    },
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "evidence": "You see Julian Vale in Hotel Argent."
+                }
+              ],
+              "provider": "StreamLake",
+              "clean": true
+            },
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: [\n    {\n      \u0022kind\u0022: \u0022character_observed\u0022,\n      \u0022targetId\u0022: \u0022julian\u0022,\n      \u0022identity\u0022: {\n        \u0022value\u0022: \u0022Julian Vale\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022appearance\u0022: null,\n      \u0022condition\u0022: null,\n      \u0022whereabouts\u0022: {\n        \u0022value\u0022: {\n          \u0022kind\u0022: \u0022Location\u0022,\n          \u0022targetId\u0022: \u0022hotel\u0022,\n          \u0022disclosedLabel\u0022: \u0022Hotel Argent\u0022\n        },\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022evidence\u0022: \u0022You see Julian Vale in Hotel Argent.\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022location_observed\u0022,\n      \u0022targetId\u0022: \u0022hotel\u0022,\n      \u0022identity\u0022: {\n        \u0022value\u0022: \u0022Hotel Argent\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022appearance\u0022: null,\n      \u0022condition\u0022: null,\n      \u0022whereabouts\u0022: null,\n      \u0022connections\u0022: null,\n      \u0022evidence\u0022: \u0022You see Julian Vale in Hotel Argent.\u0022\n    }\n  ]\n}",
+              "rejectionReasons": [
+                "Conflicting same-turn observation; review in Author view."
+              ],
+              "noOps": [
+                {
+                  "kind": "location_observed",
+                  "connections": null,
+                  "targetId": "hotel",
+                  "identity": {
+                    "value": "Hotel Argent",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "appearance": null,
+                  "condition": null,
+                  "whereabouts": null,
+                  "evidence": "You see Julian Vale in Hotel Argent."
+                }
+              ],
+              "failed": false,
+              "note": null,
+              "requiredHit": 2,
+              "requiredTotal": 2,
+              "forbiddenHit": 0,
+              "rejected": 1,
+              "promptTokens": 8078,
+              "completionTokens": 245,
+              "reasoningTokens": 0,
+              "missingRules": [],
+              "violatedRules": [],
+              "proposed": [
+                {
+                  "kind": "character_observed",
+                  "targetId": "julian",
+                  "identity": {
+                    "value": "Julian Vale",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "appearance": null,
+                  "condition": null,
+                  "whereabouts": {
+                    "value": {
+                      "kind": "Location",
+                      "targetId": "hotel",
+                      "disclosedLabel": "Hotel Argent"
+                    },
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "evidence": "You see Julian Vale in Hotel Argent."
+                },
+                {
+                  "kind": "location_observed",
+                  "connections": null,
+                  "targetId": "hotel",
+                  "identity": {
+                    "value": "Hotel Argent",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "appearance": null,
+                  "condition": null,
+                  "whereabouts": null,
+                  "evidence": "You see Julian Vale in Hotel Argent."
+                }
+              ],
+              "rejectedDeltas": [
+                {
+                  "kind": "character_observed",
+                  "targetId": "julian",
+                  "identity": {
+                    "value": "Julian Vale",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "appearance": null,
+                  "condition": null,
+                  "whereabouts": {
+                    "value": {
+                      "kind": "Location",
+                      "targetId": "hotel",
+                      "disclosedLabel": "Hotel Argent"
+                    },
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "evidence": "You see Julian Vale in Hotel Argent."
+                }
+              ],
+              "provider": "StreamLake",
+              "clean": true
+            },
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: [\n    {\n      \u0022kind\u0022: \u0022character_observed\u0022,\n      \u0022targetId\u0022: \u0022julian\u0022,\n      \u0022identity\u0022: {\n        \u0022value\u0022: \u0022Julian Vale\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022appearance\u0022: null,\n      \u0022condition\u0022: null,\n      \u0022whereabouts\u0022: {\n        \u0022value\u0022: {\n          \u0022kind\u0022: \u0022Location\u0022,\n          \u0022targetId\u0022: \u0022hotel\u0022,\n          \u0022disclosedLabel\u0022: \u0022Hotel Argent\u0022\n        },\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022evidence\u0022: \u0022You see Julian Vale in Hotel Argent.\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022location_observed\u0022,\n      \u0022targetId\u0022: \u0022hotel\u0022,\n      \u0022identity\u0022: {\n        \u0022value\u0022: \u0022Hotel Argent\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022appearance\u0022: null,\n      \u0022condition\u0022: null,\n      \u0022whereabouts\u0022: null,\n      \u0022connections\u0022: null,\n      \u0022evidence\u0022: \u0022You see Julian Vale in Hotel Argent.\u0022\n    }\n  ]\n}",
+              "rejectionReasons": [
+                "Conflicting same-turn observation; review in Author view."
+              ],
+              "noOps": [
+                {
+                  "kind": "location_observed",
+                  "connections": null,
+                  "targetId": "hotel",
+                  "identity": {
+                    "value": "Hotel Argent",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "appearance": null,
+                  "condition": null,
+                  "whereabouts": null,
+                  "evidence": "You see Julian Vale in Hotel Argent."
+                }
+              ],
+              "failed": false,
+              "note": null,
+              "requiredHit": 2,
+              "requiredTotal": 2,
+              "forbiddenHit": 0,
+              "rejected": 1,
+              "promptTokens": 8078,
+              "completionTokens": 245,
+              "reasoningTokens": 0,
+              "missingRules": [],
+              "violatedRules": [],
+              "proposed": [
+                {
+                  "kind": "character_observed",
+                  "targetId": "julian",
+                  "identity": {
+                    "value": "Julian Vale",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "appearance": null,
+                  "condition": null,
+                  "whereabouts": {
+                    "value": {
+                      "kind": "Location",
+                      "targetId": "hotel",
+                      "disclosedLabel": "Hotel Argent"
+                    },
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "evidence": "You see Julian Vale in Hotel Argent."
+                },
+                {
+                  "kind": "location_observed",
+                  "connections": null,
+                  "targetId": "hotel",
+                  "identity": {
+                    "value": "Hotel Argent",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "appearance": null,
+                  "condition": null,
+                  "whereabouts": null,
+                  "evidence": "You see Julian Vale in Hotel Argent."
+                }
+              ],
+              "rejectedDeltas": [
+                {
+                  "kind": "character_observed",
+                  "targetId": "julian",
+                  "identity": {
+                    "value": "Julian Vale",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "appearance": null,
+                  "condition": null,
+                  "whereabouts": {
+                    "value": {
+                      "kind": "Location",
+                      "targetId": "hotel",
+                      "disclosedLabel": "Hotel Argent"
+                    },
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "evidence": "You see Julian Vale in Hotel Argent."
+                }
+              ],
+              "provider": "StreamLake",
+              "clean": true
+            }
+          ],
+          "requiredHit": 6,
+          "requiredTotal": 6,
+          "forbiddenHit": 0,
+          "failedCount": 0,
+          "problems": []
+        },
+        {
+          "name": "discovery-older-retry",
+          "runs": [
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: [\n    {\n      \u0022kind\u0022: \u0022character_observed\u0022,\n      \u0022targetId\u0022: \u0022julian\u0022,\n      \u0022identity\u0022: {\n        \u0022value\u0022: \u0022Julian Vale\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022appearance\u0022: null,\n      \u0022condition\u0022: null,\n      \u0022whereabouts\u0022: {\n        \u0022value\u0022: {\n          \u0022kind\u0022: \u0022Location\u0022,\n          \u0022targetId\u0022: \u0022hotel\u0022,\n          \u0022disclosedLabel\u0022: \u0022Hotel Argent\u0022\n        },\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022evidence\u0022: \u0022You see Julian Vale in Hotel Argent.\u0022\n    }\n  ]\n}",
+              "rejectionReasons": [
+                "Older evidence cannot overwrite a newer observation."
+              ],
+              "noOps": [],
+              "failed": false,
+              "note": null,
+              "requiredHit": 2,
+              "requiredTotal": 2,
+              "forbiddenHit": 0,
+              "rejected": 1,
+              "promptTokens": 7957,
+              "completionTokens": 152,
+              "reasoningTokens": 0,
+              "missingRules": [],
+              "violatedRules": [],
+              "proposed": [
+                {
+                  "kind": "character_observed",
+                  "targetId": "julian",
+                  "identity": {
+                    "value": "Julian Vale",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "appearance": null,
+                  "condition": null,
+                  "whereabouts": {
+                    "value": {
+                      "kind": "Location",
+                      "targetId": "hotel",
+                      "disclosedLabel": "Hotel Argent"
+                    },
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "evidence": "You see Julian Vale in Hotel Argent."
+                }
+              ],
+              "rejectedDeltas": [
+                {
+                  "kind": "character_observed",
+                  "targetId": "julian",
+                  "identity": {
+                    "value": "Julian Vale",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "appearance": null,
+                  "condition": null,
+                  "whereabouts": {
+                    "value": {
+                      "kind": "Location",
+                      "targetId": "hotel",
+                      "disclosedLabel": "Hotel Argent"
+                    },
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "evidence": "You see Julian Vale in Hotel Argent."
+                }
+              ],
+              "provider": "StreamLake",
+              "clean": true
+            },
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: [\n    {\n      \u0022kind\u0022: \u0022character_observed\u0022,\n      \u0022targetId\u0022: \u0022julian\u0022,\n      \u0022identity\u0022: {\n        \u0022value\u0022: \u0022Julian Vale\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022appearance\u0022: null,\n      \u0022condition\u0022: null,\n      \u0022whereabouts\u0022: {\n        \u0022value\u0022: {\n          \u0022kind\u0022: \u0022Location\u0022,\n          \u0022targetId\u0022: \u0022hotel\u0022,\n          \u0022disclosedLabel\u0022: \u0022Hotel Argent\u0022\n        },\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022evidence\u0022: \u0022You see Julian Vale in Hotel Argent.\u0022\n    }\n  ]\n}",
+              "rejectionReasons": [
+                "Older evidence cannot overwrite a newer observation."
+              ],
+              "noOps": [],
+              "failed": false,
+              "note": null,
+              "requiredHit": 2,
+              "requiredTotal": 2,
+              "forbiddenHit": 0,
+              "rejected": 1,
+              "promptTokens": 7957,
+              "completionTokens": 152,
+              "reasoningTokens": 0,
+              "missingRules": [],
+              "violatedRules": [],
+              "proposed": [
+                {
+                  "kind": "character_observed",
+                  "targetId": "julian",
+                  "identity": {
+                    "value": "Julian Vale",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "appearance": null,
+                  "condition": null,
+                  "whereabouts": {
+                    "value": {
+                      "kind": "Location",
+                      "targetId": "hotel",
+                      "disclosedLabel": "Hotel Argent"
+                    },
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "evidence": "You see Julian Vale in Hotel Argent."
+                }
+              ],
+              "rejectedDeltas": [
+                {
+                  "kind": "character_observed",
+                  "targetId": "julian",
+                  "identity": {
+                    "value": "Julian Vale",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "appearance": null,
+                  "condition": null,
+                  "whereabouts": {
+                    "value": {
+                      "kind": "Location",
+                      "targetId": "hotel",
+                      "disclosedLabel": "Hotel Argent"
+                    },
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "evidence": "You see Julian Vale in Hotel Argent."
+                }
+              ],
+              "provider": "StreamLake",
+              "clean": true
+            },
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: [\n    {\n      \u0022kind\u0022: \u0022character_observed\u0022,\n      \u0022targetId\u0022: \u0022julian\u0022,\n      \u0022identity\u0022: {\n        \u0022value\u0022: \u0022Julian Vale\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022appearance\u0022: null,\n      \u0022condition\u0022: null,\n      \u0022whereabouts\u0022: {\n        \u0022value\u0022: {\n          \u0022kind\u0022: \u0022Location\u0022,\n          \u0022targetId\u0022: \u0022hotel\u0022,\n          \u0022disclosedLabel\u0022: \u0022Hotel Argent\u0022\n        },\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022evidence\u0022: \u0022You see Julian Vale in Hotel Argent.\u0022\n    }\n  ]\n}",
+              "rejectionReasons": [
+                "Older evidence cannot overwrite a newer observation."
+              ],
+              "noOps": [],
+              "failed": false,
+              "note": null,
+              "requiredHit": 2,
+              "requiredTotal": 2,
+              "forbiddenHit": 0,
+              "rejected": 1,
+              "promptTokens": 7957,
+              "completionTokens": 152,
+              "reasoningTokens": 0,
+              "missingRules": [],
+              "violatedRules": [],
+              "proposed": [
+                {
+                  "kind": "character_observed",
+                  "targetId": "julian",
+                  "identity": {
+                    "value": "Julian Vale",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "appearance": null,
+                  "condition": null,
+                  "whereabouts": {
+                    "value": {
+                      "kind": "Location",
+                      "targetId": "hotel",
+                      "disclosedLabel": "Hotel Argent"
+                    },
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "evidence": "You see Julian Vale in Hotel Argent."
+                }
+              ],
+              "rejectedDeltas": [
+                {
+                  "kind": "character_observed",
+                  "targetId": "julian",
+                  "identity": {
+                    "value": "Julian Vale",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "appearance": null,
+                  "condition": null,
+                  "whereabouts": {
+                    "value": {
+                      "kind": "Location",
+                      "targetId": "hotel",
+                      "disclosedLabel": "Hotel Argent"
+                    },
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "evidence": "You see Julian Vale in Hotel Argent."
+                }
+              ],
+              "provider": "StreamLake",
+              "clean": true
+            }
+          ],
+          "requiredHit": 6,
+          "requiredTotal": 6,
+          "forbiddenHit": 0,
+          "failedCount": 0,
+          "problems": []
+        },
+        {
+          "name": "discovery-author-protected",
+          "runs": [
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: [\n    {\n      \u0022kind\u0022: \u0022character_observed\u0022,\n      \u0022targetId\u0022: \u0022julian\u0022,\n      \u0022identity\u0022: {\n        \u0022value\u0022: \u0022Julian Vale\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022appearance\u0022: null,\n      \u0022condition\u0022: null,\n      \u0022whereabouts\u0022: {\n        \u0022value\u0022: {\n          \u0022kind\u0022: \u0022Location\u0022,\n          \u0022targetId\u0022: \u0022hotel\u0022,\n          \u0022disclosedLabel\u0022: \u0022Hotel Argent\u0022\n        },\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022evidence\u0022: \u0022You see Julian Vale in Hotel Argent.\u0022\n    }\n  ]\n}",
+              "rejectionReasons": [
+                "This aspect is protected from retry of older evidence. Clear protection to allow it."
+              ],
+              "noOps": [],
+              "failed": false,
+              "note": null,
+              "requiredHit": 2,
+              "requiredTotal": 2,
+              "forbiddenHit": 0,
+              "rejected": 1,
+              "promptTokens": 8079,
+              "completionTokens": 152,
+              "reasoningTokens": 0,
+              "missingRules": [],
+              "violatedRules": [],
+              "proposed": [
+                {
+                  "kind": "character_observed",
+                  "targetId": "julian",
+                  "identity": {
+                    "value": "Julian Vale",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "appearance": null,
+                  "condition": null,
+                  "whereabouts": {
+                    "value": {
+                      "kind": "Location",
+                      "targetId": "hotel",
+                      "disclosedLabel": "Hotel Argent"
+                    },
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "evidence": "You see Julian Vale in Hotel Argent."
+                }
+              ],
+              "rejectedDeltas": [
+                {
+                  "kind": "character_observed",
+                  "targetId": "julian",
+                  "identity": {
+                    "value": "Julian Vale",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "appearance": null,
+                  "condition": null,
+                  "whereabouts": {
+                    "value": {
+                      "kind": "Location",
+                      "targetId": "hotel",
+                      "disclosedLabel": "Hotel Argent"
+                    },
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "evidence": "You see Julian Vale in Hotel Argent."
+                }
+              ],
+              "provider": "StreamLake",
+              "clean": true
+            },
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: [\n    {\n      \u0022kind\u0022: \u0022character_observed\u0022,\n      \u0022targetId\u0022: \u0022julian\u0022,\n      \u0022identity\u0022: {\n        \u0022value\u0022: \u0022Julian Vale\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022appearance\u0022: null,\n      \u0022condition\u0022: null,\n      \u0022whereabouts\u0022: {\n        \u0022value\u0022: {\n          \u0022kind\u0022: \u0022Location\u0022,\n          \u0022targetId\u0022: \u0022hotel\u0022,\n          \u0022disclosedLabel\u0022: \u0022Hotel Argent\u0022\n        },\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022evidence\u0022: \u0022You see Julian Vale in Hotel Argent.\u0022\n    }\n  ]\n}",
+              "rejectionReasons": [
+                "This aspect is protected from retry of older evidence. Clear protection to allow it."
+              ],
+              "noOps": [],
+              "failed": false,
+              "note": null,
+              "requiredHit": 2,
+              "requiredTotal": 2,
+              "forbiddenHit": 0,
+              "rejected": 1,
+              "promptTokens": 8079,
+              "completionTokens": 152,
+              "reasoningTokens": 0,
+              "missingRules": [],
+              "violatedRules": [],
+              "proposed": [
+                {
+                  "kind": "character_observed",
+                  "targetId": "julian",
+                  "identity": {
+                    "value": "Julian Vale",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "appearance": null,
+                  "condition": null,
+                  "whereabouts": {
+                    "value": {
+                      "kind": "Location",
+                      "targetId": "hotel",
+                      "disclosedLabel": "Hotel Argent"
+                    },
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "evidence": "You see Julian Vale in Hotel Argent."
+                }
+              ],
+              "rejectedDeltas": [
+                {
+                  "kind": "character_observed",
+                  "targetId": "julian",
+                  "identity": {
+                    "value": "Julian Vale",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "appearance": null,
+                  "condition": null,
+                  "whereabouts": {
+                    "value": {
+                      "kind": "Location",
+                      "targetId": "hotel",
+                      "disclosedLabel": "Hotel Argent"
+                    },
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "evidence": "You see Julian Vale in Hotel Argent."
+                }
+              ],
+              "provider": "StreamLake",
+              "clean": true
+            },
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: [\n    {\n      \u0022kind\u0022: \u0022character_observed\u0022,\n      \u0022targetId\u0022: \u0022julian\u0022,\n      \u0022identity\u0022: {\n        \u0022value\u0022: \u0022Julian Vale\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022appearance\u0022: null,\n      \u0022condition\u0022: null,\n      \u0022whereabouts\u0022: {\n        \u0022value\u0022: {\n          \u0022kind\u0022: \u0022Location\u0022,\n          \u0022targetId\u0022: \u0022hotel\u0022,\n          \u0022disclosedLabel\u0022: \u0022Hotel Argent\u0022\n        },\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022evidence\u0022: \u0022You see Julian Vale in Hotel Argent.\u0022\n    }\n  ]\n}",
+              "rejectionReasons": [
+                "This aspect is protected from retry of older evidence. Clear protection to allow it."
+              ],
+              "noOps": [],
+              "failed": false,
+              "note": null,
+              "requiredHit": 2,
+              "requiredTotal": 2,
+              "forbiddenHit": 0,
+              "rejected": 1,
+              "promptTokens": 8079,
+              "completionTokens": 152,
+              "reasoningTokens": 0,
+              "missingRules": [],
+              "violatedRules": [],
+              "proposed": [
+                {
+                  "kind": "character_observed",
+                  "targetId": "julian",
+                  "identity": {
+                    "value": "Julian Vale",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "appearance": null,
+                  "condition": null,
+                  "whereabouts": {
+                    "value": {
+                      "kind": "Location",
+                      "targetId": "hotel",
+                      "disclosedLabel": "Hotel Argent"
+                    },
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "evidence": "You see Julian Vale in Hotel Argent."
+                }
+              ],
+              "rejectedDeltas": [
+                {
+                  "kind": "character_observed",
+                  "targetId": "julian",
+                  "identity": {
+                    "value": "Julian Vale",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "appearance": null,
+                  "condition": null,
+                  "whereabouts": {
+                    "value": {
+                      "kind": "Location",
+                      "targetId": "hotel",
+                      "disclosedLabel": "Hotel Argent"
+                    },
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "evidence": "You see Julian Vale in Hotel Argent."
+                }
+              ],
+              "provider": "StreamLake",
+              "clean": true
+            }
+          ],
+          "requiredHit": 6,
+          "requiredTotal": 6,
+          "forbiddenHit": 0,
+          "failedCount": 0,
+          "problems": []
+        },
+        {
+          "name": "discovery-lore-topic",
+          "runs": [
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: [\n    {\n      \u0022kind\u0022: \u0022fact_established\u0022,\n      \u0022factId\u0022: \u0022lantern-society-exists\u0022,\n      \u0022text\u0022: \u0022There is an organization called the Lantern Society.\u0022,\n      \u0022sourceId\u0022: \u0022vivian\u0022,\n      \u0022evidence\u0022: \u0022Vivian says, \\\u0022There is an organization called the Lantern Society.\\\u0022\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022fact_learned\u0022,\n      \u0022characterId\u0022: \u0022player\u0022,\n      \u0022factId\u0022: \u0022lantern-society-exists\u0022,\n      \u0022evidence\u0022: \u0022Vivian says, \\\u0022There is an organization called the Lantern Society.\\\u0022\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022fact_learned\u0022,\n      \u0022characterId\u0022: \u0022vivian\u0022,\n      \u0022factId\u0022: \u0022lantern-society-exists\u0022,\n      \u0022evidence\u0022: \u0022Vivian says, \\\u0022There is an organization called the Lantern Society.\\\u0022\u0022\n    }\n  ]\n}",
+              "rejectionReasons": [],
+              "noOps": [],
+              "failed": false,
+              "note": null,
+              "requiredHit": 2,
+              "requiredTotal": 3,
+              "forbiddenHit": 0,
+              "rejected": 0,
+              "promptTokens": 8225,
+              "completionTokens": 199,
+              "reasoningTokens": 0,
+              "missingRules": [
+                "Topic learned"
+              ],
+              "violatedRules": [],
+              "proposed": [
+                {
+                  "kind": "fact_established",
+                  "factId": "lantern-society-exists",
+                  "text": "There is an organization called the Lantern Society.",
+                  "sourceId": "vivian",
+                  "evidence": "Vivian says, \u0022There is an organization called the Lantern Society.\u0022"
+                },
+                {
+                  "kind": "fact_learned",
+                  "characterId": "player",
+                  "factId": "lantern-society-exists",
+                  "evidence": "Vivian says, \u0022There is an organization called the Lantern Society.\u0022"
+                },
+                {
+                  "kind": "fact_learned",
+                  "characterId": "vivian",
+                  "factId": "lantern-society-exists",
+                  "evidence": "Vivian says, \u0022There is an organization called the Lantern Society.\u0022"
+                }
+              ],
+              "rejectedDeltas": [],
+              "provider": "StreamLake",
+              "clean": false
+            },
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: [\n    {\n      \u0022kind\u0022: \u0022fact_established\u0022,\n      \u0022factId\u0022: \u0022lantern-society-exists\u0022,\n      \u0022text\u0022: \u0022There is an organization called the Lantern Society.\u0022,\n      \u0022sourceId\u0022: \u0022vivian\u0022,\n      \u0022evidence\u0022: \u0022Vivian says, \\\u0022There is an organization called the Lantern Society.\\\u0022\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022fact_learned\u0022,\n      \u0022characterId\u0022: \u0022player\u0022,\n      \u0022factId\u0022: \u0022lantern-society-exists\u0022,\n      \u0022evidence\u0022: \u0022You hear the name for the first time.\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022fact_learned\u0022,\n      \u0022characterId\u0022: \u0022vivian\u0022,\n      \u0022factId\u0022: \u0022lantern-society-exists\u0022,\n      \u0022evidence\u0022: \u0022Vivian says, \\\u0022There is an organization called the Lantern Society.\\\u0022\u0022\n    }\n  ]\n}",
+              "rejectionReasons": [],
+              "noOps": [],
+              "failed": false,
+              "note": null,
+              "requiredHit": 2,
+              "requiredTotal": 3,
+              "forbiddenHit": 0,
+              "rejected": 0,
+              "promptTokens": 8225,
+              "completionTokens": 191,
+              "reasoningTokens": 0,
+              "missingRules": [
+                "Topic learned"
+              ],
+              "violatedRules": [],
+              "proposed": [
+                {
+                  "kind": "fact_established",
+                  "factId": "lantern-society-exists",
+                  "text": "There is an organization called the Lantern Society.",
+                  "sourceId": "vivian",
+                  "evidence": "Vivian says, \u0022There is an organization called the Lantern Society.\u0022"
+                },
+                {
+                  "kind": "fact_learned",
+                  "characterId": "player",
+                  "factId": "lantern-society-exists",
+                  "evidence": "You hear the name for the first time."
+                },
+                {
+                  "kind": "fact_learned",
+                  "characterId": "vivian",
+                  "factId": "lantern-society-exists",
+                  "evidence": "Vivian says, \u0022There is an organization called the Lantern Society.\u0022"
+                }
+              ],
+              "rejectedDeltas": [],
+              "provider": "StreamLake",
+              "clean": false
+            },
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: [\n    {\n      \u0022kind\u0022: \u0022fact_established\u0022,\n      \u0022factId\u0022: \u0022lantern-society-exists\u0022,\n      \u0022text\u0022: \u0022There is an organization called the Lantern Society.\u0022,\n      \u0022sourceId\u0022: \u0022vivian\u0022,\n      \u0022evidence\u0022: \u0022Vivian says, \\\u0022There is an organization called the Lantern Society.\\\u0022\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022fact_learned\u0022,\n      \u0022characterId\u0022: \u0022player\u0022,\n      \u0022factId\u0022: \u0022lantern-society-exists\u0022,\n      \u0022evidence\u0022: \u0022Vivian says, \\\u0022There is an organization called the Lantern Society.\\\u0022 You hear the name for the first time.\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022fact_learned\u0022,\n      \u0022characterId\u0022: \u0022vivian\u0022,\n      \u0022factId\u0022: \u0022lantern-society-exists\u0022,\n      \u0022evidence\u0022: \u0022Vivian says, \\\u0022There is an organization called the Lantern Society.\\\u0022\u0022\n    }\n  ]\n}",
+              "rejectionReasons": [],
+              "noOps": [],
+              "failed": false,
+              "note": null,
+              "requiredHit": 2,
+              "requiredTotal": 3,
+              "forbiddenHit": 0,
+              "rejected": 0,
+              "promptTokens": 8225,
+              "completionTokens": 207,
+              "reasoningTokens": 0,
+              "missingRules": [
+                "Topic learned"
+              ],
+              "violatedRules": [],
+              "proposed": [
+                {
+                  "kind": "fact_established",
+                  "factId": "lantern-society-exists",
+                  "text": "There is an organization called the Lantern Society.",
+                  "sourceId": "vivian",
+                  "evidence": "Vivian says, \u0022There is an organization called the Lantern Society.\u0022"
+                },
+                {
+                  "kind": "fact_learned",
+                  "characterId": "player",
+                  "factId": "lantern-society-exists",
+                  "evidence": "Vivian says, \u0022There is an organization called the Lantern Society.\u0022 You hear the name for the first time."
+                },
+                {
+                  "kind": "fact_learned",
+                  "characterId": "vivian",
+                  "factId": "lantern-society-exists",
+                  "evidence": "Vivian says, \u0022There is an organization called the Lantern Society.\u0022"
+                }
+              ],
+              "rejectedDeltas": [],
+              "provider": "StreamLake",
+              "clean": false
+            }
+          ],
+          "requiredHit": 6,
+          "requiredTotal": 9,
+          "forbiddenHit": 0,
+          "failedCount": 0,
+          "problems": [
+            {
+              "kind": 0,
+              "description": "Topic learned",
+              "hitRuns": 3,
+              "totalRuns": 3
+            }
+          ]
+        }
+      ],
+      "requiredRate": 0.9166666666666666,
+      "forbiddenPerRun": 0,
+      "rejectsPerRun": 0.6,
+      "averageCompletionTokens": 151.6,
+      "providerBreakdown": [
+        {
+          "provider": "StreamLake",
+          "runs": 15,
+          "clean": 12,
+          "forbiddenPerRun": 0
+        }
+      ]
+    }
+  ],
+  "promptFingerprint": "4b299c42",
+  "schemaFingerprint": "D539A520EBD97525CD678A1B5B97B20A5620A15BBFCB10B52A1D2616075DBA2E"
+}

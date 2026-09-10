@@ -41,7 +41,8 @@ public sealed record EvalScenario(
     IReadOnlyList<DeltaRule> Forbidden,
     Func<WorldState>? Seed = null,
     IReadOnlyList<StateRule>? Expected = null,
-    Func<LoreBook>? Lore = null)
+    Func<LoreBook>? Lore = null,
+    int? ObservationTurn = null)
 {
     /// <summary>
     /// The pack lore this scenario is scored against. Empty for every scenario that predates
@@ -1130,7 +1131,7 @@ public static class EvalScenarios
         PlayerArrival with { Name = "player-arrival-large", Seed = WorldSeeds.Marrow_Late };
 
     /// <summary>Every scenario, scored and diagnostic, for name-based selection.</summary>
-    public static IReadOnlyList<EvalScenario> Everything => [.. All, .. Diagnostics];
+    public static IReadOnlyList<EvalScenario> Everything => [.. All, .. Diagnostics, .. DiscoveryEvalScenarios.All];
 
     /// <summary>
     /// <b>Diagnostic.</b> The player names a place that does not exist in canon, as

@@ -53,6 +53,14 @@ public static partial class ContextAssembler
         bool withIds)
     {
         StringBuilder builder = new();
+        builder.AppendLine("## Player knowledge and observations");
+        foreach (var entry in DiscoveryProjection.Player(world, lore).Entries)
+        {
+            builder.AppendLine($"{Label(entry.Name, entry.Id, withIds)}: {entry.Description}");
+            foreach (var field in entry.Fields) builder.AppendLine($"  {field.Label}: {field.Value}");
+        }
+        builder.AppendLine("## Private scene truth — canonical identities are NOT necessarily player-known names");
+        builder.AppendLine("Use learned labels above in public prose. Private fields, contents, motives and co-location are not permission to reveal them. Observe presentation rules; disclosure must happen through the story.");
 
         Location? here = world.PlayerLocationId is { } id ? world.FindLocation(id) : null;
 
@@ -101,6 +109,8 @@ public static partial class ContextAssembler
         builder.AppendLine();
         AppendPlayer(builder, world, lore, sheets, withIds);
         AppendNpcs(builder, world, lore, sheets, withIds);
+        AppendDiscoveryRules(builder, world, withIds);
+        builder.AppendLine("## Private story/lore guidance — common knowledge is explicitly marked; knowing a topic does not reveal its entire body");
         AppendLore(builder, world, lore, withIds);
 
         if (withIds)
@@ -109,6 +119,36 @@ public static partial class ContextAssembler
         }
 
         return builder.ToString().TrimEnd();
+    }
+
+    private static void AppendDiscoveryRules(StringBuilder builder, WorldState world, bool withIds)
+    {
+        builder.AppendLine("Presentation rules for this scene:");
+        var here = world.PlayerLocationId;
+        var present = world.CharactersIn(here ?? "").ToList();
+        var ids = new List<(DiscoveryKind Kind, Entity Entity)>();
+        if (here is not null && world.FindLocation(here) is { } location)
+        {
+            ids.Add((DiscoveryKind.Location, location));
+            foreach (var destination in location.Connections)
+                if (world.FindLocation(destination) is { } target)
+                {
+                    var rule = world.Discovery?.Rules.GetValueOrDefault($"Route:{here}:{destination}") ?? new();
+                    builder.AppendLine($"  Route {Label(location.Name, location.Id, withIds)} -> {Label(target.Name, target.Id, withIds)}: {(rule.RequiresDiscovery ? "Requires discovery" : "Ordinary scene presentation")}. {rule.PrivateInstruction}");
+                }
+        }
+        ids.AddRange(present.Select(c => (DiscoveryKind.Character, (Entity)c)));
+        // Ids compare case-insensitively everywhere else, including the holder test on the very
+        // next line. Using == here silently dropped an item whose LocationId differed only in
+        // case from the presentation rules, so its discovery rule never reached the narrator.
+        ids.AddRange(world.Items.Values.Where(i => here is not null && string.Equals(i.LocationId, here, StringComparison.OrdinalIgnoreCase)
+            || present.Any(c => string.Equals(c.Id, i.HolderId, StringComparison.OrdinalIgnoreCase))).Select(i => (DiscoveryKind.Item, (Entity)i)));
+        foreach (var (kind, entity) in ids)
+        {
+            var rule = world.Discovery?.Rules.GetValueOrDefault(DiscoveryState.Key(kind, entity.Id)) ?? new();
+            var alias = world.Discovery?.Find(kind, entity.Id) is { } memory ? DiscoveryEngine.SafeName(memory) : null;
+            builder.AppendLine($"  {Label(entity.Name, entity.Id, withIds)} [private canonical identity; player label: {alias ?? "not learned"}]: {(rule.RequiresDiscovery ? "Requires discovery — do not announce undiscovered presence" : "Ordinary scene presentation — private details remain private")}. {rule.PrivateInstruction}");
+        }
     }
 
     /// <summary>
@@ -404,24 +444,24 @@ public static partial class ContextAssembler
 
     private static void AppendKnownIds(StringBuilder builder, WorldState world, LoreBook lore)
     {
-        builder.AppendLine("## Known ids");
+        builder.AppendLine("## Known ids — private canon identity roster, NOT player knowledge");
         builder.AppendLine();
         builder.AppendLine(
             "These already exist. Reference them by id. Do not re-introduce them, and do not " +
             "re-establish a fact that is already listed.");
         builder.AppendLine();
-        builder.AppendLine($"Characters: {Join(world.Characters.Keys)}");
-        builder.AppendLine($"Locations:  {Join(world.Locations.Keys)}");
+        builder.AppendLine($"Characters: {Join(world.Characters.Values.Select(c => Label(c.Name, c.Id, true) + (c.LocationId is null ? " [EXISTS OFFSTAGE; return uses character_moved]" : " [already exists]")))}");
+        builder.AppendLine($"Locations:  {Join(world.Locations.Values.Select(l => Label(l.Name, l.Id, true)))}");
         builder.AppendLine($"Facts:      {Join(world.Facts.Keys)}");
 
         if (world.Items.Count > 0)
         {
-            builder.AppendLine($"Items:      {Join(world.Items.Keys)}");
+            builder.AppendLine($"Items:      {Join(world.Items.Values.Select(i => Label(i.Name, i.Id, true)))}");
         }
 
         if (lore.Count > 0)
         {
-            builder.AppendLine($"Lore:       {Join(lore.Ids)}");
+            builder.AppendLine($"Lore:       {Join(lore.All.Select(l => Label(l.Title, l.Id, true) + " [learn topic via fact_learned, not a new fact about its existence]"))}");
         }
     }
 

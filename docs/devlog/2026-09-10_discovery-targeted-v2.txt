@@ -1,0 +1,199 @@
+StoryWeaver - console client
+
+Settings loaded and validated.
+
+  Endpoint : https://openrouter.ai/api/v1/chat/completions
+  Timeout  : 120s
+
+  Roles:
+    extraction   deepseek/deepseek-v3.2  [temp 0, JsonSchema, require_parameters]
+    narration    qwen/qwen3.7-plus  [temp 0.9, Text]
+    summarize    deepseek/deepseek-v3.2  [temp 0.3, Text]
+    worldgen     deepseek/deepseek-v3.2  [temp 1, JsonSchema, require_parameters]
+
+Scenarios: 10, models: 1, providers: StreamLake, runs each: 3
+Calls: 30
+Logging to logs\session-2026-09-10_06-21-05.log
+
+=== deepseek/deepseek-v3.2 via StreamLake ===
+    [two-stage-entry run 1]
+      ok       player_moved        -> marrow-square
+      ok       location_introduced well-cistern (well cistern)
+      ok       item_introduced     pale-thing (pale thing) @ well-cistern
+      REJECTED {"kind":"location_observed","connections":null,"entityKind":"Location","targetId":"marrow-square","identity":{"value":"Marrow Square","provenance":"Observed","factId":null},"appearance":null,"condition":null,"whereabouts":null,"evidence":"You brace against the cold stone and drop the last few feet, your boots breaking through a skin of black water at the bottom of the shaft."}
+      REJECTED {"kind":"location_observed","connections":null,"entityKind":"Location","targetId":"well-cistern","identity":{"value":"well cistern","provenance":"Observed","factId":null},"appearance":{"value":"A vaulted cistern, wide and dark, with a low brick tunnel leading to it. Crates are stacked against one side.","provenance":"Observed","factId":null},"condition":null,"whereabouts":null,"evidence":"A low brick tunnel runs off from the shaft. After twenty feet it opens out into a vaulted cistern, wide enough that your light cannot find the far wall. Crates have been stacked against the near side, sodden and split, and something pale is wedged behind them where the water laps at the brick."}
+      REJECTED {"kind":"item_observed","entityKind":"Item","targetId":"pale-thing","identity":{"value":"pale thing","provenance":"Observed","factId":null},"appearance":{"value":"Something pale wedged behind the crates.","provenance":"Observed","factId":null},"condition":null,"whereabouts":{"value":{"kind":"Location","targetId":"well-cistern","disclosedLabel":"well cistern"},"provenance":"Observed","factId":null},"evidence":"something pale is wedged behind them where the water laps at the brick."}
+    [two-stage-entry run 2]
+      ok       player_moved        -> marrow-square
+      ok       location_introduced well-cistern (Well Cistern)
+      ok       player_moved        -> well-cistern
+      ok       item_introduced     pale-thing-crates (Pale thing) @ well-cistern
+      REJECTED {"kind":"location_observed","connections":null,"entityKind":"Location","targetId":"marrow-square","identity":{"value":"Marrow Square","provenance":"Observed","factId":null},"appearance":null,"condition":null,"whereabouts":null,"evidence":"You brace against the cold stone and drop the last few feet, your boots breaking through a skin of black water at the bottom of the shaft."}
+      REJECTED {"kind":"location_observed","connections":null,"entityKind":"Location","targetId":"well-cistern","identity":{"value":"Well Cistern","provenance":"Observed","factId":null},"appearance":{"value":"A vaulted cistern, wide enough that your light cannot find the far wall. Crates have been stacked against the near side, sodden and split.","provenance":"Observed","factId":null},"condition":{"value":"Air thick and close, tasting of rust and old rot. Water laps at the brick.","provenance":"Observed","factId":null},"whereabouts":null,"evidence":"After twenty feet it opens out into a vaulted cistern, wide enough that your light cannot find the far wall. Crates have been stacked against the near side, sodden and split, and something pale is wedged behind them where the water laps at the brick."}
+      REJECTED {"kind":"item_observed","entityKind":"Item","targetId":"pale-thing-crates","identity":{"value":"Pale thing","provenance":"Observed","factId":null},"appearance":{"value":"Something pale wedged behind the crates.","provenance":"Observed","factId":null},"condition":null,"whereabouts":{"value":{"kind":"Location","targetId":"well-cistern","disclosedLabel":"Well Cistern"},"provenance":"Observed","factId":null},"evidence":"something pale is wedged behind them where the water laps at the brick."}
+    [two-stage-entry run 3]
+      ok       player_moved        -> marrow-square
+      ok       location_introduced well-cistern (Well Cistern)
+      ok       player_moved        -> well-cistern
+      ok       item_introduced     pale-thing (pale thing) @ well-cistern
+  two-stage-entry  required 5/6     forbidden 0
+    [name-reveal run 1]
+      ok       character_renamed   hooded-drinker -> Sera Voight
+      REJECTED {"kind":"character_observed","entityKind":"Character","targetId":"hooded-drinker","identity":{"value":"Sera Voight","provenance":"Observed","factId":null},"appearance":{"value":"dark hair flattened by the rain, a face younger than the stillness suggested, a long white scar running from her ear to the corner of her jaw","provenance":"Observed","factId":null},"condition":null,"whereabouts":null,"evidence":"she reaches up and pushes the hood back off her head \u2014 dark hair flattened by the rain, a face younger than the stillness suggested, a long white scar running from her ear to the corner of her jaw. \u0022Sera,\u0022 she says. \u0022Sera Voight.\u0022"}
+      REJECTED {"kind":"character_observed","entityKind":"Character","targetId":"innkeeper-hald","identity":null,"appearance":null,"condition":{"value":"watching","provenance":"Observed","factId":null},"whereabouts":null,"evidence":"Behind the counter, Hald has stopped wiping and is watching the pair of you."}
+    [name-reveal run 2]
+      ok       character_renamed   hooded-drinker -> Sera Voight
+      REJECTED {"kind":"character_observed","entityKind":"Character","targetId":"hooded-drinker","identity":{"value":"Sera Voight","provenance":"Observed","factId":null},"appearance":{"value":"dark hair flattened by the rain, a face younger than the stillness suggested, a long white scar running from her ear to the corner of her jaw","provenance":"Observed","factId":null},"condition":null,"whereabouts":{"value":{"kind":"Location","targetId":"marrow-tavern","disclosedLabel":null},"provenance":"Observed","factId":null},"evidence":"she reaches up and pushes the hood back off her head \u2014 dark hair flattened by the rain, a face younger than the stillness suggested, a long white scar running from her ear to the corner of her jaw. \u0022Sera,\u0022 she says. \u0022Sera Voight.\u0022"}
+      ok       fact_established    sera-knows-player: Sera Voight knows who the player is.  [said by hooded-drinker]
+      ok       fact_learned        hooded-drinker <- sera-knows-player
+      ok       fact_learned        player <- sera-knows-player
+      ok       mood_changed        innkeeper-hald = watchful
+    [name-reveal run 3]
+      ok       character_renamed   hooded-drinker -> Sera Voight
+      REJECTED {"kind":"character_observed","entityKind":"Character","targetId":"hooded-drinker","identity":{"value":"Sera Voight","provenance":"Observed","factId":null},"appearance":{"value":"dark hair flattened by the rain, a face younger than the stillness suggested, a long white scar running from her ear to the corner of her jaw","provenance":"Observed","factId":null},"condition":null,"whereabouts":null,"evidence":"she reaches up and pushes the hood back off her head \u2014 dark hair flattened by the rain, a face younger than the stillness suggested, a long white scar running from her ear to the corner of her jaw. \u0022Sera,\u0022 she says. \u0022Sera Voight.\u0022"}
+      ok       mood_changed        innkeeper-hald = watchful
+  name-reveal      required 9/9     forbidden 0
+    [discovery-briefing run 1]
+      ok       fact_established    vivian-husband: Vivian Vale's husband is Julian Vale, a city contractor.  [said by vivian]
+      ok       fact_established    julian-missing: Julian Vale has been missing since yesterday.  [said by vivian]
+      ok       fact_learned        vivian <- vivian-husband
+      ok       fact_learned        vivian <- julian-missing
+      ok       fact_learned        player <- vivian-husband
+      ok       fact_learned        player <- julian-missing
+      ok       {"kind":"character_observed","entityKind":"Character","targetId":"vivian","identity":{"value":"Vivian Vale","provenance":"Observed","factId":null},"appearance":null,"condition":null,"whereabouts":null,"evidence":"Vivian says, \u0022My husband is Julian Vale, a city contractor. He has been missing since yesterday. I don\u0027t know where he is.\u0022"}
+      ok       {"kind":"character_observed","entityKind":"Character","targetId":"julian","identity":{"value":"Julian Vale","provenance":"Reported","factId":"vivian-husband"},"appearance":null,"condition":null,"whereabouts":{"value":{"kind":"Unknown","targetId":null,"disclosedLabel":null},"provenance":"Reported","factId":"julian-missing"},"evidence":"\u0022My husband is Julian Vale, a city contractor. He has been missing since yesterday. I don\u0027t know where he is.\u0022"}
+    [discovery-briefing run 2]
+      ok       fact_established    vivian-husband: Vivian's husband is Julian Vale, a city contractor.  [said by vivian]
+      ok       fact_established    julian-missing: Julian Vale has been missing since yesterday.  [said by vivian]
+      ok       fact_learned        player <- vivian-husband
+      ok       fact_learned        player <- julian-missing
+      ok       {"kind":"character_observed","entityKind":"Character","targetId":"vivian","identity":{"value":"Vivian Vale","provenance":"Observed","factId":null},"appearance":null,"condition":null,"whereabouts":{"value":{"kind":"Location","targetId":"office","disclosedLabel":"Office"},"provenance":"Observed","factId":null},"evidence":"Vivian says, \u0022My husband is Julian Vale, a city contractor. He has been missing since yesterday. I don\u0027t know where he is.\u0022"}
+      ok       {"kind":"character_observed","entityKind":"Character","targetId":"julian","identity":{"value":"Julian Vale","provenance":"Reported","factId":"vivian-husband"},"appearance":null,"condition":null,"whereabouts":{"value":{"kind":"Unknown","targetId":null,"disclosedLabel":null},"provenance":"Reported","factId":"julian-missing"},"evidence":"Vivian says, \u0022My husband is Julian Vale, a city contractor. He has been missing since yesterday. I don\u0027t know where he is.\u0022"}
+    [discovery-briefing run 3]
+      ok       fact_established    vivian-husband: Vivian's husband is Julian Vale, a city contractor.  [said by vivian]
+      ok       fact_established    julian-missing: Julian Vale has been missing since yesterday.  [said by vivian]
+      ok       fact_learned        player <- vivian-husband
+      ok       fact_learned        player <- julian-missing
+      ok       {"kind":"character_observed","entityKind":"Character","targetId":"vivian","identity":{"value":"Vivian Vale","provenance":"Observed","factId":null},"appearance":null,"condition":null,"whereabouts":{"value":{"kind":"Location","targetId":"office","disclosedLabel":"Office"},"provenance":"Observed","factId":null},"evidence":"Vivian says, \u0022My husband is Julian Vale, a city contractor. He has been missing since yesterday. I don\u0027t know where he is.\u0022"}
+      ok       {"kind":"character_observed","entityKind":"Character","targetId":"julian","identity":{"value":"Julian Vale","provenance":"Reported","factId":"vivian-husband"},"appearance":null,"condition":null,"whereabouts":{"value":{"kind":"Unknown","targetId":null,"disclosedLabel":null},"provenance":"Reported","factId":"julian-missing"},"evidence":"Vivian says, \u0022My husband is Julian Vale, a city contractor. He has been missing since yesterday. I don\u0027t know where he is.\u0022"}
+  discovery-briefing required 15/15   forbidden 0
+    [discovery-item-mentioned run 1]
+      ok       fact_established    ledger-recorded-payments: Julian used a black ledger to record payments.  [said by vivian]
+      ok       fact_learned        player <- ledger-recorded-payments
+      ok       fact_learned        vivian <- ledger-recorded-payments
+      ok       {"kind":"item_observed","entityKind":"Item","targetId":"ledger","identity":{"value":"black ledger","provenance":"Reported","factId":"ledger-recorded-payments"},"appearance":null,"condition":null,"whereabouts":null,"evidence":"Vivian says, \u0022There is a black ledger. Julian used it to record payments.\u0022"}
+    [discovery-item-mentioned run 2]
+      ok       fact_established    ledger-existence: There is a black ledger.  [said by vivian]
+      ok       fact_established    ledger-purpose: Julian used the black ledger to record payments.  [said by vivian]
+      ok       fact_learned        player <- ledger-existence
+      ok       fact_learned        player <- ledger-purpose
+      ok       fact_learned        vivian <- ledger-existence
+      ok       fact_learned        vivian <- ledger-purpose
+      REJECTED {"kind":"item_observed","entityKind":"Item","targetId":"ledger","identity":{"value":"black ledger","provenance":"Reported","factId":"ledger-existence"},"appearance":null,"condition":null,"whereabouts":null,"evidence":"Vivian says, \u0022There is a black ledger.\u0022"}
+    [discovery-item-mentioned run 3]
+      ok       fact_established    ledger-existence: There is a black ledger.  [said by vivian]
+      ok       fact_established    ledger-use: Julian used the black ledger to record payments.  [said by vivian]
+      ok       fact_learned        player <- ledger-existence
+      ok       fact_learned        player <- ledger-use
+      REJECTED {"kind":"character_observed","entityKind":"Character","targetId":"vivian","identity":{"value":"Vivian Vale","provenance":"Observed","factId":null},"appearance":null,"condition":null,"whereabouts":null,"evidence":"Vivian says, \u0022There is a black ledger.\u0022"}
+      REJECTED {"kind":"item_observed","entityKind":"Item","targetId":"ledger","identity":{"value":"black ledger","provenance":"Reported","factId":"ledger-existence"},"appearance":null,"condition":null,"whereabouts":null,"evidence":"Vivian says, \u0022There is a black ledger.\u0022"}
+  discovery-item-mentioned required 7/12    forbidden 2
+    [discovery-found run 1]
+      REJECTED character_introduced julian (Julian Vale) @ hotel
+      ok       {"kind":"character_observed","entityKind":"Character","targetId":"julian","identity":{"value":"Julian Vale","provenance":"Observed","factId":null},"appearance":{"value":"his grey coat soaked through","provenance":"Observed","factId":null},"condition":{"value":"exhausted","provenance":"Observed","factId":null},"whereabouts":{"value":{"kind":"Location","targetId":"hotel","disclosedLabel":null},"provenance":"Observed","factId":null},"evidence":"Julian Vale stands behind it, his grey coat soaked through. He looks exhausted. You can see him clearly."}
+    [discovery-found run 2]
+      ok       {"kind":"character_observed","entityKind":"Character","targetId":"julian","identity":{"value":"Julian Vale","provenance":"Observed","factId":null},"appearance":{"value":"a contractor, in a grey coat soaked through","provenance":"Observed","factId":null},"condition":{"value":"exhausted","provenance":"Observed","factId":null},"whereabouts":{"value":{"kind":"Location","targetId":"hotel","disclosedLabel":"Hotel Argent"},"provenance":"Observed","factId":null},"evidence":"Julian Vale stands behind it, his grey coat soaked through. He looks exhausted. You can see him clearly."}
+    [discovery-found run 3]
+      ok       {"kind":"character_observed","entityKind":"Character","targetId":"julian","identity":{"value":"Julian Vale","provenance":"Observed","factId":null},"appearance":{"value":"a contractor, in a grey coat soaked through","provenance":"Observed","factId":null},"condition":{"value":"exhausted","provenance":"Observed","factId":null},"whereabouts":{"value":{"kind":"Location","targetId":"hotel","disclosedLabel":"Hotel Argent"},"provenance":"Observed","factId":null},"evidence":"Julian Vale stands behind it, his grey coat soaked through. He looks exhausted. You can see him clearly."}
+  discovery-found  required 9/12    forbidden 0
+    [discovery-lose-sight run 1]
+      ok       {"kind":"character_observed","entityKind":"Character","targetId":"julian","identity":{"value":"Julian Vale","provenance":"Observed","factId":null},"appearance":null,"condition":null,"whereabouts":{"value":{"kind":"Unknown","targetId":null,"disclosedLabel":null},"provenance":"Observed","factId":null},"evidence":"Julian steps behind a tall screen inside the same hotel lobby. He remains in the lobby, but you can no longer see him or his exact position."}
+    [discovery-lose-sight run 2]
+      ok       character_moved     julian -> 
+      ok       {"kind":"character_observed","entityKind":"Character","targetId":"julian","identity":{"value":"Julian Vale","provenance":"Observed","factId":null},"appearance":null,"condition":null,"whereabouts":{"value":{"kind":"Unknown","targetId":null,"disclosedLabel":null},"provenance":"Observed","factId":null},"evidence":"Julian steps behind a tall screen inside the same hotel lobby. He remains in the lobby, but you can no longer see him or his exact position."}
+    [discovery-lose-sight run 3]
+      ok       {"kind":"character_observed","entityKind":"Character","targetId":"julian","identity":{"value":"Julian Vale","provenance":"Observed","factId":null},"appearance":null,"condition":null,"whereabouts":{"value":{"kind":"Unknown","targetId":null,"disclosedLabel":null},"provenance":"Observed","factId":null},"evidence":"Julian steps behind a tall screen inside the same hotel lobby. He remains in the lobby, but you can no longer see him or his exact position."}
+  discovery-lose-sight required 8/9     forbidden 1
+    [discovery-return run 1]
+      REJECTED character_introduced julian (Julian Vale) @ office
+      ok       {"kind":"character_observed","entityKind":"Character","targetId":"julian","identity":{"value":"Julian Vale","provenance":"Observed","factId":null},"appearance":{"value":"carrying a brass key","provenance":"Observed","factId":null},"condition":null,"whereabouts":{"value":{"kind":"Location","targetId":"office","disclosedLabel":"beside your desk"},"provenance":"Observed","factId":null},"evidence":"Julian Vale enters your office carrying his brass key. You see him standing beside your desk."}
+    [discovery-return run 2]
+      REJECTED character_introduced julian (Julian Vale) @ office
+      ok       {"kind":"character_observed","entityKind":"Character","targetId":"julian","identity":{"value":"Julian Vale","provenance":"Observed","factId":null},"appearance":null,"condition":null,"whereabouts":{"value":{"kind":"Location","targetId":"office","disclosedLabel":"your office"},"provenance":"Observed","factId":null},"evidence":"Julian Vale enters your office carrying his brass key. You see him standing beside your desk."}
+      REJECTED {"kind":"item_observed","entityKind":"Item","targetId":"key","identity":null,"appearance":null,"condition":null,"whereabouts":{"value":{"kind":"Holder","targetId":"julian","disclosedLabel":"carrying his brass key"},"provenance":"Observed","factId":null},"evidence":"Julian Vale enters your office carrying his brass key."}
+    [discovery-return run 3]
+      REJECTED character_introduced julian (Julian Vale) @ office
+      ok       {"kind":"character_observed","entityKind":"Character","targetId":"julian","identity":{"value":"Julian Vale","provenance":"Observed","factId":null},"appearance":{"value":"carrying a brass key","provenance":"Observed","factId":null},"condition":null,"whereabouts":{"value":{"kind":"Location","targetId":"office","disclosedLabel":"beside your desk"},"provenance":"Observed","factId":null},"evidence":"Julian Vale enters your office carrying his brass key. You see him standing beside your desk."}
+  discovery-return required 9/12    forbidden 0
+    [discovery-unnamed run 1]
+      ok       {"kind":"character_observed","entityKind":"Character","targetId":"vivian","identity":{"value":"a woman in a green coat","provenance":"Observed","factId":null},"appearance":{"value":"wearing a green coat with rain dripping from her sleeves","provenance":"Observed","factId":null},"condition":{"value":"normal","provenance":"Observed","factId":null},"whereabouts":{"value":{"kind":"Location","targetId":"office","disclosedLabel":"Office"},"provenance":"Observed","factId":null},"evidence":"A woman in a green coat sits across your desk."}
+      ok       {"kind":"location_observed","connections":null,"entityKind":"Location","targetId":"office","identity":{"value":"Office","provenance":"Observed","factId":null},"appearance":{"value":"A scarred desk and filing cabinet.","provenance":"Observed","factId":null},"condition":null,"whereabouts":null,"evidence":"A woman in a green coat sits across your desk."}
+    [discovery-unnamed run 2]
+      ok       {"kind":"character_observed","entityKind":"Character","targetId":"vivian","identity":{"value":"a woman in a green coat","provenance":"Observed","factId":null},"appearance":{"value":"a woman in a green coat","provenance":"Observed","factId":null},"condition":{"value":"rain dripping from her sleeves","provenance":"Observed","factId":null},"whereabouts":{"value":{"kind":"Location","targetId":"office","disclosedLabel":"Office"},"provenance":"Observed","factId":null},"evidence":"A woman in a green coat sits across your desk."}
+    [discovery-unnamed run 3]
+      ok       {"kind":"character_observed","entityKind":"Character","targetId":"vivian","identity":{"value":"a woman in a green coat","provenance":"Observed","factId":null},"appearance":{"value":"a woman in a green coat","provenance":"Observed","factId":null},"condition":{"value":"rain dripping from her sleeves","provenance":"Observed","factId":null},"whereabouts":{"value":{"kind":"Location","targetId":"office","disclosedLabel":"Office"},"provenance":"Observed","factId":null},"evidence":"A woman in a green coat sits across your desk."}
+  discovery-unnamed required 9/9     forbidden 0
+    [discovery-routes run 1]
+      ok       player_moved        -> street
+      ok       {"kind":"location_observed","connections":null,"entityKind":"Location","targetId":"street","identity":{"value":"Street","provenance":"Observed","factId":null},"appearance":{"value":"rainy","provenance":"Observed","factId":null},"condition":null,"whereabouts":null,"evidence":"You open the office\u0027s front door and see the rainy Street beyond."}
+      ok       {"kind":"character_observed","entityKind":"Character","targetId":"vivian","identity":null,"appearance":null,"condition":null,"whereabouts":{"value":{"kind":"Unknown","targetId":null,"disclosedLabel":null},"provenance":"Observed","factId":null},"evidence":"You open the office\u0027s front door and see the rainy Street beyond."}
+    [discovery-routes run 2]
+      ok       player_moved        -> street
+      ok       {"kind":"location_observed","connections":null,"entityKind":"Location","targetId":"street","identity":{"value":"Street","provenance":"Observed","factId":null},"appearance":{"value":"rainy","provenance":"Observed","factId":null},"condition":null,"whereabouts":null,"evidence":"You open the office\u0027s front door and see the rainy Street beyond."}
+    [discovery-routes run 3]
+      ok       {"kind":"location_observed","connections":[{"destinationId":"street","label":{"value":"Street","provenance":"Observed","factId":null}}],"entityKind":"Location","targetId":"office","identity":{"value":"Office","provenance":"Observed","factId":null},"appearance":{"value":"A scarred desk and filing cabinet.","provenance":"Observed","factId":null},"condition":null,"whereabouts":null,"evidence":"You open the office\u0027s front door and see the rainy Street beyond. That doorway leads from the Office to the Street."}
+      ok       {"kind":"location_observed","connections":null,"entityKind":"Location","targetId":"street","identity":{"value":"Street","provenance":"Observed","factId":null},"appearance":null,"condition":{"value":"rainy","provenance":"Observed","factId":null},"whereabouts":null,"evidence":"You open the office\u0027s front door and see the rainy Street beyond."}
+  discovery-routes required 10/12   forbidden 0
+    [discovery-facts run 1]
+      ok       fact_established    forged-bridge-report: Julian forged the city's bridge inspection report last winter.  [said by vivian]
+      ok       fact_learned        player <- forged-bridge-report
+      ok       fact_learned        vivian <- forged-bridge-report
+      ok       {"kind":"character_observed","entityKind":"Character","targetId":"julian","identity":{"value":"Julian","provenance":"Reported","factId":"forged-bridge-report"},"appearance":null,"condition":null,"whereabouts":null,"evidence":"Vivian tells you, \u0022Julian forged the city\u0027s bridge inspection report last winter.\u0022"}
+    [discovery-facts run 2]
+      ok       fact_established    forged-bridge-report: Julian forged the city's bridge inspection report last winter.  [said by vivian]
+      ok       fact_learned        player <- forged-bridge-report
+      ok       {"kind":"character_observed","entityKind":"Character","targetId":"vivian","identity":{"value":"Vivian Vale","provenance":"Observed","factId":null},"appearance":null,"condition":null,"whereabouts":null,"evidence":"Vivian tells you"}
+      ok       {"kind":"character_observed","entityKind":"Character","targetId":"julian","identity":{"value":"Julian Vale","provenance":"Reported","factId":"forged-bridge-report"},"appearance":null,"condition":null,"whereabouts":null,"evidence":"\u0022Julian forged the city\u0027s bridge inspection report last winter.\u0022"}
+    [discovery-facts run 3]
+      ok       fact_established    julian-forged-report: Julian forged the city's bridge inspection report last winter.  [said by vivian]
+      ok       fact_learned        player <- julian-forged-report
+      ok       {"kind":"character_observed","entityKind":"Character","targetId":"vivian","identity":{"value":"Vivian Vale","provenance":"Observed","factId":null},"appearance":null,"condition":null,"whereabouts":null,"evidence":"Vivian tells you"}
+  discovery-facts  required 6/6     forbidden 0
+
+==============================================================================
+SUMMARY
+==============================================================================
+prompts   4b299c42
+
+model                               required  forbidden  rejects   tokens
+------------------------------------------------------------------------------
+…seek/deepseek-v3.2 via StreamLake      85%       0.10     0.60      366
+
+required  = share of must-have deltas produced (higher is better)
+forbidden = must-not-happen deltas per run    (lower is better)
+rejects   = deltas the validator threw out    (lower is better)
+tokens    = mean completion tokens per call   (cost proxy)
+
+--- deepseek/deepseek-v3.2 via StreamLake ---
+  two-stage-entry  required 5/6     forbidden 0
+      MISSED: the player ends the turn in the cistern (1/3)
+  name-reveal      required 9/9     forbidden 0
+  discovery-briefing required 15/15   forbidden 0
+  discovery-item-mentioned required 7/12    forbidden 2
+      MISSED: Purpose recorded as reported (3/3)
+      MISSED: Ledger identity known (2/3)
+      DID:    Observation evidence absent from narration (2/3)
+  discovery-found  required 9/12    forbidden 0
+      MISSED: Hotel identity learned (3/3)
+  discovery-lose-sight required 8/9     forbidden 1
+      MISSED: Still in lobby (1/3)
+      DID:    Invented movement (1/3)
+  discovery-return required 9/12    forbidden 0
+      MISSED: Same NPC returned (3/3)
+  discovery-unnamed required 9/9     forbidden 0
+  discovery-routes required 10/12   forbidden 0
+      MISSED: Directed street route learned (2/3)
+  discovery-facts  required 6/6     forbidden 0
+  by provider:
+    StreamLake              30 run(s), clean 17/30, forbidden/run 0.10
+

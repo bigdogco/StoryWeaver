@@ -1,5 +1,28 @@
 # Challenges
 
+## Discovery implementation and extraction measurement (2026-09-10)
+
+Typed observation property names initially overlapped existing string fields such as
+`name`, causing schema conversion failures in unrelated rename scenarios. Observations
+now use `identity` and `descriptionObservation`. Evidence comparison normalizes whitespace
+but still requires contiguous exact wording; it does not prove semantic entailment.
+
+Models can copy private scene details alongside a valid evidence excerpt. Targeted v4
+produced all required outcomes but still copied speaker details in one of 24 runs.
+Raw proposals must be scored independently from accepted state. Full v5 measurement
+finished at 71/78 clean discovery runs and 26/30 clean regression runs. Do not treat
+schema validity or required coverage as spoiler safety. See the implementation devlog.
+
+Two fixture issues were corrected openly: the unnamed-identity check serialized internal
+DTO IDs instead of only rendered text, and a temporary slow clock was an ambiguous durable
+fact expectation. The latter now uses a durable forged-report claim. Same-turn retry
+fixtures must include the same disclosed relation label to measure actual equality.
+
+Prompt fingerprints previously reloaded files after a run, so edits during a run could
+mislabel its requests. Harness now fingerprints the captured prompt library and schema,
+and retains raw responses, provider identity and rejection reasons in JSON reports.
+Initial request logs remain the authoritative record for earlier runs.
+
 Known risks, gotchas, and open problems. Add to this as they are identified — including
 ones that turn out to be non-issues, with the resolution noted.
 
@@ -1567,3 +1590,48 @@ Detached catalog/candidate copies must preserve case-insensitive collections. Co
 model-facing StoryJson options do not install Storage's dictionary/set converters;
 a plain JSON round trip would lose those comparers. The new creation path copies the
 domain values into fresh case-insensitive collections without referencing Storage.
+
+The extraction prompt was rewritten for discovery in one pass, and the rewrite of its
+opening paragraph traded away a rule the existing suite depended on. Replacing "the
+player's input is authoritative … if the player moved, it still happened and must be
+reported" with "use input as action context, not proof that a requested outcome
+happened" restrained player *claims* and player *movement* with the same sentence.
+The pre-existing regression suite fell from 30/30 clean to 26/30: `player-arrival`
+dropped to 4/6 because the model reported the waypoint and not the destination. The
+two cases are separable and the prompt now separates them explicitly — what the player
+DID is authoritative, what the player LEARNED or FOUND is not. A prompt edit aimed at
+one behaviour needs the other suite re-run before it is called an improvement.
+
+Encouraging the extractor toward completeness in general terms backfires. A clause
+reading "what the protagonist plainly sees is always worth recording, even when it is
+mundane" fixed its target scenario and broke three others: the model began attaching a
+speaker's visible appearance to observations of them (the exact disclosure leak the
+design forbids, 2/3 runs) and padded description fields until the evidence check
+rejected whole observations, costing `discovery-unnamed` its alias 3/3. Restraint and
+completeness instructions must both name the delta kinds they govern. The narrow
+replacement — a closed or empty container still has a visible exterior — held the fix
+without the collateral cost. Do not re-add the general form.
+
+Extraction evals at three runs per scenario have a noise floor of roughly plus or minus
+two clean runs, even at temperature 0. Two runs of the identical suite against the
+identical prompt scored 29/30 and 28/30 with *different* scenarios failing each time.
+Single-scenario deltas of one or two runs are therefore not evidence about a prompt
+change; only findings that reproduce across runs and have an identifiable mechanism in
+the raw proposals should be attributed. Prompt comparisons want `--runs 5` or more, and
+`--report` JSON retains the raw responses needed to attribute a change to a cause.
+
+`SafeName` resolved a player's label for an entity by recency across both provenances,
+so a later report overwrote an earlier direct sighting. `PLAYER_DISCOVERY.md` requires
+the opposite: preserve the latest sighting separately from the latest report and present
+both, rather than letting a rumour overwrite a witnessed encounter. An NPC lying about
+someone's name on a later turn silently relabelled a person the player had already seen
+and identified. Storage always kept both values; only the label resolution was wrong.
+
+Player-facing reference resolution needs the same id-to-kind precedence as canon
+resolution. `{{<id>}}` carries no kind, so trying each kind's discovery memories in
+turn let a character and a location sharing an id borrow each other's disclosed label.
+The same path also routed `{{player}}` through the memories and rendered the
+protagonist as "not yet identified" to themselves; the player's own name is not a
+discovery. Ids compare case-insensitively across the codebase, and a stray `==` on
+`LocationId` in the narrator's presentation rules dropped an item's discovery rule
+whenever its stored id differed from the current location id only in case.

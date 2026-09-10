@@ -1,0 +1,2017 @@
+{
+  "models": [
+    {
+      "label": "deepseek/deepseek-v3.2 via StreamLake",
+      "scenarios": [
+        {
+          "name": "deflection",
+          "runs": [
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: [\n    {\n      \u0022kind\u0022: \u0022character_observed\u0022,\n      \u0022targetId\u0022: \u0022innkeeper-hald\u0022,\n      \u0022identity\u0022: null,\n      \u0022descriptionObservation\u0022: null,\n      \u0022condition\u0022: {\n        \u0022value\u0022: \u0022guarded\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022whereabouts\u0022: {\n        \u0022value\u0022: {\n          \u0022kind\u0022: \u0022Location\u0022,\n          \u0022targetId\u0022: \u0022marrow-tavern\u0022,\n          \u0022disclosedLabel\u0022: null\n        },\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022evidence\u0022: \u0022He looks at you for a moment\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022fact_learned\u0022,\n      \u0022characterId\u0022: \u0022player\u0022,\n      \u0022factId\u0022: \u0022well-boarded\u0022,\n      \u0022evidence\u0022: \u0022Boarded up for a reason\u0022\n    }\n  ]\n}",
+              "rejectionReasons": [
+                "Observation needs a disclosed safe identity."
+              ],
+              "noOps": [],
+              "failed": false,
+              "note": null,
+              "requiredHit": 0,
+              "requiredTotal": 0,
+              "forbiddenHit": 0,
+              "rejected": 1,
+              "promptTokens": 8703,
+              "completionTokens": 196,
+              "reasoningTokens": 0,
+              "missingRules": [],
+              "violatedRules": [],
+              "proposed": [
+                {
+                  "kind": "character_observed",
+                  "targetId": "innkeeper-hald",
+                  "identity": null,
+                  "descriptionObservation": null,
+                  "condition": {
+                    "value": "guarded",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "whereabouts": {
+                    "value": {
+                      "kind": "Location",
+                      "targetId": "marrow-tavern",
+                      "disclosedLabel": null
+                    },
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "evidence": "He looks at you for a moment"
+                },
+                {
+                  "kind": "fact_learned",
+                  "characterId": "player",
+                  "factId": "well-boarded",
+                  "evidence": "Boarded up for a reason"
+                }
+              ],
+              "rejectedDeltas": [
+                {
+                  "kind": "character_observed",
+                  "targetId": "innkeeper-hald",
+                  "identity": null,
+                  "descriptionObservation": null,
+                  "condition": {
+                    "value": "guarded",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "whereabouts": {
+                    "value": {
+                      "kind": "Location",
+                      "targetId": "marrow-tavern",
+                      "disclosedLabel": null
+                    },
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "evidence": "He looks at you for a moment"
+                }
+              ],
+              "provider": "StreamLake",
+              "clean": true
+            },
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: []\n}",
+              "rejectionReasons": [],
+              "noOps": [],
+              "failed": false,
+              "note": null,
+              "requiredHit": 0,
+              "requiredTotal": 0,
+              "forbiddenHit": 0,
+              "rejected": 0,
+              "promptTokens": 8703,
+              "completionTokens": 10,
+              "reasoningTokens": 0,
+              "missingRules": [],
+              "violatedRules": [],
+              "proposed": [],
+              "rejectedDeltas": [],
+              "provider": "StreamLake",
+              "clean": true
+            },
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: [\n    {\n      \u0022kind\u0022: \u0022fact_established\u0022,\n      \u0022factId\u0022: \u0022well-black-water\u0022,\n      \u0022text\u0022: \u0022The well contains black water and bad luck.\u0022,\n      \u0022sourceId\u0022: \u0022innkeeper-hald\u0022,\n      \u0022evidence\u0022: \u0022Ain\u0027t nothing down there but black water and bad luck.\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022fact_learned\u0022,\n      \u0022characterId\u0022: \u0022player\u0022,\n      \u0022factId\u0022: \u0022well-black-water\u0022,\n      \u0022evidence\u0022: \u0022Ain\u0027t nothing down there but black water and bad luck.\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022character_observed\u0022,\n      \u0022targetId\u0022: \u0022innkeeper-hald\u0022,\n      \u0022identity\u0022: null,\n      \u0022descriptionObservation\u0022: null,\n      \u0022condition\u0022: {\n        \u0022value\u0022: \u0022guarded\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022whereabouts\u0022: {\n        \u0022value\u0022: {\n          \u0022kind\u0022: \u0022Location\u0022,\n          \u0022targetId\u0022: \u0022marrow-tavern\u0022,\n          \u0022disclosedLabel\u0022: null\n        },\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022evidence\u0022: \u0022He looks at you for a moment, then resumes his slow circles without answering.\u0022\n    }\n  ]\n}",
+              "rejectionReasons": [
+                "Observation needs a disclosed safe identity."
+              ],
+              "noOps": [],
+              "failed": false,
+              "note": null,
+              "requiredHit": 0,
+              "requiredTotal": 0,
+              "forbiddenHit": 1,
+              "rejected": 1,
+              "promptTokens": 8703,
+              "completionTokens": 276,
+              "reasoningTokens": 0,
+              "missingRules": [],
+              "violatedRules": [
+                "any fact established"
+              ],
+              "proposed": [
+                {
+                  "kind": "fact_established",
+                  "factId": "well-black-water",
+                  "text": "The well contains black water and bad luck.",
+                  "sourceId": "innkeeper-hald",
+                  "evidence": "Ain\u0027t nothing down there but black water and bad luck."
+                },
+                {
+                  "kind": "fact_learned",
+                  "characterId": "player",
+                  "factId": "well-black-water",
+                  "evidence": "Ain\u0027t nothing down there but black water and bad luck."
+                },
+                {
+                  "kind": "character_observed",
+                  "targetId": "innkeeper-hald",
+                  "identity": null,
+                  "descriptionObservation": null,
+                  "condition": {
+                    "value": "guarded",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "whereabouts": {
+                    "value": {
+                      "kind": "Location",
+                      "targetId": "marrow-tavern",
+                      "disclosedLabel": null
+                    },
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "evidence": "He looks at you for a moment, then resumes his slow circles without answering."
+                }
+              ],
+              "rejectedDeltas": [
+                {
+                  "kind": "character_observed",
+                  "targetId": "innkeeper-hald",
+                  "identity": null,
+                  "descriptionObservation": null,
+                  "condition": {
+                    "value": "guarded",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "whereabouts": {
+                    "value": {
+                      "kind": "Location",
+                      "targetId": "marrow-tavern",
+                      "disclosedLabel": null
+                    },
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "evidence": "He looks at you for a moment, then resumes his slow circles without answering."
+                }
+              ],
+              "provider": "StreamLake",
+              "clean": false
+            }
+          ],
+          "requiredHit": 0,
+          "requiredTotal": 0,
+          "forbiddenHit": 1,
+          "failedCount": 0,
+          "problems": [
+            {
+              "kind": 1,
+              "description": "any fact established",
+              "hitRuns": 1,
+              "totalRuns": 3
+            }
+          ]
+        },
+        {
+          "name": "revelation",
+          "runs": [
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: [\n    {\n      \u0022kind\u0022: \u0022fact_established\u0022,\n      \u0022factId\u0022: \u0022tanner-girl-body\u0022,\n      \u0022text\u0022: \u0022A tanner\u0027s girl was found dead in the well.\u0022,\n      \u0022sourceId\u0022: \u0022innkeeper-hald\u0022,\n      \u0022evidence\u0022: \u0022\\\u0022A body,\\\u0022 he says, barely above the crackle of the fire. \\\u0022Tanner\u0027s girl. Three weeks under the water before anyone thought to look.\\\u0022\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022fact_learned\u0022,\n      \u0022characterId\u0022: \u0022player\u0022,\n      \u0022factId\u0022: \u0022tanner-girl-body\u0022,\n      \u0022evidence\u0022: \u0022\\\u0022A body,\\\u0022 he says, barely above the crackle of the fire. \\\u0022Tanner\u0027s girl. Three weeks under the water before anyone thought to look.\\\u0022\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022fact_learned\u0022,\n      \u0022characterId\u0022: \u0022innkeeper-hald\u0022,\n      \u0022factId\u0022: \u0022tanner-girl-body\u0022,\n      \u0022evidence\u0022: \u0022\\\u0022A body,\\\u0022 he says, barely above the crackle of the fire. \\\u0022Tanner\u0027s girl. Three weeks under the water before anyone thought to look.\\\u0022\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022character_observed\u0022,\n      \u0022targetId\u0022: \u0022innkeeper-hald\u0022,\n      \u0022identity\u0022: {\n        \u0022value\u0022: \u0022Hald\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022descriptionObservation\u0022: {\n        \u0022value\u0022: \u0022The innkeeper of the Drowned Crow. Heavyset, watchful.\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022condition\u0022: {\n        \u0022value\u0022: \u0022guarded\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022whereabouts\u0022: {\n        \u0022value\u0022: {\n          \u0022kind\u0022: \u0022Location\u0022,\n          \u0022targetId\u0022: \u0022marrow-tavern\u0022,\n          \u0022disclosedLabel\u0022: null\n        },\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022evidence\u0022: \u0022Hald\u0027s hand closes over the coin. He glances at the door, then leans close enough that you smell the ale on him.\u0022\n    }\n  ]\n}",
+              "rejectionReasons": [],
+              "noOps": [],
+              "failed": false,
+              "note": null,
+              "requiredHit": 3,
+              "requiredTotal": 3,
+              "forbiddenHit": 0,
+              "rejected": 0,
+              "promptTokens": 8720,
+              "completionTokens": 483,
+              "reasoningTokens": 0,
+              "missingRules": [],
+              "violatedRules": [],
+              "proposed": [
+                {
+                  "kind": "fact_established",
+                  "factId": "tanner-girl-body",
+                  "text": "A tanner\u0027s girl was found dead in the well.",
+                  "sourceId": "innkeeper-hald",
+                  "evidence": "\u0022A body,\u0022 he says, barely above the crackle of the fire. \u0022Tanner\u0027s girl. Three weeks under the water before anyone thought to look.\u0022"
+                },
+                {
+                  "kind": "fact_learned",
+                  "characterId": "player",
+                  "factId": "tanner-girl-body",
+                  "evidence": "\u0022A body,\u0022 he says, barely above the crackle of the fire. \u0022Tanner\u0027s girl. Three weeks under the water before anyone thought to look.\u0022"
+                },
+                {
+                  "kind": "fact_learned",
+                  "characterId": "innkeeper-hald",
+                  "factId": "tanner-girl-body",
+                  "evidence": "\u0022A body,\u0022 he says, barely above the crackle of the fire. \u0022Tanner\u0027s girl. Three weeks under the water before anyone thought to look.\u0022"
+                },
+                {
+                  "kind": "character_observed",
+                  "targetId": "innkeeper-hald",
+                  "identity": {
+                    "value": "Hald",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "descriptionObservation": {
+                    "value": "The innkeeper of the Drowned Crow. Heavyset, watchful.",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "condition": {
+                    "value": "guarded",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "whereabouts": {
+                    "value": {
+                      "kind": "Location",
+                      "targetId": "marrow-tavern",
+                      "disclosedLabel": null
+                    },
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "evidence": "Hald\u0027s hand closes over the coin. He glances at the door, then leans close enough that you smell the ale on him."
+                }
+              ],
+              "rejectedDeltas": [],
+              "provider": "StreamLake",
+              "clean": true
+            },
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: [\n    {\n      \u0022kind\u0022: \u0022fact_established\u0022,\n      \u0022factId\u0022: \u0022tanner-girl-body\u0022,\n      \u0022text\u0022: \u0022A body was found in the well, the tanner\u0027s girl, three weeks under the water.\u0022,\n      \u0022sourceId\u0022: \u0022innkeeper-hald\u0022,\n      \u0022evidence\u0022: \u0022\\\u0022A body,\\\u0022 he says, barely above the crackle of the fire. \\\u0022Tanner\u0027s girl. Three weeks under the water before anyone thought to look.\\\u0022\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022fact_learned\u0022,\n      \u0022characterId\u0022: \u0022player\u0022,\n      \u0022factId\u0022: \u0022tanner-girl-body\u0022,\n      \u0022evidence\u0022: \u0022\\\u0022A body,\\\u0022 he says, barely above the crackle of the fire. \\\u0022Tanner\u0027s girl. Three weeks under the water before anyone thought to look.\\\u0022\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022fact_learned\u0022,\n      \u0022characterId\u0022: \u0022innkeeper-hald\u0022,\n      \u0022factId\u0022: \u0022tanner-girl-body\u0022,\n      \u0022evidence\u0022: \u0022\\\u0022A body,\\\u0022 he says, barely above the crackle of the fire. \\\u0022Tanner\u0027s girl. Three weeks under the water before anyone thought to look.\\\u0022\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022character_observed\u0022,\n      \u0022targetId\u0022: \u0022innkeeper-hald\u0022,\n      \u0022identity\u0022: {\n        \u0022value\u0022: \u0022Hald\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022descriptionObservation\u0022: {\n        \u0022value\u0022: \u0022The innkeeper of the Drowned Crow. Heavyset, watchful.\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022condition\u0022: {\n        \u0022value\u0022: \u0022guarded\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022whereabouts\u0022: {\n        \u0022value\u0022: {\n          \u0022kind\u0022: \u0022Location\u0022,\n          \u0022targetId\u0022: \u0022marrow-tavern\u0022,\n          \u0022disclosedLabel\u0022: null\n        },\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022evidence\u0022: \u0022Hald\u0027s hand closes over the coin. He glances at the door, then leans close enough that you smell the ale on him.\u0022\n    }\n  ]\n}",
+              "rejectionReasons": [],
+              "noOps": [],
+              "failed": false,
+              "note": null,
+              "requiredHit": 3,
+              "requiredTotal": 3,
+              "forbiddenHit": 0,
+              "rejected": 0,
+              "promptTokens": 8720,
+              "completionTokens": 491,
+              "reasoningTokens": 0,
+              "missingRules": [],
+              "violatedRules": [],
+              "proposed": [
+                {
+                  "kind": "fact_established",
+                  "factId": "tanner-girl-body",
+                  "text": "A body was found in the well, the tanner\u0027s girl, three weeks under the water.",
+                  "sourceId": "innkeeper-hald",
+                  "evidence": "\u0022A body,\u0022 he says, barely above the crackle of the fire. \u0022Tanner\u0027s girl. Three weeks under the water before anyone thought to look.\u0022"
+                },
+                {
+                  "kind": "fact_learned",
+                  "characterId": "player",
+                  "factId": "tanner-girl-body",
+                  "evidence": "\u0022A body,\u0022 he says, barely above the crackle of the fire. \u0022Tanner\u0027s girl. Three weeks under the water before anyone thought to look.\u0022"
+                },
+                {
+                  "kind": "fact_learned",
+                  "characterId": "innkeeper-hald",
+                  "factId": "tanner-girl-body",
+                  "evidence": "\u0022A body,\u0022 he says, barely above the crackle of the fire. \u0022Tanner\u0027s girl. Three weeks under the water before anyone thought to look.\u0022"
+                },
+                {
+                  "kind": "character_observed",
+                  "targetId": "innkeeper-hald",
+                  "identity": {
+                    "value": "Hald",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "descriptionObservation": {
+                    "value": "The innkeeper of the Drowned Crow. Heavyset, watchful.",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "condition": {
+                    "value": "guarded",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "whereabouts": {
+                    "value": {
+                      "kind": "Location",
+                      "targetId": "marrow-tavern",
+                      "disclosedLabel": null
+                    },
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "evidence": "Hald\u0027s hand closes over the coin. He glances at the door, then leans close enough that you smell the ale on him."
+                }
+              ],
+              "rejectedDeltas": [],
+              "provider": "StreamLake",
+              "clean": true
+            },
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: [\n    {\n      \u0022kind\u0022: \u0022fact_established\u0022,\n      \u0022factId\u0022: \u0022tanner-girl-body\u0022,\n      \u0022text\u0022: \u0022A tanner\u0027s girl was found dead in the well.\u0022,\n      \u0022sourceId\u0022: \u0022innkeeper-hald\u0022,\n      \u0022evidence\u0022: \u0022\\\u0022A body,\\\u0022 he says, barely above the crackle of the fire. \\\u0022Tanner\u0027s girl. Three weeks under the water before anyone thought to look.\\\u0022\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022fact_learned\u0022,\n      \u0022characterId\u0022: \u0022player\u0022,\n      \u0022factId\u0022: \u0022tanner-girl-body\u0022,\n      \u0022evidence\u0022: \u0022\\\u0022A body,\\\u0022 he says, barely above the crackle of the fire. \\\u0022Tanner\u0027s girl. Three weeks under the water before anyone thought to look.\\\u0022\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022fact_learned\u0022,\n      \u0022characterId\u0022: \u0022innkeeper-hald\u0022,\n      \u0022factId\u0022: \u0022tanner-girl-body\u0022,\n      \u0022evidence\u0022: \u0022\\\u0022A body,\\\u0022 he says, barely above the crackle of the fire. \\\u0022Tanner\u0027s girl. Three weeks under the water before anyone thought to look.\\\u0022\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022character_observed\u0022,\n      \u0022targetId\u0022: \u0022innkeeper-hald\u0022,\n      \u0022identity\u0022: {\n        \u0022value\u0022: \u0022Hald\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022descriptionObservation\u0022: {\n        \u0022value\u0022: \u0022The innkeeper of the Drowned Crow. Heavyset, watchful.\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022condition\u0022: {\n        \u0022value\u0022: \u0022guarded\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022whereabouts\u0022: {\n        \u0022value\u0022: {\n          \u0022kind\u0022: \u0022Location\u0022,\n          \u0022targetId\u0022: \u0022marrow-tavern\u0022,\n          \u0022disclosedLabel\u0022: null\n        },\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022evidence\u0022: \u0022Hald\u0027s hand closes over the coin. He glances at the door, then leans close enough that you smell the ale on him.\u0022\n    }\n  ]\n}",
+              "rejectionReasons": [],
+              "noOps": [],
+              "failed": false,
+              "note": null,
+              "requiredHit": 3,
+              "requiredTotal": 3,
+              "forbiddenHit": 0,
+              "rejected": 0,
+              "promptTokens": 8720,
+              "completionTokens": 483,
+              "reasoningTokens": 0,
+              "missingRules": [],
+              "violatedRules": [],
+              "proposed": [
+                {
+                  "kind": "fact_established",
+                  "factId": "tanner-girl-body",
+                  "text": "A tanner\u0027s girl was found dead in the well.",
+                  "sourceId": "innkeeper-hald",
+                  "evidence": "\u0022A body,\u0022 he says, barely above the crackle of the fire. \u0022Tanner\u0027s girl. Three weeks under the water before anyone thought to look.\u0022"
+                },
+                {
+                  "kind": "fact_learned",
+                  "characterId": "player",
+                  "factId": "tanner-girl-body",
+                  "evidence": "\u0022A body,\u0022 he says, barely above the crackle of the fire. \u0022Tanner\u0027s girl. Three weeks under the water before anyone thought to look.\u0022"
+                },
+                {
+                  "kind": "fact_learned",
+                  "characterId": "innkeeper-hald",
+                  "factId": "tanner-girl-body",
+                  "evidence": "\u0022A body,\u0022 he says, barely above the crackle of the fire. \u0022Tanner\u0027s girl. Three weeks under the water before anyone thought to look.\u0022"
+                },
+                {
+                  "kind": "character_observed",
+                  "targetId": "innkeeper-hald",
+                  "identity": {
+                    "value": "Hald",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "descriptionObservation": {
+                    "value": "The innkeeper of the Drowned Crow. Heavyset, watchful.",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "condition": {
+                    "value": "guarded",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "whereabouts": {
+                    "value": {
+                      "kind": "Location",
+                      "targetId": "marrow-tavern",
+                      "disclosedLabel": null
+                    },
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "evidence": "Hald\u0027s hand closes over the coin. He glances at the door, then leans close enough that you smell the ale on him."
+                }
+              ],
+              "rejectedDeltas": [],
+              "provider": "StreamLake",
+              "clean": true
+            }
+          ],
+          "requiredHit": 9,
+          "requiredTotal": 9,
+          "forbiddenHit": 0,
+          "failedCount": 0,
+          "problems": []
+        },
+        {
+          "name": "movement",
+          "runs": [
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: [\n    {\n      \u0022kind\u0022: \u0022player_moved\u0022,\n      \u0022toLocationId\u0022: \u0022marrow-square\u0022,\n      \u0022evidence\u0022: \u0022Marrow Square opens ahead of you\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022location_observed\u0022,\n      \u0022targetId\u0022: \u0022marrow-square\u0022,\n      \u0022identity\u0022: {\n        \u0022value\u0022: \u0022Marrow Square\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022descriptionObservation\u0022: {\n        \u0022value\u0022: \u0022rutted and near empty under a low grey sky, the boarded well squatting at its centre beneath its iron bands\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022condition\u0022: null,\n      \u0022whereabouts\u0022: null,\n      \u0022connections\u0022: null,\n      \u0022evidence\u0022: \u0022Marrow Square opens ahead of you, rutted and near empty under a low grey sky, the boarded well squatting at its centre beneath its iron bands\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022item_observed\u0022,\n      \u0022targetId\u0022: \u0022well-boarded\u0022,\n      \u0022identity\u0022: {\n        \u0022value\u0022: \u0022boarded well\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022descriptionObservation\u0022: {\n        \u0022value\u0022: \u0022squatting at the centre of the square beneath its iron bands\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022condition\u0022: null,\n      \u0022whereabouts\u0022: {\n        \u0022value\u0022: {\n          \u0022kind\u0022: \u0022Location\u0022,\n          \u0022targetId\u0022: \u0022marrow-square\u0022,\n          \u0022disclosedLabel\u0022: \u0022Marrow Square\u0022\n        },\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022evidence\u0022: \u0022the boarded well squatting at its centre beneath its iron bands\u0022\n    }\n  ]\n}",
+              "rejectionReasons": [
+                "Observation target does not exist in accepted canon."
+              ],
+              "noOps": [],
+              "failed": false,
+              "note": null,
+              "requiredHit": 1,
+              "requiredTotal": 1,
+              "forbiddenHit": 0,
+              "rejected": 1,
+              "promptTokens": 8691,
+              "completionTokens": 400,
+              "reasoningTokens": 0,
+              "missingRules": [],
+              "violatedRules": [],
+              "proposed": [
+                {
+                  "kind": "player_moved",
+                  "toLocationId": "marrow-square",
+                  "evidence": "Marrow Square opens ahead of you"
+                },
+                {
+                  "kind": "location_observed",
+                  "connections": null,
+                  "targetId": "marrow-square",
+                  "identity": {
+                    "value": "Marrow Square",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "descriptionObservation": {
+                    "value": "rutted and near empty under a low grey sky, the boarded well squatting at its centre beneath its iron bands",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "condition": null,
+                  "whereabouts": null,
+                  "evidence": "Marrow Square opens ahead of you, rutted and near empty under a low grey sky, the boarded well squatting at its centre beneath its iron bands"
+                },
+                {
+                  "kind": "item_observed",
+                  "targetId": "well-boarded",
+                  "identity": {
+                    "value": "boarded well",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "descriptionObservation": {
+                    "value": "squatting at the centre of the square beneath its iron bands",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "condition": null,
+                  "whereabouts": {
+                    "value": {
+                      "kind": "Location",
+                      "targetId": "marrow-square",
+                      "disclosedLabel": "Marrow Square"
+                    },
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "evidence": "the boarded well squatting at its centre beneath its iron bands"
+                }
+              ],
+              "rejectedDeltas": [
+                {
+                  "kind": "item_observed",
+                  "targetId": "well-boarded",
+                  "identity": {
+                    "value": "boarded well",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "descriptionObservation": {
+                    "value": "squatting at the centre of the square beneath its iron bands",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "condition": null,
+                  "whereabouts": {
+                    "value": {
+                      "kind": "Location",
+                      "targetId": "marrow-square",
+                      "disclosedLabel": "Marrow Square"
+                    },
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "evidence": "the boarded well squatting at its centre beneath its iron bands"
+                }
+              ],
+              "provider": "StreamLake",
+              "clean": true
+            },
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: [\n    {\n      \u0022kind\u0022: \u0022player_moved\u0022,\n      \u0022toLocationId\u0022: \u0022marrow-square\u0022,\n      \u0022evidence\u0022: \u0022Marrow Square opens ahead of you\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022location_observed\u0022,\n      \u0022targetId\u0022: \u0022marrow-square\u0022,\n      \u0022identity\u0022: {\n        \u0022value\u0022: \u0022Marrow Square\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022descriptionObservation\u0022: {\n        \u0022value\u0022: \u0022rutted and near empty under a low grey sky, the boarded well squatting at its centre beneath its iron bands\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022condition\u0022: null,\n      \u0022whereabouts\u0022: null,\n      \u0022connections\u0022: null,\n      \u0022evidence\u0022: \u0022Marrow Square opens ahead of you, rutted and near empty under a low grey sky, the boarded well squatting at its centre beneath its iron bands\u0022\n    }\n  ]\n}",
+              "rejectionReasons": [],
+              "noOps": [],
+              "failed": false,
+              "note": null,
+              "requiredHit": 1,
+              "requiredTotal": 1,
+              "forbiddenHit": 0,
+              "rejected": 0,
+              "promptTokens": 8691,
+              "completionTokens": 215,
+              "reasoningTokens": 0,
+              "missingRules": [],
+              "violatedRules": [],
+              "proposed": [
+                {
+                  "kind": "player_moved",
+                  "toLocationId": "marrow-square",
+                  "evidence": "Marrow Square opens ahead of you"
+                },
+                {
+                  "kind": "location_observed",
+                  "connections": null,
+                  "targetId": "marrow-square",
+                  "identity": {
+                    "value": "Marrow Square",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "descriptionObservation": {
+                    "value": "rutted and near empty under a low grey sky, the boarded well squatting at its centre beneath its iron bands",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "condition": null,
+                  "whereabouts": null,
+                  "evidence": "Marrow Square opens ahead of you, rutted and near empty under a low grey sky, the boarded well squatting at its centre beneath its iron bands"
+                }
+              ],
+              "rejectedDeltas": [],
+              "provider": "StreamLake",
+              "clean": true
+            },
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: [\n    {\n      \u0022kind\u0022: \u0022player_moved\u0022,\n      \u0022toLocationId\u0022: \u0022marrow-square\u0022,\n      \u0022evidence\u0022: \u0022You drain the last of the ale and push through the heavy door. Marrow Square opens ahead of you\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022location_observed\u0022,\n      \u0022targetId\u0022: \u0022marrow-square\u0022,\n      \u0022identity\u0022: {\n        \u0022value\u0022: \u0022Marrow Square\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022descriptionObservation\u0022: {\n        \u0022value\u0022: \u0022rutted and near empty under a low grey sky, the boarded well squatting at its centre beneath its iron bands\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022condition\u0022: null,\n      \u0022whereabouts\u0022: null,\n      \u0022connections\u0022: null,\n      \u0022evidence\u0022: \u0022Marrow Square opens ahead of you, rutted and near empty under a low grey sky, the boarded well squatting at its centre beneath its iron bands\u0022\n    }\n  ]\n}",
+              "rejectionReasons": [],
+              "noOps": [],
+              "failed": false,
+              "note": null,
+              "requiredHit": 1,
+              "requiredTotal": 1,
+              "forbiddenHit": 0,
+              "rejected": 0,
+              "promptTokens": 8691,
+              "completionTokens": 229,
+              "reasoningTokens": 0,
+              "missingRules": [],
+              "violatedRules": [],
+              "proposed": [
+                {
+                  "kind": "player_moved",
+                  "toLocationId": "marrow-square",
+                  "evidence": "You drain the last of the ale and push through the heavy door. Marrow Square opens ahead of you"
+                },
+                {
+                  "kind": "location_observed",
+                  "connections": null,
+                  "targetId": "marrow-square",
+                  "identity": {
+                    "value": "Marrow Square",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "descriptionObservation": {
+                    "value": "rutted and near empty under a low grey sky, the boarded well squatting at its centre beneath its iron bands",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "condition": null,
+                  "whereabouts": null,
+                  "evidence": "Marrow Square opens ahead of you, rutted and near empty under a low grey sky, the boarded well squatting at its centre beneath its iron bands"
+                }
+              ],
+              "rejectedDeltas": [],
+              "provider": "StreamLake",
+              "clean": true
+            }
+          ],
+          "requiredHit": 3,
+          "requiredTotal": 3,
+          "forbiddenHit": 0,
+          "failedCount": 0,
+          "problems": []
+        },
+        {
+          "name": "hostility",
+          "runs": [
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: [\n    {\n      \u0022kind\u0022: \u0022mood_changed\u0022,\n      \u0022characterId\u0022: \u0022innkeeper-hald\u0022,\n      \u0022mood\u0022: \u0022hostile\u0022,\n      \u0022evidence\u0022: \u0022the guarded caution he had for you hardens into something colder and more permanent\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022relationship_changed\u0022,\n      \u0022characterId\u0022: \u0022innkeeper-hald\u0022,\n      \u0022standing\u0022: -20,\n      \u0022summary\u0022: \u0022angered by the accusation\u0022,\n      \u0022evidence\u0022: \u0022something in the way he says it suggests he will remember this\u0022\n    }\n  ]\n}",
+              "rejectionReasons": [],
+              "noOps": [],
+              "failed": false,
+              "note": null,
+              "requiredHit": 2,
+              "requiredTotal": 2,
+              "forbiddenHit": 0,
+              "rejected": 0,
+              "promptTokens": 8724,
+              "completionTokens": 126,
+              "reasoningTokens": 0,
+              "missingRules": [],
+              "violatedRules": [],
+              "proposed": [
+                {
+                  "kind": "mood_changed",
+                  "characterId": "innkeeper-hald",
+                  "mood": "hostile",
+                  "evidence": "the guarded caution he had for you hardens into something colder and more permanent"
+                },
+                {
+                  "kind": "relationship_changed",
+                  "characterId": "innkeeper-hald",
+                  "standing": -20,
+                  "summary": "angered by the accusation",
+                  "evidence": "something in the way he says it suggests he will remember this"
+                }
+              ],
+              "rejectedDeltas": [],
+              "provider": "StreamLake",
+              "clean": true
+            },
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: [\n    {\n      \u0022kind\u0022: \u0022mood_changed\u0022,\n      \u0022characterId\u0022: \u0022innkeeper-hald\u0022,\n      \u0022mood\u0022: \u0022hostile\u0022,\n      \u0022evidence\u0022: \u0022the guarded caution he had for you hardens into something colder and more permanent\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022relationship_changed\u0022,\n      \u0022characterId\u0022: \u0022innkeeper-hald\u0022,\n      \u0022standing\u0022: -20,\n      \u0022summary\u0022: \u0022hostile after being accused\u0022,\n      \u0022evidence\u0022: \u0022something in the way he says it suggests he will remember this\u0022\n    }\n  ]\n}",
+              "rejectionReasons": [],
+              "noOps": [],
+              "failed": false,
+              "note": null,
+              "requiredHit": 2,
+              "requiredTotal": 2,
+              "forbiddenHit": 0,
+              "rejected": 0,
+              "promptTokens": 8724,
+              "completionTokens": 127,
+              "reasoningTokens": 0,
+              "missingRules": [],
+              "violatedRules": [],
+              "proposed": [
+                {
+                  "kind": "mood_changed",
+                  "characterId": "innkeeper-hald",
+                  "mood": "hostile",
+                  "evidence": "the guarded caution he had for you hardens into something colder and more permanent"
+                },
+                {
+                  "kind": "relationship_changed",
+                  "characterId": "innkeeper-hald",
+                  "standing": -20,
+                  "summary": "hostile after being accused",
+                  "evidence": "something in the way he says it suggests he will remember this"
+                }
+              ],
+              "rejectedDeltas": [],
+              "provider": "StreamLake",
+              "clean": true
+            },
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: [\n    {\n      \u0022kind\u0022: \u0022mood_changed\u0022,\n      \u0022characterId\u0022: \u0022innkeeper-hald\u0022,\n      \u0022mood\u0022: \u0022hostile\u0022,\n      \u0022evidence\u0022: \u0022the guarded caution he had for you hardens into something colder and more permanent\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022relationship_changed\u0022,\n      \u0022characterId\u0022: \u0022innkeeper-hald\u0022,\n      \u0022standing\u0022: -30,\n      \u0022summary\u0022: \u0022hostile after being accused of lying\u0022,\n      \u0022evidence\u0022: \u0022something in the way he says it suggests he will remember this\u0022\n    }\n  ]\n}",
+              "rejectionReasons": [],
+              "noOps": [],
+              "failed": false,
+              "note": null,
+              "requiredHit": 2,
+              "requiredTotal": 2,
+              "forbiddenHit": 0,
+              "rejected": 0,
+              "promptTokens": 8724,
+              "completionTokens": 129,
+              "reasoningTokens": 0,
+              "missingRules": [],
+              "violatedRules": [],
+              "proposed": [
+                {
+                  "kind": "mood_changed",
+                  "characterId": "innkeeper-hald",
+                  "mood": "hostile",
+                  "evidence": "the guarded caution he had for you hardens into something colder and more permanent"
+                },
+                {
+                  "kind": "relationship_changed",
+                  "characterId": "innkeeper-hald",
+                  "standing": -30,
+                  "summary": "hostile after being accused of lying",
+                  "evidence": "something in the way he says it suggests he will remember this"
+                }
+              ],
+              "rejectedDeltas": [],
+              "provider": "StreamLake",
+              "clean": true
+            }
+          ],
+          "requiredHit": 6,
+          "requiredTotal": 6,
+          "forbiddenHit": 0,
+          "failedCount": 0,
+          "problems": []
+        },
+        {
+          "name": "new-character",
+          "runs": [
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: [\n    {\n      \u0022kind\u0022: \u0022character_introduced\u0022,\n      \u0022characterId\u0022: \u0022militia-woman\u0022,\n      \u0022name\u0022: \u0022militia woman\u0022,\n      \u0022description\u0022: \u0022A woman in a militia tabard, professional and commanding.\u0022,\n      \u0022locationId\u0022: \u0022marrow-tavern\u0022,\n      \u0022evidence\u0022: \u0022A woman in a militia tabard stands in the frame\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022character_observed\u0022,\n      \u0022targetId\u0022: \u0022militia-woman\u0022,\n      \u0022identity\u0022: {\n        \u0022value\u0022: \u0022militia woman\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022descriptionObservation\u0022: {\n        \u0022value\u0022: \u0022A woman in a militia tabard, rain running off her shoulders, professional and commanding.\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022condition\u0022: {\n        \u0022value\u0022: \u0022wet from rain\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022whereabouts\u0022: {\n        \u0022value\u0022: {\n          \u0022kind\u0022: \u0022Location\u0022,\n          \u0022targetId\u0022: \u0022marrow-tavern\u0022,\n          \u0022disclosedLabel\u0022: null\n        },\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022evidence\u0022: \u0022A woman in a militia tabard stands in the frame\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022mood_changed\u0022,\n      \u0022characterId\u0022: \u0022innkeeper-hald\u0022,\n      \u0022mood\u0022: \u0022alarmed\u0022,\n      \u0022evidence\u0022: \u0022Hald has gone very still behind the counter.\u0022\n    }\n  ]\n}",
+              "rejectionReasons": [],
+              "noOps": [],
+              "failed": false,
+              "note": null,
+              "requiredHit": 1,
+              "requiredTotal": 1,
+              "forbiddenHit": 0,
+              "rejected": 0,
+              "promptTokens": 8699,
+              "completionTokens": 356,
+              "reasoningTokens": 0,
+              "missingRules": [],
+              "violatedRules": [],
+              "proposed": [
+                {
+                  "kind": "character_introduced",
+                  "characterId": "militia-woman",
+                  "name": "militia woman",
+                  "description": "A woman in a militia tabard, professional and commanding.",
+                  "locationId": "marrow-tavern",
+                  "evidence": "A woman in a militia tabard stands in the frame"
+                },
+                {
+                  "kind": "character_observed",
+                  "targetId": "militia-woman",
+                  "identity": {
+                    "value": "militia woman",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "descriptionObservation": {
+                    "value": "A woman in a militia tabard, rain running off her shoulders, professional and commanding.",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "condition": {
+                    "value": "wet from rain",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "whereabouts": {
+                    "value": {
+                      "kind": "Location",
+                      "targetId": "marrow-tavern",
+                      "disclosedLabel": null
+                    },
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "evidence": "A woman in a militia tabard stands in the frame"
+                },
+                {
+                  "kind": "mood_changed",
+                  "characterId": "innkeeper-hald",
+                  "mood": "alarmed",
+                  "evidence": "Hald has gone very still behind the counter."
+                }
+              ],
+              "rejectedDeltas": [],
+              "provider": "StreamLake",
+              "clean": true
+            },
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: [\n    {\n      \u0022kind\u0022: \u0022character_introduced\u0022,\n      \u0022characterId\u0022: \u0022militia-woman\u0022,\n      \u0022name\u0022: \u0022militia woman\u0022,\n      \u0022description\u0022: \u0022A woman in a militia tabard, professional and commanding.\u0022,\n      \u0022locationId\u0022: \u0022marrow-tavern\u0022,\n      \u0022evidence\u0022: \u0022A woman in a militia tabard stands in the frame\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022character_observed\u0022,\n      \u0022targetId\u0022: \u0022militia-woman\u0022,\n      \u0022identity\u0022: {\n        \u0022value\u0022: \u0022militia woman\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022descriptionObservation\u0022: {\n        \u0022value\u0022: \u0022A woman in a militia tabard, rain running off her shoulders, professional and commanding.\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022condition\u0022: {\n        \u0022value\u0022: \u0022wet from rain\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022whereabouts\u0022: {\n        \u0022value\u0022: {\n          \u0022kind\u0022: \u0022Location\u0022,\n          \u0022targetId\u0022: \u0022marrow-tavern\u0022,\n          \u0022disclosedLabel\u0022: null\n        },\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022evidence\u0022: \u0022A woman in a militia tabard stands in the frame\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022mood_changed\u0022,\n      \u0022characterId\u0022: \u0022innkeeper-hald\u0022,\n      \u0022mood\u0022: \u0022tense\u0022,\n      \u0022evidence\u0022: \u0022Hald has gone very still behind the counter.\u0022\n    }\n  ]\n}",
+              "rejectionReasons": [],
+              "noOps": [],
+              "failed": false,
+              "note": null,
+              "requiredHit": 1,
+              "requiredTotal": 1,
+              "forbiddenHit": 0,
+              "rejected": 0,
+              "promptTokens": 8699,
+              "completionTokens": 356,
+              "reasoningTokens": 0,
+              "missingRules": [],
+              "violatedRules": [],
+              "proposed": [
+                {
+                  "kind": "character_introduced",
+                  "characterId": "militia-woman",
+                  "name": "militia woman",
+                  "description": "A woman in a militia tabard, professional and commanding.",
+                  "locationId": "marrow-tavern",
+                  "evidence": "A woman in a militia tabard stands in the frame"
+                },
+                {
+                  "kind": "character_observed",
+                  "targetId": "militia-woman",
+                  "identity": {
+                    "value": "militia woman",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "descriptionObservation": {
+                    "value": "A woman in a militia tabard, rain running off her shoulders, professional and commanding.",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "condition": {
+                    "value": "wet from rain",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "whereabouts": {
+                    "value": {
+                      "kind": "Location",
+                      "targetId": "marrow-tavern",
+                      "disclosedLabel": null
+                    },
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "evidence": "A woman in a militia tabard stands in the frame"
+                },
+                {
+                  "kind": "mood_changed",
+                  "characterId": "innkeeper-hald",
+                  "mood": "tense",
+                  "evidence": "Hald has gone very still behind the counter."
+                }
+              ],
+              "rejectedDeltas": [],
+              "provider": "StreamLake",
+              "clean": true
+            },
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: [\n    {\n      \u0022kind\u0022: \u0022character_introduced\u0022,\n      \u0022characterId\u0022: \u0022militia-woman\u0022,\n      \u0022name\u0022: \u0022militia woman\u0022,\n      \u0022description\u0022: \u0022A woman in a militia tabard, professional and commanding.\u0022,\n      \u0022locationId\u0022: \u0022marrow-tavern\u0022,\n      \u0022evidence\u0022: \u0022A woman in a militia tabard stands in the frame\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022character_observed\u0022,\n      \u0022targetId\u0022: \u0022militia-woman\u0022,\n      \u0022identity\u0022: {\n        \u0022value\u0022: \u0022militia woman\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022descriptionObservation\u0022: {\n        \u0022value\u0022: \u0022A woman in a militia tabard, rain running off her shoulders, professional and commanding.\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022condition\u0022: {\n        \u0022value\u0022: \u0022wet from rain\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022whereabouts\u0022: {\n        \u0022value\u0022: {\n          \u0022kind\u0022: \u0022Location\u0022,\n          \u0022targetId\u0022: \u0022marrow-tavern\u0022,\n          \u0022disclosedLabel\u0022: null\n        },\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022evidence\u0022: \u0022A woman in a militia tabard stands in the frame\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022mood_changed\u0022,\n      \u0022characterId\u0022: \u0022innkeeper-hald\u0022,\n      \u0022mood\u0022: \u0022tense\u0022,\n      \u0022evidence\u0022: \u0022Hald has gone very still behind the counter.\u0022\n    }\n  ]\n}",
+              "rejectionReasons": [],
+              "noOps": [],
+              "failed": false,
+              "note": null,
+              "requiredHit": 1,
+              "requiredTotal": 1,
+              "forbiddenHit": 0,
+              "rejected": 0,
+              "promptTokens": 8699,
+              "completionTokens": 356,
+              "reasoningTokens": 0,
+              "missingRules": [],
+              "violatedRules": [],
+              "proposed": [
+                {
+                  "kind": "character_introduced",
+                  "characterId": "militia-woman",
+                  "name": "militia woman",
+                  "description": "A woman in a militia tabard, professional and commanding.",
+                  "locationId": "marrow-tavern",
+                  "evidence": "A woman in a militia tabard stands in the frame"
+                },
+                {
+                  "kind": "character_observed",
+                  "targetId": "militia-woman",
+                  "identity": {
+                    "value": "militia woman",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "descriptionObservation": {
+                    "value": "A woman in a militia tabard, rain running off her shoulders, professional and commanding.",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "condition": {
+                    "value": "wet from rain",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "whereabouts": {
+                    "value": {
+                      "kind": "Location",
+                      "targetId": "marrow-tavern",
+                      "disclosedLabel": null
+                    },
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "evidence": "A woman in a militia tabard stands in the frame"
+                },
+                {
+                  "kind": "mood_changed",
+                  "characterId": "innkeeper-hald",
+                  "mood": "tense",
+                  "evidence": "Hald has gone very still behind the counter."
+                }
+              ],
+              "rejectedDeltas": [],
+              "provider": "StreamLake",
+              "clean": true
+            }
+          ],
+          "requiredHit": 3,
+          "requiredTotal": 3,
+          "forbiddenHit": 0,
+          "failedCount": 0,
+          "problems": []
+        },
+        {
+          "name": "redescription",
+          "runs": [
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: [\n    {\n      \u0022kind\u0022: \u0022character_observed\u0022,\n      \u0022targetId\u0022: \u0022innkeeper-hald\u0022,\n      \u0022identity\u0022: null,\n      \u0022descriptionObservation\u0022: {\n        \u0022value\u0022: \u0022Heavyset, watchful, his sleeves pushed back over forearms like ham hocks.\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022condition\u0022: null,\n      \u0022whereabouts\u0022: {\n        \u0022value\u0022: {\n          \u0022kind\u0022: \u0022Location\u0022,\n          \u0022targetId\u0022: \u0022marrow-tavern\u0022,\n          \u0022disclosedLabel\u0022: null\n        },\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022evidence\u0022: \u0022Heavyset, watchful, his sleeves pushed back over forearms like ham hocks.\u0022\n    }\n  ]\n}",
+              "rejectionReasons": [
+                "Observation needs a disclosed safe identity."
+              ],
+              "noOps": [],
+              "failed": false,
+              "note": null,
+              "requiredHit": 0,
+              "requiredTotal": 0,
+              "forbiddenHit": 0,
+              "rejected": 1,
+              "promptTokens": 8695,
+              "completionTokens": 179,
+              "reasoningTokens": 0,
+              "missingRules": [],
+              "violatedRules": [],
+              "proposed": [
+                {
+                  "kind": "character_observed",
+                  "targetId": "innkeeper-hald",
+                  "identity": null,
+                  "descriptionObservation": {
+                    "value": "Heavyset, watchful, his sleeves pushed back over forearms like ham hocks.",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "condition": null,
+                  "whereabouts": {
+                    "value": {
+                      "kind": "Location",
+                      "targetId": "marrow-tavern",
+                      "disclosedLabel": null
+                    },
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "evidence": "Heavyset, watchful, his sleeves pushed back over forearms like ham hocks."
+                }
+              ],
+              "rejectedDeltas": [
+                {
+                  "kind": "character_observed",
+                  "targetId": "innkeeper-hald",
+                  "identity": null,
+                  "descriptionObservation": {
+                    "value": "Heavyset, watchful, his sleeves pushed back over forearms like ham hocks.",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "condition": null,
+                  "whereabouts": {
+                    "value": {
+                      "kind": "Location",
+                      "targetId": "marrow-tavern",
+                      "disclosedLabel": null
+                    },
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "evidence": "Heavyset, watchful, his sleeves pushed back over forearms like ham hocks."
+                }
+              ],
+              "provider": "StreamLake",
+              "clean": true
+            },
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: []\n}",
+              "rejectionReasons": [],
+              "noOps": [],
+              "failed": false,
+              "note": null,
+              "requiredHit": 0,
+              "requiredTotal": 0,
+              "forbiddenHit": 0,
+              "rejected": 0,
+              "promptTokens": 8695,
+              "completionTokens": 10,
+              "reasoningTokens": 0,
+              "missingRules": [],
+              "violatedRules": [],
+              "proposed": [],
+              "rejectedDeltas": [],
+              "provider": "StreamLake",
+              "clean": true
+            },
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: []\n}",
+              "rejectionReasons": [],
+              "noOps": [],
+              "failed": false,
+              "note": null,
+              "requiredHit": 0,
+              "requiredTotal": 0,
+              "forbiddenHit": 0,
+              "rejected": 0,
+              "promptTokens": 8695,
+              "completionTokens": 10,
+              "reasoningTokens": 0,
+              "missingRules": [],
+              "violatedRules": [],
+              "proposed": [],
+              "rejectedDeltas": [],
+              "provider": "StreamLake",
+              "clean": true
+            }
+          ],
+          "requiredHit": 0,
+          "requiredTotal": 0,
+          "forbiddenHit": 0,
+          "failedCount": 0,
+          "problems": []
+        },
+        {
+          "name": "atmosphere",
+          "runs": [
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: [\n    {\n      \u0022kind\u0022: \u0022character_observed\u0022,\n      \u0022targetId\u0022: \u0022innkeeper-hald\u0022,\n      \u0022identity\u0022: null,\n      \u0022descriptionObservation\u0022: {\n        \u0022value\u0022: \u0022Heavyset, watchful, wipes the same patch of counter when he is thinking.\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022condition\u0022: {\n        \u0022value\u0022: \u0022guarded\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022whereabouts\u0022: {\n        \u0022value\u0022: {\n          \u0022kind\u0022: \u0022Location\u0022,\n          \u0022targetId\u0022: \u0022marrow-tavern\u0022,\n          \u0022disclosedLabel\u0022: null\n        },\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022evidence\u0022: \u0022Hald watches you from behind the scarred wood of the bar.\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022character_observed\u0022,\n      \u0022targetId\u0022: \u0022drinker-mabb\u0022,\n      \u0022identity\u0022: null,\n      \u0022descriptionObservation\u0022: {\n        \u0022value\u0022: \u0022An old marsh-hand nursing a mug in the corner. Talks when drunk, which is often.\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022condition\u0022: {\n        \u0022value\u0022: \u0022drunk, maudlin\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022whereabouts\u0022: {\n        \u0022value\u0022: {\n          \u0022kind\u0022: \u0022Location\u0022,\n          \u0022targetId\u0022: \u0022marrow-tavern\u0022,\n          \u0022disclosedLabel\u0022: null\n        },\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022evidence\u0022: \u0022Over in the shadowed corner, the old marsh-hand slumps over his mug.\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022location_observed\u0022,\n      \u0022targetId\u0022: \u0022marrow-tavern\u0022,\n      \u0022identity\u0022: null,\n      \u0022descriptionObservation\u0022: {\n        \u0022value\u0022: \u0022A low-ceilinged taproom in the town of Marrow. Peat smoke, spilled ale, and the sour cold that comes off the marsh outside. A handful of locals keep to their own tables and their own business.\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022condition\u0022: null,\n      \u0022whereabouts\u0022: null,\n      \u0022connections\u0022: [\n        {\n          \u0022destinationId\u0022: \u0022marrow-square\u0022,\n          \u0022label\u0022: {\n            \u0022value\u0022: \u0022Marrow Square\u0022,\n            \u0022provenance\u0022: \u0022Observed\u0022,\n            \u0022factId\u0022: null\n          }\n        }\n      ],\n      \u0022evidence\u0022: \u0022the heavy door that leads out to Marrow Square\u0022\n    }\n  ]\n}",
+              "rejectionReasons": [
+                "Observation needs a disclosed safe identity.",
+                "Observation needs a disclosed safe identity.",
+                "Observation needs a disclosed safe identity."
+              ],
+              "noOps": [],
+              "failed": false,
+              "note": null,
+              "requiredHit": 0,
+              "requiredTotal": 0,
+              "forbiddenHit": 0,
+              "rejected": 3,
+              "promptTokens": 8810,
+              "completionTokens": 584,
+              "reasoningTokens": 0,
+              "missingRules": [],
+              "violatedRules": [],
+              "proposed": [
+                {
+                  "kind": "character_observed",
+                  "targetId": "innkeeper-hald",
+                  "identity": null,
+                  "descriptionObservation": {
+                    "value": "Heavyset, watchful, wipes the same patch of counter when he is thinking.",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "condition": {
+                    "value": "guarded",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "whereabouts": {
+                    "value": {
+                      "kind": "Location",
+                      "targetId": "marrow-tavern",
+                      "disclosedLabel": null
+                    },
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "evidence": "Hald watches you from behind the scarred wood of the bar."
+                },
+                {
+                  "kind": "character_observed",
+                  "targetId": "drinker-mabb",
+                  "identity": null,
+                  "descriptionObservation": {
+                    "value": "An old marsh-hand nursing a mug in the corner. Talks when drunk, which is often.",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "condition": {
+                    "value": "drunk, maudlin",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "whereabouts": {
+                    "value": {
+                      "kind": "Location",
+                      "targetId": "marrow-tavern",
+                      "disclosedLabel": null
+                    },
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "evidence": "Over in the shadowed corner, the old marsh-hand slumps over his mug."
+                },
+                {
+                  "kind": "location_observed",
+                  "connections": [
+                    {
+                      "destinationId": "marrow-square",
+                      "label": {
+                        "value": "Marrow Square",
+                        "provenance": "Observed",
+                        "factId": null
+                      }
+                    }
+                  ],
+                  "targetId": "marrow-tavern",
+                  "identity": null,
+                  "descriptionObservation": {
+                    "value": "A low-ceilinged taproom in the town of Marrow. Peat smoke, spilled ale, and the sour cold that comes off the marsh outside. A handful of locals keep to their own tables and their own business.",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "condition": null,
+                  "whereabouts": null,
+                  "evidence": "the heavy door that leads out to Marrow Square"
+                }
+              ],
+              "rejectedDeltas": [
+                {
+                  "kind": "character_observed",
+                  "targetId": "innkeeper-hald",
+                  "identity": null,
+                  "descriptionObservation": {
+                    "value": "Heavyset, watchful, wipes the same patch of counter when he is thinking.",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "condition": {
+                    "value": "guarded",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "whereabouts": {
+                    "value": {
+                      "kind": "Location",
+                      "targetId": "marrow-tavern",
+                      "disclosedLabel": null
+                    },
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "evidence": "Hald watches you from behind the scarred wood of the bar."
+                },
+                {
+                  "kind": "character_observed",
+                  "targetId": "drinker-mabb",
+                  "identity": null,
+                  "descriptionObservation": {
+                    "value": "An old marsh-hand nursing a mug in the corner. Talks when drunk, which is often.",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "condition": {
+                    "value": "drunk, maudlin",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "whereabouts": {
+                    "value": {
+                      "kind": "Location",
+                      "targetId": "marrow-tavern",
+                      "disclosedLabel": null
+                    },
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "evidence": "Over in the shadowed corner, the old marsh-hand slumps over his mug."
+                },
+                {
+                  "kind": "location_observed",
+                  "connections": [
+                    {
+                      "destinationId": "marrow-square",
+                      "label": {
+                        "value": "Marrow Square",
+                        "provenance": "Observed",
+                        "factId": null
+                      }
+                    }
+                  ],
+                  "targetId": "marrow-tavern",
+                  "identity": null,
+                  "descriptionObservation": {
+                    "value": "A low-ceilinged taproom in the town of Marrow. Peat smoke, spilled ale, and the sour cold that comes off the marsh outside. A handful of locals keep to their own tables and their own business.",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "condition": null,
+                  "whereabouts": null,
+                  "evidence": "the heavy door that leads out to Marrow Square"
+                }
+              ],
+              "provider": "StreamLake",
+              "clean": true
+            },
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: []\n}",
+              "rejectionReasons": [],
+              "noOps": [],
+              "failed": false,
+              "note": null,
+              "requiredHit": 0,
+              "requiredTotal": 0,
+              "forbiddenHit": 0,
+              "rejected": 0,
+              "promptTokens": 8810,
+              "completionTokens": 10,
+              "reasoningTokens": 0,
+              "missingRules": [],
+              "violatedRules": [],
+              "proposed": [],
+              "rejectedDeltas": [],
+              "provider": "StreamLake",
+              "clean": true
+            },
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: []\n}",
+              "rejectionReasons": [],
+              "noOps": [],
+              "failed": false,
+              "note": null,
+              "requiredHit": 0,
+              "requiredTotal": 0,
+              "forbiddenHit": 0,
+              "rejected": 0,
+              "promptTokens": 8810,
+              "completionTokens": 10,
+              "reasoningTokens": 0,
+              "missingRules": [],
+              "violatedRules": [],
+              "proposed": [],
+              "rejectedDeltas": [],
+              "provider": "StreamLake",
+              "clean": true
+            }
+          ],
+          "requiredHit": 0,
+          "requiredTotal": 0,
+          "forbiddenHit": 0,
+          "failedCount": 0,
+          "problems": []
+        },
+        {
+          "name": "player-arrival",
+          "runs": [
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: [\n    {\n      \u0022kind\u0022: \u0022player_moved\u0022,\n      \u0022toLocationId\u0022: \u0022marrow-square\u0022,\n      \u0022evidence\u0022: \u0022The track turns to mud past the last of the houses\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022location_introduced\u0022,\n      \u0022locationId\u0022: \u0022old-mill\u0022,\n      \u0022name\u0022: \u0022old mill\u0022,\n      \u0022description\u0022: \u0022An abandoned mill where the ground rises, its wheel long stopped and half its roof fallen in.\u0022,\n      \u0022evidence\u0022: \u0022The old mill stands where the ground rises, its wheel long stopped and half its roof fallen in.\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022location_observed\u0022,\n      \u0022targetId\u0022: \u0022old-mill\u0022,\n      \u0022identity\u0022: {\n        \u0022value\u0022: \u0022old mill\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022descriptionObservation\u0022: {\n        \u0022value\u0022: \u0022An abandoned mill where the ground rises, its wheel long stopped and half its roof fallen in.\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022condition\u0022: null,\n      \u0022whereabouts\u0022: null,\n      \u0022connections\u0022: null,\n      \u0022evidence\u0022: \u0022The old mill stands where the ground rises, its wheel long stopped and half its roof fallen in.\u0022\n    }\n  ]\n}",
+              "rejectionReasons": [],
+              "noOps": [],
+              "failed": false,
+              "note": null,
+              "requiredHit": 1,
+              "requiredTotal": 2,
+              "forbiddenHit": 0,
+              "rejected": 0,
+              "promptTokens": 8720,
+              "completionTokens": 281,
+              "reasoningTokens": 0,
+              "missingRules": [
+                "the player ends the turn at the mill"
+              ],
+              "violatedRules": [],
+              "proposed": [
+                {
+                  "kind": "player_moved",
+                  "toLocationId": "marrow-square",
+                  "evidence": "The track turns to mud past the last of the houses"
+                },
+                {
+                  "kind": "location_introduced",
+                  "locationId": "old-mill",
+                  "name": "old mill",
+                  "description": "An abandoned mill where the ground rises, its wheel long stopped and half its roof fallen in.",
+                  "evidence": "The old mill stands where the ground rises, its wheel long stopped and half its roof fallen in."
+                },
+                {
+                  "kind": "location_observed",
+                  "connections": null,
+                  "targetId": "old-mill",
+                  "identity": {
+                    "value": "old mill",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "descriptionObservation": {
+                    "value": "An abandoned mill where the ground rises, its wheel long stopped and half its roof fallen in.",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "condition": null,
+                  "whereabouts": null,
+                  "evidence": "The old mill stands where the ground rises, its wheel long stopped and half its roof fallen in."
+                }
+              ],
+              "rejectedDeltas": [],
+              "provider": "StreamLake",
+              "clean": false
+            },
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: [\n    {\n      \u0022kind\u0022: \u0022player_moved\u0022,\n      \u0022toLocationId\u0022: \u0022marrow-square\u0022,\n      \u0022evidence\u0022: \u0022The track turns to mud past the last of the houses\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022location_introduced\u0022,\n      \u0022locationId\u0022: \u0022old-mill\u0022,\n      \u0022name\u0022: \u0022old mill\u0022,\n      \u0022description\u0022: \u0022An abandoned mill where the ground rises, its wheel long stopped and half its roof fallen in.\u0022,\n      \u0022evidence\u0022: \u0022The old mill stands where the ground rises, its wheel long stopped and half its roof fallen in.\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022player_moved\u0022,\n      \u0022toLocationId\u0022: \u0022old-mill\u0022,\n      \u0022evidence\u0022: \u0022Nothing moves in the doorway of the mill.\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022location_observed\u0022,\n      \u0022targetId\u0022: \u0022old-mill\u0022,\n      \u0022identity\u0022: {\n        \u0022value\u0022: \u0022old mill\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022descriptionObservation\u0022: {\n        \u0022value\u0022: \u0022An abandoned mill where the ground rises, its wheel long stopped and half its roof fallen in.\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022condition\u0022: null,\n      \u0022whereabouts\u0022: null,\n      \u0022connections\u0022: null,\n      \u0022evidence\u0022: \u0022The old mill stands where the ground rises, its wheel long stopped and half its roof fallen in.\u0022\n    }\n  ]\n}",
+              "rejectionReasons": [],
+              "noOps": [],
+              "failed": false,
+              "note": null,
+              "requiredHit": 2,
+              "requiredTotal": 2,
+              "forbiddenHit": 0,
+              "rejected": 0,
+              "promptTokens": 8720,
+              "completionTokens": 319,
+              "reasoningTokens": 0,
+              "missingRules": [],
+              "violatedRules": [],
+              "proposed": [
+                {
+                  "kind": "player_moved",
+                  "toLocationId": "marrow-square",
+                  "evidence": "The track turns to mud past the last of the houses"
+                },
+                {
+                  "kind": "location_introduced",
+                  "locationId": "old-mill",
+                  "name": "old mill",
+                  "description": "An abandoned mill where the ground rises, its wheel long stopped and half its roof fallen in.",
+                  "evidence": "The old mill stands where the ground rises, its wheel long stopped and half its roof fallen in."
+                },
+                {
+                  "kind": "player_moved",
+                  "toLocationId": "old-mill",
+                  "evidence": "Nothing moves in the doorway of the mill."
+                },
+                {
+                  "kind": "location_observed",
+                  "connections": null,
+                  "targetId": "old-mill",
+                  "identity": {
+                    "value": "old mill",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "descriptionObservation": {
+                    "value": "An abandoned mill where the ground rises, its wheel long stopped and half its roof fallen in.",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "condition": null,
+                  "whereabouts": null,
+                  "evidence": "The old mill stands where the ground rises, its wheel long stopped and half its roof fallen in."
+                }
+              ],
+              "rejectedDeltas": [],
+              "provider": "StreamLake",
+              "clean": true
+            },
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: [\n    {\n      \u0022kind\u0022: \u0022player_moved\u0022,\n      \u0022toLocationId\u0022: \u0022marrow-square\u0022,\n      \u0022evidence\u0022: \u0022The track turns to mud past the last of the houses\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022location_introduced\u0022,\n      \u0022locationId\u0022: \u0022old-mill\u0022,\n      \u0022name\u0022: \u0022old mill\u0022,\n      \u0022description\u0022: \u0022An abandoned mill where the ground rises, its wheel long stopped and half its roof fallen in. The door hangs open and nettles by the step are trodden flat.\u0022,\n      \u0022evidence\u0022: \u0022The old mill stands where the ground rises, its wheel long stopped and half its roof fallen in.\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022location_observed\u0022,\n      \u0022targetId\u0022: \u0022old-mill\u0022,\n      \u0022identity\u0022: {\n        \u0022value\u0022: \u0022old mill\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022descriptionObservation\u0022: {\n        \u0022value\u0022: \u0022An abandoned mill where the ground rises, its wheel long stopped and half its roof fallen in. The door hangs open and nettles by the step are trodden flat.\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022condition\u0022: null,\n      \u0022whereabouts\u0022: null,\n      \u0022connections\u0022: null,\n      \u0022evidence\u0022: \u0022The old mill stands where the ground rises, its wheel long stopped and half its roof fallen in.\u0022\n    }\n  ]\n}",
+              "rejectionReasons": [],
+              "noOps": [],
+              "failed": false,
+              "note": null,
+              "requiredHit": 1,
+              "requiredTotal": 2,
+              "forbiddenHit": 0,
+              "rejected": 0,
+              "promptTokens": 8720,
+              "completionTokens": 313,
+              "reasoningTokens": 0,
+              "missingRules": [
+                "the player ends the turn at the mill"
+              ],
+              "violatedRules": [],
+              "proposed": [
+                {
+                  "kind": "player_moved",
+                  "toLocationId": "marrow-square",
+                  "evidence": "The track turns to mud past the last of the houses"
+                },
+                {
+                  "kind": "location_introduced",
+                  "locationId": "old-mill",
+                  "name": "old mill",
+                  "description": "An abandoned mill where the ground rises, its wheel long stopped and half its roof fallen in. The door hangs open and nettles by the step are trodden flat.",
+                  "evidence": "The old mill stands where the ground rises, its wheel long stopped and half its roof fallen in."
+                },
+                {
+                  "kind": "location_observed",
+                  "connections": null,
+                  "targetId": "old-mill",
+                  "identity": {
+                    "value": "old mill",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "descriptionObservation": {
+                    "value": "An abandoned mill where the ground rises, its wheel long stopped and half its roof fallen in. The door hangs open and nettles by the step are trodden flat.",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "condition": null,
+                  "whereabouts": null,
+                  "evidence": "The old mill stands where the ground rises, its wheel long stopped and half its roof fallen in."
+                }
+              ],
+              "rejectedDeltas": [],
+              "provider": "StreamLake",
+              "clean": false
+            }
+          ],
+          "requiredHit": 4,
+          "requiredTotal": 6,
+          "forbiddenHit": 0,
+          "failedCount": 0,
+          "problems": [
+            {
+              "kind": 0,
+              "description": "the player ends the turn at the mill",
+              "hitRuns": 2,
+              "totalRuns": 3
+            }
+          ]
+        },
+        {
+          "name": "two-stage-entry",
+          "runs": [
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: [\n    {\n      \u0022kind\u0022: \u0022player_moved\u0022,\n      \u0022toLocationId\u0022: \u0022marrow-square\u0022,\n      \u0022evidence\u0022: \u0022You brace against the cold stone and drop the last few feet, your boots breaking through a skin of black water at the bottom of the shaft.\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022location_introduced\u0022,\n      \u0022locationId\u0022: \u0022well-cistern\u0022,\n      \u0022name\u0022: \u0022Well Cistern\u0022,\n      \u0022description\u0022: \u0022A vaulted cistern at the bottom of the well, wide and dark, with a low brick tunnel leading to it. Crates are stacked against one side.\u0022,\n      \u0022evidence\u0022: \u0022A low brick tunnel runs off from the shaft. After twenty feet it opens out into a vaulted cistern, wide enough that your light cannot find the far wall. Crates have been stacked against the near side, sodden and split, and something pale is wedged behind them where the water laps at the brick.\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022location_observed\u0022,\n      \u0022targetId\u0022: \u0022marrow-square\u0022,\n      \u0022identity\u0022: null,\n      \u0022descriptionObservation\u0022: null,\n      \u0022condition\u0022: null,\n      \u0022whereabouts\u0022: null,\n      \u0022connections\u0022: null,\n      \u0022evidence\u0022: \u0022You brace against the cold stone and drop the last few feet, your boots breaking through a skin of black water at the bottom of the shaft.\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022location_observed\u0022,\n      \u0022targetId\u0022: \u0022well-cistern\u0022,\n      \u0022identity\u0022: {\n        \u0022value\u0022: \u0022Well Cistern\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022descriptionObservation\u0022: {\n        \u0022value\u0022: \u0022A vaulted cistern at the bottom of the well, wide and dark, with a low brick tunnel leading to it. Crates are stacked against one side.\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022condition\u0022: null,\n      \u0022whereabouts\u0022: null,\n      \u0022connections\u0022: null,\n      \u0022evidence\u0022: \u0022A low brick tunnel runs off from the shaft. After twenty feet it opens out into a vaulted cistern, wide enough that your light cannot find the far wall. Crates have been stacked against the near side, sodden and split, and something pale is wedged behind them where the water laps at the brick.\u0022\n    }\n  ]\n}",
+              "rejectionReasons": [
+                "Observation needs a disclosed safe identity."
+              ],
+              "noOps": [],
+              "failed": false,
+              "note": null,
+              "requiredHit": 1,
+              "requiredTotal": 2,
+              "forbiddenHit": 0,
+              "rejected": 1,
+              "promptTokens": 8752,
+              "completionTokens": 509,
+              "reasoningTokens": 0,
+              "missingRules": [
+                "the player ends the turn in the cistern"
+              ],
+              "violatedRules": [],
+              "proposed": [
+                {
+                  "kind": "player_moved",
+                  "toLocationId": "marrow-square",
+                  "evidence": "You brace against the cold stone and drop the last few feet, your boots breaking through a skin of black water at the bottom of the shaft."
+                },
+                {
+                  "kind": "location_introduced",
+                  "locationId": "well-cistern",
+                  "name": "Well Cistern",
+                  "description": "A vaulted cistern at the bottom of the well, wide and dark, with a low brick tunnel leading to it. Crates are stacked against one side.",
+                  "evidence": "A low brick tunnel runs off from the shaft. After twenty feet it opens out into a vaulted cistern, wide enough that your light cannot find the far wall. Crates have been stacked against the near side, sodden and split, and something pale is wedged behind them where the water laps at the brick."
+                },
+                {
+                  "kind": "location_observed",
+                  "connections": null,
+                  "targetId": "marrow-square",
+                  "identity": null,
+                  "descriptionObservation": null,
+                  "condition": null,
+                  "whereabouts": null,
+                  "evidence": "You brace against the cold stone and drop the last few feet, your boots breaking through a skin of black water at the bottom of the shaft."
+                },
+                {
+                  "kind": "location_observed",
+                  "connections": null,
+                  "targetId": "well-cistern",
+                  "identity": {
+                    "value": "Well Cistern",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "descriptionObservation": {
+                    "value": "A vaulted cistern at the bottom of the well, wide and dark, with a low brick tunnel leading to it. Crates are stacked against one side.",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "condition": null,
+                  "whereabouts": null,
+                  "evidence": "A low brick tunnel runs off from the shaft. After twenty feet it opens out into a vaulted cistern, wide enough that your light cannot find the far wall. Crates have been stacked against the near side, sodden and split, and something pale is wedged behind them where the water laps at the brick."
+                }
+              ],
+              "rejectedDeltas": [
+                {
+                  "kind": "location_observed",
+                  "connections": null,
+                  "targetId": "marrow-square",
+                  "identity": null,
+                  "descriptionObservation": null,
+                  "condition": null,
+                  "whereabouts": null,
+                  "evidence": "You brace against the cold stone and drop the last few feet, your boots breaking through a skin of black water at the bottom of the shaft."
+                }
+              ],
+              "provider": "StreamLake",
+              "clean": false
+            },
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: [\n    {\n      \u0022kind\u0022: \u0022player_moved\u0022,\n      \u0022toLocationId\u0022: \u0022marrow-square\u0022,\n      \u0022evidence\u0022: \u0022You brace against the cold stone and drop the last few feet, your boots breaking through a skin of black water at the bottom of the shaft.\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022location_introduced\u0022,\n      \u0022locationId\u0022: \u0022well-cistern\u0022,\n      \u0022name\u0022: \u0022Well Cistern\u0022,\n      \u0022description\u0022: \u0022A vaulted cistern at the end of a low brick tunnel from the well shaft. Wide, dark, with crates stacked against the near side and water lapping at the brick.\u0022,\n      \u0022evidence\u0022: \u0022A low brick tunnel runs off from the shaft. After twenty feet it opens out into a vaulted cistern, wide enough that your light cannot find the far wall.\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022player_moved\u0022,\n      \u0022toLocationId\u0022: \u0022well-cistern\u0022,\n      \u0022evidence\u0022: \u0022After twenty feet it opens out into a vaulted cistern\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022item_introduced\u0022,\n      \u0022itemId\u0022: \u0022sodden-crates\u0022,\n      \u0022name\u0022: \u0022sodden crates\u0022,\n      \u0022description\u0022: \u0022Crates stacked against the near side of the cistern, sodden and split.\u0022,\n      \u0022locationId\u0022: \u0022well-cistern\u0022,\n      \u0022holderId\u0022: null,\n      \u0022evidence\u0022: \u0022Crates have been stacked against the near side, sodden and split\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022item_introduced\u0022,\n      \u0022itemId\u0022: \u0022pale-object\u0022,\n      \u0022name\u0022: \u0022pale object\u0022,\n      \u0022description\u0022: \u0022Something pale wedged behind the crates where the water laps at the brick.\u0022,\n      \u0022locationId\u0022: \u0022well-cistern\u0022,\n      \u0022holderId\u0022: null,\n      \u0022evidence\u0022: \u0022something pale is wedged behind them where the water laps at the brick.\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022location_observed\u0022,\n      \u0022targetId\u0022: \u0022marrow-tavern\u0022,\n      \u0022identity\u0022: null,\n      \u0022descriptionObservation\u0022: null,\n      \u0022condition\u0022: null,\n      \u0022whereabouts\u0022: null,\n      \u0022connections\u0022: null,\n      \u0022evidence\u0022: \u0022You brace against the cold stone and drop the last few feet\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022location_observed\u0022,\n      \u0022targetId\u0022: \u0022marrow-square\u0022,\n      \u0022identity\u0022: {\n        \u0022value\u0022: \u0022Marrow Square\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022descriptionObservation\u0022: {\n        \u0022value\u0022: \u0022The well in the square.\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022condition\u0022: null,\n      \u0022whereabouts\u0022: null,\n      \u0022connections\u0022: null,\n      \u0022evidence\u0022: \u0022the bottom of the shaft\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022location_observed\u0022,\n      \u0022targetId\u0022: \u0022well-cistern\u0022,\n      \u0022identity\u0022: {\n        \u0022value\u0022: \u0022Well Cistern\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022descriptionObservation\u0022: {\n        \u0022value\u0022: \u0022A vaulted cistern at the end of a low brick tunnel from the well shaft. Wide, dark, with crates stacked against the near side and water lapping at the brick.\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022condition\u0022: null,\n      \u0022whereabouts\u0022: null,\n      \u0022connections\u0022: null,\n      \u0022evidence\u0022: \u0022A low brick tunnel runs off from the shaft. After twenty feet it opens out into a vaulted cistern\u0022\n    }\n  ]\n}",
+              "rejectionReasons": [
+                "Observation needs a disclosed safe identity."
+              ],
+              "noOps": [],
+              "failed": false,
+              "note": null,
+              "requiredHit": 2,
+              "requiredTotal": 2,
+              "forbiddenHit": 0,
+              "rejected": 1,
+              "promptTokens": 8752,
+              "completionTokens": 783,
+              "reasoningTokens": 0,
+              "missingRules": [],
+              "violatedRules": [],
+              "proposed": [
+                {
+                  "kind": "player_moved",
+                  "toLocationId": "marrow-square",
+                  "evidence": "You brace against the cold stone and drop the last few feet, your boots breaking through a skin of black water at the bottom of the shaft."
+                },
+                {
+                  "kind": "location_introduced",
+                  "locationId": "well-cistern",
+                  "name": "Well Cistern",
+                  "description": "A vaulted cistern at the end of a low brick tunnel from the well shaft. Wide, dark, with crates stacked against the near side and water lapping at the brick.",
+                  "evidence": "A low brick tunnel runs off from the shaft. After twenty feet it opens out into a vaulted cistern, wide enough that your light cannot find the far wall."
+                },
+                {
+                  "kind": "player_moved",
+                  "toLocationId": "well-cistern",
+                  "evidence": "After twenty feet it opens out into a vaulted cistern"
+                },
+                {
+                  "kind": "item_introduced",
+                  "itemId": "sodden-crates",
+                  "name": "sodden crates",
+                  "description": "Crates stacked against the near side of the cistern, sodden and split.",
+                  "locationId": "well-cistern",
+                  "holderId": null,
+                  "evidence": "Crates have been stacked against the near side, sodden and split"
+                },
+                {
+                  "kind": "item_introduced",
+                  "itemId": "pale-object",
+                  "name": "pale object",
+                  "description": "Something pale wedged behind the crates where the water laps at the brick.",
+                  "locationId": "well-cistern",
+                  "holderId": null,
+                  "evidence": "something pale is wedged behind them where the water laps at the brick."
+                },
+                {
+                  "kind": "location_observed",
+                  "connections": null,
+                  "targetId": "marrow-tavern",
+                  "identity": null,
+                  "descriptionObservation": null,
+                  "condition": null,
+                  "whereabouts": null,
+                  "evidence": "You brace against the cold stone and drop the last few feet"
+                },
+                {
+                  "kind": "location_observed",
+                  "connections": null,
+                  "targetId": "marrow-square",
+                  "identity": {
+                    "value": "Marrow Square",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "descriptionObservation": {
+                    "value": "The well in the square.",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "condition": null,
+                  "whereabouts": null,
+                  "evidence": "the bottom of the shaft"
+                },
+                {
+                  "kind": "location_observed",
+                  "connections": null,
+                  "targetId": "well-cistern",
+                  "identity": {
+                    "value": "Well Cistern",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "descriptionObservation": {
+                    "value": "A vaulted cistern at the end of a low brick tunnel from the well shaft. Wide, dark, with crates stacked against the near side and water lapping at the brick.",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "condition": null,
+                  "whereabouts": null,
+                  "evidence": "A low brick tunnel runs off from the shaft. After twenty feet it opens out into a vaulted cistern"
+                }
+              ],
+              "rejectedDeltas": [
+                {
+                  "kind": "location_observed",
+                  "connections": null,
+                  "targetId": "marrow-tavern",
+                  "identity": null,
+                  "descriptionObservation": null,
+                  "condition": null,
+                  "whereabouts": null,
+                  "evidence": "You brace against the cold stone and drop the last few feet"
+                }
+              ],
+              "provider": "StreamLake",
+              "clean": true
+            },
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: [\n    {\n      \u0022kind\u0022: \u0022player_moved\u0022,\n      \u0022toLocationId\u0022: \u0022marrow-square\u0022,\n      \u0022evidence\u0022: \u0022You brace against the cold stone and drop the last few feet, your boots breaking through a skin of black water at the bottom of the shaft.\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022location_introduced\u0022,\n      \u0022locationId\u0022: \u0022well-cistern\u0022,\n      \u0022name\u0022: \u0022Well Cistern\u0022,\n      \u0022description\u0022: \u0022A vaulted cistern at the end of a low brick tunnel from the well shaft. Wide, dark, with crates stacked against the near side and water lapping at the brick.\u0022,\n      \u0022evidence\u0022: \u0022A low brick tunnel runs off from the shaft. After twenty feet it opens out into a vaulted cistern, wide enough that your light cannot find the far wall.\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022player_moved\u0022,\n      \u0022toLocationId\u0022: \u0022well-cistern\u0022,\n      \u0022evidence\u0022: \u0022After twenty feet it opens out into a vaulted cistern\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022item_introduced\u0022,\n      \u0022itemId\u0022: \u0022sodden-crates\u0022,\n      \u0022name\u0022: \u0022sodden crates\u0022,\n      \u0022description\u0022: \u0022Crates stacked against the near side of the cistern, sodden and split.\u0022,\n      \u0022locationId\u0022: \u0022well-cistern\u0022,\n      \u0022holderId\u0022: null,\n      \u0022evidence\u0022: \u0022Crates have been stacked against the near side, sodden and split\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022item_introduced\u0022,\n      \u0022itemId\u0022: \u0022pale-thing\u0022,\n      \u0022name\u0022: \u0022pale thing\u0022,\n      \u0022description\u0022: \u0022Something pale wedged behind the crates where the water laps at the brick.\u0022,\n      \u0022locationId\u0022: \u0022well-cistern\u0022,\n      \u0022holderId\u0022: null,\n      \u0022evidence\u0022: \u0022something pale is wedged behind them where the water laps at the brick.\u0022\n    }\n  ]\n}",
+              "rejectionReasons": [],
+              "noOps": [],
+              "failed": false,
+              "note": null,
+              "requiredHit": 2,
+              "requiredTotal": 2,
+              "forbiddenHit": 0,
+              "rejected": 0,
+              "promptTokens": 8752,
+              "completionTokens": 415,
+              "reasoningTokens": 0,
+              "missingRules": [],
+              "violatedRules": [],
+              "proposed": [
+                {
+                  "kind": "player_moved",
+                  "toLocationId": "marrow-square",
+                  "evidence": "You brace against the cold stone and drop the last few feet, your boots breaking through a skin of black water at the bottom of the shaft."
+                },
+                {
+                  "kind": "location_introduced",
+                  "locationId": "well-cistern",
+                  "name": "Well Cistern",
+                  "description": "A vaulted cistern at the end of a low brick tunnel from the well shaft. Wide, dark, with crates stacked against the near side and water lapping at the brick.",
+                  "evidence": "A low brick tunnel runs off from the shaft. After twenty feet it opens out into a vaulted cistern, wide enough that your light cannot find the far wall."
+                },
+                {
+                  "kind": "player_moved",
+                  "toLocationId": "well-cistern",
+                  "evidence": "After twenty feet it opens out into a vaulted cistern"
+                },
+                {
+                  "kind": "item_introduced",
+                  "itemId": "sodden-crates",
+                  "name": "sodden crates",
+                  "description": "Crates stacked against the near side of the cistern, sodden and split.",
+                  "locationId": "well-cistern",
+                  "holderId": null,
+                  "evidence": "Crates have been stacked against the near side, sodden and split"
+                },
+                {
+                  "kind": "item_introduced",
+                  "itemId": "pale-thing",
+                  "name": "pale thing",
+                  "description": "Something pale wedged behind the crates where the water laps at the brick.",
+                  "locationId": "well-cistern",
+                  "holderId": null,
+                  "evidence": "something pale is wedged behind them where the water laps at the brick."
+                }
+              ],
+              "rejectedDeltas": [],
+              "provider": "StreamLake",
+              "clean": true
+            }
+          ],
+          "requiredHit": 5,
+          "requiredTotal": 6,
+          "forbiddenHit": 0,
+          "failedCount": 0,
+          "problems": [
+            {
+              "kind": 0,
+              "description": "the player ends the turn in the cistern",
+              "hitRuns": 1,
+              "totalRuns": 3
+            }
+          ]
+        },
+        {
+          "name": "name-reveal",
+          "runs": [
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: [\n    {\n      \u0022kind\u0022: \u0022character_renamed\u0022,\n      \u0022characterId\u0022: \u0022hooded-drinker\u0022,\n      \u0022name\u0022: \u0022Sera Voight\u0022,\n      \u0022description\u0022: null,\n      \u0022evidence\u0022: \u0022She reaches up and pushes the hood back off her head \u2014 dark hair flattened by the rain, a face younger than the stillness suggested, a long white scar running from her ear to the corner of her jaw. \\\u0022Sera,\\\u0022 she says. \\\u0022Sera Voight.\\\u0022\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022character_observed\u0022,\n      \u0022targetId\u0022: \u0022hooded-drinker\u0022,\n      \u0022identity\u0022: {\n        \u0022value\u0022: \u0022Sera Voight\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022descriptionObservation\u0022: {\n        \u0022value\u0022: \u0022Dark hair flattened by the rain, a face younger than the stillness suggested, a long white scar running from her ear to the corner of her jaw.\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022condition\u0022: null,\n      \u0022whereabouts\u0022: null,\n      \u0022evidence\u0022: \u0022She reaches up and pushes the hood back off her head \u2014 dark hair flattened by the rain, a face younger than the stillness suggested, a long white scar running from her ear to the corner of her jaw.\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022character_observed\u0022,\n      \u0022targetId\u0022: \u0022innkeeper-hald\u0022,\n      \u0022identity\u0022: null,\n      \u0022descriptionObservation\u0022: null,\n      \u0022condition\u0022: null,\n      \u0022whereabouts\u0022: null,\n      \u0022evidence\u0022: \u0022Behind the counter, Hald has stopped wiping and is watching the pair of you.\u0022\n    }\n  ]\n}",
+              "rejectionReasons": [
+                "Observation evidence must quote the current narration exactly.",
+                "Observation needs a disclosed safe identity."
+              ],
+              "noOps": [],
+              "failed": false,
+              "note": null,
+              "requiredHit": 3,
+              "requiredTotal": 3,
+              "forbiddenHit": 0,
+              "rejected": 2,
+              "promptTokens": 8883,
+              "completionTokens": 366,
+              "reasoningTokens": 0,
+              "missingRules": [],
+              "violatedRules": [],
+              "proposed": [
+                {
+                  "kind": "character_renamed",
+                  "characterId": "hooded-drinker",
+                  "name": "Sera Voight",
+                  "description": null,
+                  "evidence": "She reaches up and pushes the hood back off her head \u2014 dark hair flattened by the rain, a face younger than the stillness suggested, a long white scar running from her ear to the corner of her jaw. \u0022Sera,\u0022 she says. \u0022Sera Voight.\u0022"
+                },
+                {
+                  "kind": "character_observed",
+                  "targetId": "hooded-drinker",
+                  "identity": {
+                    "value": "Sera Voight",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "descriptionObservation": {
+                    "value": "Dark hair flattened by the rain, a face younger than the stillness suggested, a long white scar running from her ear to the corner of her jaw.",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "condition": null,
+                  "whereabouts": null,
+                  "evidence": "She reaches up and pushes the hood back off her head \u2014 dark hair flattened by the rain, a face younger than the stillness suggested, a long white scar running from her ear to the corner of her jaw."
+                },
+                {
+                  "kind": "character_observed",
+                  "targetId": "innkeeper-hald",
+                  "identity": null,
+                  "descriptionObservation": null,
+                  "condition": null,
+                  "whereabouts": null,
+                  "evidence": "Behind the counter, Hald has stopped wiping and is watching the pair of you."
+                }
+              ],
+              "rejectedDeltas": [
+                {
+                  "kind": "character_observed",
+                  "targetId": "hooded-drinker",
+                  "identity": {
+                    "value": "Sera Voight",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "descriptionObservation": {
+                    "value": "Dark hair flattened by the rain, a face younger than the stillness suggested, a long white scar running from her ear to the corner of her jaw.",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "condition": null,
+                  "whereabouts": null,
+                  "evidence": "She reaches up and pushes the hood back off her head \u2014 dark hair flattened by the rain, a face younger than the stillness suggested, a long white scar running from her ear to the corner of her jaw."
+                },
+                {
+                  "kind": "character_observed",
+                  "targetId": "innkeeper-hald",
+                  "identity": null,
+                  "descriptionObservation": null,
+                  "condition": null,
+                  "whereabouts": null,
+                  "evidence": "Behind the counter, Hald has stopped wiping and is watching the pair of you."
+                }
+              ],
+              "provider": "StreamLake",
+              "clean": true
+            },
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: [\n    {\n      \u0022kind\u0022: \u0022character_renamed\u0022,\n      \u0022characterId\u0022: \u0022hooded-drinker\u0022,\n      \u0022name\u0022: \u0022Sera Voight\u0022,\n      \u0022description\u0022: null,\n      \u0022evidence\u0022: \u0022She reaches up and pushes the hood back off her head \u2014 dark hair flattened by the rain, a face younger than the stillness suggested, a long white scar running from her ear to the corner of her jaw. \\\u0022Sera,\\\u0022 she says. \\\u0022Sera Voight.\\\u0022\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022character_observed\u0022,\n      \u0022targetId\u0022: \u0022hooded-drinker\u0022,\n      \u0022identity\u0022: {\n        \u0022value\u0022: \u0022Sera Voight\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022descriptionObservation\u0022: {\n        \u0022value\u0022: \u0022Dark hair flattened by the rain, a face younger than the stillness suggested, a long white scar running from her ear to the corner of her jaw.\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022condition\u0022: null,\n      \u0022whereabouts\u0022: {\n        \u0022value\u0022: {\n          \u0022kind\u0022: \u0022Location\u0022,\n          \u0022targetId\u0022: \u0022marrow-tavern\u0022,\n          \u0022disclosedLabel\u0022: null\n        },\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022evidence\u0022: \u0022She reaches up and pushes the hood back off her head \u2014 dark hair flattened by the rain, a face younger than the stillness suggested, a long white scar running from her ear to the corner of her jaw.\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022character_observed\u0022,\n      \u0022targetId\u0022: \u0022innkeeper-hald\u0022,\n      \u0022identity\u0022: null,\n      \u0022descriptionObservation\u0022: null,\n      \u0022condition\u0022: null,\n      \u0022whereabouts\u0022: {\n        \u0022value\u0022: {\n          \u0022kind\u0022: \u0022Location\u0022,\n          \u0022targetId\u0022: \u0022marrow-tavern\u0022,\n          \u0022disclosedLabel\u0022: null\n        },\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022evidence\u0022: \u0022Behind the counter, Hald has stopped wiping and is watching the pair of you.\u0022\n    }\n  ]\n}",
+              "rejectionReasons": [
+                "Observation evidence must quote the current narration exactly.",
+                "Observation needs a disclosed safe identity."
+              ],
+              "noOps": [],
+              "failed": false,
+              "note": null,
+              "requiredHit": 3,
+              "requiredTotal": 3,
+              "forbiddenHit": 0,
+              "rejected": 2,
+              "promptTokens": 8883,
+              "completionTokens": 468,
+              "reasoningTokens": 0,
+              "missingRules": [],
+              "violatedRules": [],
+              "proposed": [
+                {
+                  "kind": "character_renamed",
+                  "characterId": "hooded-drinker",
+                  "name": "Sera Voight",
+                  "description": null,
+                  "evidence": "She reaches up and pushes the hood back off her head \u2014 dark hair flattened by the rain, a face younger than the stillness suggested, a long white scar running from her ear to the corner of her jaw. \u0022Sera,\u0022 she says. \u0022Sera Voight.\u0022"
+                },
+                {
+                  "kind": "character_observed",
+                  "targetId": "hooded-drinker",
+                  "identity": {
+                    "value": "Sera Voight",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "descriptionObservation": {
+                    "value": "Dark hair flattened by the rain, a face younger than the stillness suggested, a long white scar running from her ear to the corner of her jaw.",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "condition": null,
+                  "whereabouts": {
+                    "value": {
+                      "kind": "Location",
+                      "targetId": "marrow-tavern",
+                      "disclosedLabel": null
+                    },
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "evidence": "She reaches up and pushes the hood back off her head \u2014 dark hair flattened by the rain, a face younger than the stillness suggested, a long white scar running from her ear to the corner of her jaw."
+                },
+                {
+                  "kind": "character_observed",
+                  "targetId": "innkeeper-hald",
+                  "identity": null,
+                  "descriptionObservation": null,
+                  "condition": null,
+                  "whereabouts": {
+                    "value": {
+                      "kind": "Location",
+                      "targetId": "marrow-tavern",
+                      "disclosedLabel": null
+                    },
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "evidence": "Behind the counter, Hald has stopped wiping and is watching the pair of you."
+                }
+              ],
+              "rejectedDeltas": [
+                {
+                  "kind": "character_observed",
+                  "targetId": "hooded-drinker",
+                  "identity": {
+                    "value": "Sera Voight",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "descriptionObservation": {
+                    "value": "Dark hair flattened by the rain, a face younger than the stillness suggested, a long white scar running from her ear to the corner of her jaw.",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "condition": null,
+                  "whereabouts": {
+                    "value": {
+                      "kind": "Location",
+                      "targetId": "marrow-tavern",
+                      "disclosedLabel": null
+                    },
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "evidence": "She reaches up and pushes the hood back off her head \u2014 dark hair flattened by the rain, a face younger than the stillness suggested, a long white scar running from her ear to the corner of her jaw."
+                },
+                {
+                  "kind": "character_observed",
+                  "targetId": "innkeeper-hald",
+                  "identity": null,
+                  "descriptionObservation": null,
+                  "condition": null,
+                  "whereabouts": {
+                    "value": {
+                      "kind": "Location",
+                      "targetId": "marrow-tavern",
+                      "disclosedLabel": null
+                    },
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "evidence": "Behind the counter, Hald has stopped wiping and is watching the pair of you."
+                }
+              ],
+              "provider": "StreamLake",
+              "clean": true
+            },
+            {
+              "rawResponse": "{\n  \u0022deltas\u0022: [\n    {\n      \u0022kind\u0022: \u0022character_renamed\u0022,\n      \u0022characterId\u0022: \u0022hooded-drinker\u0022,\n      \u0022name\u0022: \u0022Sera Voight\u0022,\n      \u0022description\u0022: null,\n      \u0022evidence\u0022: \u0022She reaches up and pushes the hood back off her head \u2014 dark hair flattened by the rain, a face younger than the stillness suggested, a long white scar running from her ear to the corner of her jaw. \\\u0022Sera,\\\u0022 she says. \\\u0022Sera Voight.\\\u0022\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022character_observed\u0022,\n      \u0022targetId\u0022: \u0022hooded-drinker\u0022,\n      \u0022identity\u0022: {\n        \u0022value\u0022: \u0022Sera Voight\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022descriptionObservation\u0022: {\n        \u0022value\u0022: \u0022A woman with dark hair flattened by rain, a face younger than the stillness suggested, and a long white scar running from her ear to the corner of her jaw.\u0022,\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022condition\u0022: null,\n      \u0022whereabouts\u0022: {\n        \u0022value\u0022: {\n          \u0022kind\u0022: \u0022Location\u0022,\n          \u0022targetId\u0022: \u0022marrow-tavern\u0022,\n          \u0022disclosedLabel\u0022: null\n        },\n        \u0022provenance\u0022: \u0022Observed\u0022,\n        \u0022factId\u0022: null\n      },\n      \u0022evidence\u0022: \u0022She reaches up and pushes the hood back off her head \u2014 dark hair flattened by the rain, a face younger than the stillness suggested, a long white scar running from her ear to the corner of her jaw.\u0022\n    },\n    {\n      \u0022kind\u0022: \u0022mood_changed\u0022,\n      \u0022characterId\u0022: \u0022innkeeper-hald\u0022,\n      \u0022mood\u0022: \u0022watchful\u0022,\n      \u0022evidence\u0022: \u0022Behind the counter, Hald has stopped wiping and is watching the pair of you.\u0022\n    }\n  ]\n}",
+              "rejectionReasons": [
+                "Observation evidence must quote the current narration exactly."
+              ],
+              "noOps": [],
+              "failed": false,
+              "note": null,
+              "requiredHit": 3,
+              "requiredTotal": 3,
+              "forbiddenHit": 0,
+              "rejected": 1,
+              "promptTokens": 8883,
+              "completionTokens": 404,
+              "reasoningTokens": 0,
+              "missingRules": [],
+              "violatedRules": [],
+              "proposed": [
+                {
+                  "kind": "character_renamed",
+                  "characterId": "hooded-drinker",
+                  "name": "Sera Voight",
+                  "description": null,
+                  "evidence": "She reaches up and pushes the hood back off her head \u2014 dark hair flattened by the rain, a face younger than the stillness suggested, a long white scar running from her ear to the corner of her jaw. \u0022Sera,\u0022 she says. \u0022Sera Voight.\u0022"
+                },
+                {
+                  "kind": "character_observed",
+                  "targetId": "hooded-drinker",
+                  "identity": {
+                    "value": "Sera Voight",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "descriptionObservation": {
+                    "value": "A woman with dark hair flattened by rain, a face younger than the stillness suggested, and a long white scar running from her ear to the corner of her jaw.",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "condition": null,
+                  "whereabouts": {
+                    "value": {
+                      "kind": "Location",
+                      "targetId": "marrow-tavern",
+                      "disclosedLabel": null
+                    },
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "evidence": "She reaches up and pushes the hood back off her head \u2014 dark hair flattened by the rain, a face younger than the stillness suggested, a long white scar running from her ear to the corner of her jaw."
+                },
+                {
+                  "kind": "mood_changed",
+                  "characterId": "innkeeper-hald",
+                  "mood": "watchful",
+                  "evidence": "Behind the counter, Hald has stopped wiping and is watching the pair of you."
+                }
+              ],
+              "rejectedDeltas": [
+                {
+                  "kind": "character_observed",
+                  "targetId": "hooded-drinker",
+                  "identity": {
+                    "value": "Sera Voight",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "descriptionObservation": {
+                    "value": "A woman with dark hair flattened by rain, a face younger than the stillness suggested, and a long white scar running from her ear to the corner of her jaw.",
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "condition": null,
+                  "whereabouts": {
+                    "value": {
+                      "kind": "Location",
+                      "targetId": "marrow-tavern",
+                      "disclosedLabel": null
+                    },
+                    "provenance": "Observed",
+                    "factId": null
+                  },
+                  "evidence": "She reaches up and pushes the hood back off her head \u2014 dark hair flattened by the rain, a face younger than the stillness suggested, a long white scar running from her ear to the corner of her jaw."
+                }
+              ],
+              "provider": "StreamLake",
+              "clean": true
+            }
+          ],
+          "requiredHit": 9,
+          "requiredTotal": 9,
+          "forbiddenHit": 0,
+          "failedCount": 0,
+          "problems": []
+        }
+      ],
+      "requiredRate": 0.9285714285714286,
+      "forbiddenPerRun": 0.03333333333333333,
+      "rejectsPerRun": 0.4666666666666667,
+      "averageCompletionTokens": 296.46666666666664,
+      "providerBreakdown": [
+        {
+          "provider": "StreamLake",
+          "runs": 30,
+          "clean": 26,
+          "forbiddenPerRun": 0.03333333333333333
+        }
+      ]
+    }
+  ],
+  "promptFingerprint": "dd3cd7b1",
+  "schemaFingerprint": "FA27F80D4EED87C928E7E203444AAAECE17ED9C091ECBA59369EAA67F3CA4DCB"
+}
